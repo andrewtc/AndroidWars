@@ -24,6 +24,12 @@ namespace mage
 	static bool gIsPaused;
 	static Clock* gMasterClock;
 
+	// Touch stuff
+	static const int INVALID_POINTER_ID = -1;
+	static float gLastTouchX = 0;
+	static float gLastTouchY = 0;
+	static int gActivePointerId = INVALID_POINTER_ID;
+
 	static UpdateFn gUpdateFn = DefaultUpdateFn;
 	static RenderFn gRenderFn = DefaultRenderFn;
 	static OnSaveStateRestoredFn gOnSaveStateRestoredFn = DefaultOnSaveStateRestoredFn;
@@ -31,6 +37,8 @@ namespace mage
 	static OnDestroyFn gOnDestroyFn = DefaultOnDestroyFn;
 	static OnScreenSizeChangedFn gOnScreenSizeChanged = DefaultOnScreenSizeChangedFn;
 	static OnWindowShownFn gOnWindowShownFn = DefaultOnWindowShownFn;
+	static OnPointerDownFn gOnPointerDown = 0;
+	static OnPointerUpFn gOnPointerUp = 0;
 
 	static void handleAppCmd( struct android_app* app, int32_t cmd );
 	static int32_t handleInputEvent( struct android_app* app, AInputEvent* event );
@@ -179,6 +187,16 @@ namespace mage
 		gOnWindowShownFn = fn;
 	}
 	//---------------------------------------
+	void RegisterOnPointerDownFn( OnPointerDownFn fn )
+	{
+		gOnPointerDown = fn;
+	}
+	//---------------------------------------
+	void RegisterOnPointerUpFn( OnPointerUpFn fn )
+	{
+		gOnPointerUp = fn;
+	}
+	//---------------------------------------
 	// Input handling
 	//---------------------------------------
 	void handleAppCmd( struct android_app* app, int32_t cmd )
@@ -268,6 +286,53 @@ namespace mage
 	//    LOGI("AMotionEvent_getTouchMinor=%f", AMotionEvent_getTouchMinor(pEvent, 0));
 
 		Engine* engine = (Engine*) app->userData;
+		const int action = AMotionEvent_getAction( pEvent );
+
+		DebugPrintf("AMotionEvent_getAction=%d", AMotionEvent_getAction(pEvent));
+		switch ( action & AMOTION_EVENT_ACTION_MASK )
+		{
+			case AMOTION_EVENT_ACTION_DOWN:
+			{
+				// A single finger has touched the screen
+				//DebugPrintf( "Touch Down!" );
+				const size_t pointerIndex = 0;
+				const float x = AMotionEvent_getX( pEvent, pointerIndex );
+				const float y = AMotionEvent_getY( pEvent, pointerIndex );
+
+				if ( gOnPointerDown )
+					gOnPointerDown( x, y, pointerIndex );
+
+				gLastTouchX = x;
+				gLastTouchY = y;
+				gActivePointerId = pointerIndex;
+				break;
+			}
+			case AMOTION_EVENT_ACTION_UP:
+			{
+				// The last finger has left the screen
+				//DebugPrintf( "Touch Up!" );
+				if ( gOnPointerUp )
+					gOnPointerUp( gLastTouchX, gLastTouchY, gActivePointerId );
+				gActivePointerId = INVALID_POINTER_ID;
+				break;
+			}
+			case AMOTION_EVENT_ACTION_POINTER_DOWN:
+			{
+				DebugPrintf( "Touch Pointer Down!" );
+				break;
+			}
+			case AMOTION_EVENT_ACTION_POINTER_UP:
+			{
+				DebugPrintf( "Touch Pointer Up!" );
+				break;
+			}
+			case AMOTION_EVENT_ACTION_CANCEL:
+			{
+				DebugPrintf( "Touch Cancel" );
+				break;
+			}
+		}
+
 
 		if( AInputEvent_getType( pEvent ) == AINPUT_EVENT_TYPE_MOTION )
 		{
@@ -275,8 +340,8 @@ namespace mage
 
 			for( size_t i = 0; i < pointerCount; ++i )
 			{
-				DebugPrintf( "Received motion event from pointer %zu: (%.1f, %.1f)",
-				      i, AMotionEvent_getX( pEvent, i ), AMotionEvent_getY( pEvent, i ) );
+				//DebugPrintf( "Received motion event from pointer %zu: (%.1f, %.1f)",
+				//      i, AMotionEvent_getX( pEvent, i ), AMotionEvent_getY( pEvent, i ) );
 			}
 			return 1;
 		}
@@ -395,7 +460,7 @@ namespace mage
 		}
 
 		SetViewport( 0, 0, w, h );
-		SetOrthoView( -w/2, w/2, -h/2, h/2, 0, 1 );
+		SetOrthoView( 0, w, h, 0, 0, 1 );
 
 		gOnScreenSizeChanged( w, h );
 

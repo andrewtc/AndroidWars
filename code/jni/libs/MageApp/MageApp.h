@@ -26,6 +26,8 @@ namespace mage
 	typedef void(*OnDestroyFn)( void );
 	typedef void(*OnScreenSizeChangedFn)( int32 w, int32 h );
 	typedef void(*OnWindowShownFn)( void );
+	typedef void(*OnPointerDownFn)( float x, float y, size_t which );
+	typedef void(*OnPointerUpFn)( float x, float y, size_t which );
 
 
 	// Initialize the app - do this before calling Run(). If a savestate exists, you will get that callback before this function returns.
@@ -54,5 +56,7 @@ namespace mage
 	void RegisterOnDestroyFn( OnDestroyFn fn );
 	void RegisterOnScreenSizeChangedFn( OnScreenSizeChangedFn fn );
 	void RegisterOnWindowShownFn( OnWindowShownFn fn );
+	void RegisterOnPointerDownFn( OnPointerDownFn fn );
+	void RegisterOnPointerUpFn( OnPointerUpFn fn );
 
 }

@@ -6,11 +6,14 @@ using namespace mage;
 int32 gWindowWidth;
 int32 gWindowHeight;
 
+RectF gRect( 50, 50, 200, 200 );
+Color gColor = Color::RED;
+
 void OnDraw()
 {
 	ClearScreen();
 
-	DrawRect( 50, 50, 150, 150, Color::GREEN );
+	DrawRect( 50, 50, 150, 150, gColor);
 
 	FlushRenderer();
 }
@@ -43,6 +46,22 @@ void OnSaveStateRestore( const void* state )
 	// Game was loaded from a saved state...
 }
 
+
+void OnPointerDown( float x, float y, size_t which )
+{
+	DebugPrintf( "Touch at %f %f\n", x, y );
+	if ( gRect.Contains( x, y ) )
+		gColor = Color::GREEN;
+	else
+		gColor = Color::RED;
+
+}
+
+void OnPointerUp( float x, float y, size_t which )
+{
+
+}
+
 void main()
 {
 	// Initialize the application
@@ -54,6 +73,8 @@ void main()
 	RegisterOnScreenSizeChangedFn( OnScreenSizeChanged );
 	RegisterOnSaveStateFn( OnSaveState );
 	RegisterOnSaveStateRestoredFn( OnSaveStateRestore );
+	RegisterOnPointerUpFn( OnPointerUp );
+	RegisterOnPointerDownFn( OnPointerDown );
 	// Run the application
 	Run();
 }
