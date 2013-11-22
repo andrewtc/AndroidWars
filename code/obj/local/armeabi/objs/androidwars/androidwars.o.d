@@ -283,7 +283,7 @@ obj/local/armeabi/objs/androidwars/androidwars.o: jni/androidwars.cpp \
  jni/libs/MageRenderer/IKVisualizer.h \
  jni/libs/MageRenderer/BasicNodeVisualizer.h \
  jni/libs/MageRenderer/TileMap.h jni/libs/MageRenderer/Sprite.h \
- jni/libs/MageRenderer/SpriteManager.h
+ jni/libs/MageRenderer/SpriteManager.h jni/ui/Widget.h
 
 jni/libs/MageApp/MageApp.h:
 
@@ -916,3 +916,5 @@ jni/libs/MageRenderer/TileMap.h:
 jni/libs/MageRenderer/Sprite.h:
 
 jni/libs/MageRenderer/SpriteManager.h:
+
+jni/ui/Widget.h:

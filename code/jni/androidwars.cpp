@@ -1,5 +1,7 @@
 #include <MageApp.h>
 
+#include "ui/Widget.h"
+
 using namespace mage;
 
 // Global
@@ -7,7 +9,16 @@ int32 gWindowWidth;
 int32 gWindowHeight;
 
 RectF gRect( 50, 50, 200, 200 );
-Color gColor = Color::RED;
+Color gColor( 0xffff0000 );
+
+Camera* gCamera;
+Widget* gWidget;
+
+EventFunc( TestWidgetButtonEvent )
+{
+	DebugPrintf( "The Test Button Was Pressed" );
+	gColor = Color::ORANGE;
+}
 
 void OnDraw()
 {
@@ -15,12 +26,16 @@ void OnDraw()
 
 	DrawRect( 50, 50, 150, 150, gColor);
 
+	gWidget->OnDraw( *gCamera );
+
 	FlushRenderer();
 }
 
 void OnUpdate( float dt )
 {
 	// Update the game here...
+	if ( gWidget )
+		gWidget->OnUpdate( dt );
 }
 
 void OnScreenSizeChanged( int32 w, int32 h )
@@ -33,6 +48,13 @@ void OnWindowShown()
 {
 	// The window is shown
 	// Now is ok to load graphics
+
+	// TODO this needs to be pre-loaded someplace better...
+	SpriteManager::LoadSpriteAnimations( "ui/button.anim" );
+	SpriteManager::LoadSpriteAnimations( "ui/background.anim" );
+
+	gWidget = new Widget( "ui/test.xml" );
+	gCamera = new Camera( gWindowWidth, gWindowHeight );
 }
 
 size_t OnSaveState( void* state )
@@ -55,6 +77,8 @@ void OnPointerDown( float x, float y, size_t which )
 	else
 		gColor = Color::RED;
 
+	if ( gWidget )
+		gWidget->OnClick( x, y );
 }
 
 void OnPointerUp( float x, float y, size_t which )
@@ -75,6 +99,9 @@ void main()
 	RegisterOnSaveStateRestoredFn( OnSaveStateRestore );
 	RegisterOnPointerUpFn( OnPointerUp );
 	RegisterOnPointerDownFn( OnPointerDown );
+
+	RegisterEventFunc( TestWidgetButtonEvent );
+
 	// Run the application
 	Run();
 }

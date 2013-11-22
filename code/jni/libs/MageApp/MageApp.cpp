@@ -22,6 +22,7 @@ namespace mage
 
 	static bool gIsRunning;
 	static bool gIsPaused;
+	static bool gNeedTextureReload = false;
 	static Clock* gMasterClock;
 
 	// Touch stuff
@@ -218,10 +219,13 @@ namespace mage
 				// The window is being shown, get it ready.
 				if( engine->app->window != NULL )
 				{
-					initGL();
-					OnDraw();
 					DebugPrintf( "Showing window\n" );
+
+					// Init graphics
+					initGL();
+					// OnWindowShownFn requires GL is init first
 					gOnWindowShownFn();
+					//OnDraw();
 				}
 			}
 			break;
@@ -237,12 +241,16 @@ namespace mage
 			case APP_CMD_GAINED_FOCUS:
 			{
 				DebugPrintf( "Focus gained...\n" );
+				if ( gNeedTextureReload )
+					Texture2D::ReloadAllTextures();
 			}
 			break;
 
 			case APP_CMD_LOST_FOCUS:
 			{
 				DebugPrintf( "Focus lost...\n" );
+				gNeedTextureReload = true;
+				shutdownGL();
 			}
 			break;
 
@@ -288,7 +296,7 @@ namespace mage
 		Engine* engine = (Engine*) app->userData;
 		const int action = AMotionEvent_getAction( pEvent );
 
-		DebugPrintf("AMotionEvent_getAction=%d", AMotionEvent_getAction(pEvent));
+	//	DebugPrintf("AMotionEvent_getAction=%d", AMotionEvent_getAction(pEvent));
 		switch ( action & AMOTION_EVENT_ACTION_MASK )
 		{
 			case AMOTION_EVENT_ACTION_DOWN:
@@ -318,17 +326,17 @@ namespace mage
 			}
 			case AMOTION_EVENT_ACTION_POINTER_DOWN:
 			{
-				DebugPrintf( "Touch Pointer Down!" );
+	//			DebugPrintf( "Touch Pointer Down!" );
 				break;
 			}
 			case AMOTION_EVENT_ACTION_POINTER_UP:
 			{
-				DebugPrintf( "Touch Pointer Up!" );
+	//			DebugPrintf( "Touch Pointer Up!" );
 				break;
 			}
 			case AMOTION_EVENT_ACTION_CANCEL:
 			{
-				DebugPrintf( "Touch Cancel" );
+	//			DebugPrintf( "Touch Cancel" );
 				break;
 			}
 		}

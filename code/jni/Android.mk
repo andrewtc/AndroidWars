@@ -133,7 +133,8 @@ include $(BUILD_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE    := androidwars
-LOCAL_SRC_FILES := androidwars.cpp
+LOCAL_SRC_FILES := androidwars.cpp \
+ ui/Widget.cpp
 
 LOCAL_LDLIBS := -llog -landroid -lEGL -lGLESv2
 LOCAL_STATIC_LIBRARIES := android_native_app_glue _magemath _magecore _magerenderer png _mageapp
