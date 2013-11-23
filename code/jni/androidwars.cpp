@@ -1,6 +1,7 @@
 #include <MageApp.h>
 
 #include "ui/Widget.h"
+#include "TileMap.h"
 
 using namespace mage;
 
@@ -14,6 +15,8 @@ Color gColor( 0xffff0000 );
 Camera* gCamera;
 Widget* gWidget;
 BitmapFont* gFont;
+
+TileMap* gTileMap;
 
 EventFunc( TestWidgetButtonEvent )
 {
@@ -32,6 +35,8 @@ void OnDraw()
 	DrawText( 150, 20, gFont, "Hello World!\nThis is some testing text." );
 	DrawTextFormat( 150, 20 + 2 * gFont->GetLineHeight(), gFont, "Counter: %d", sTestCount++ );
 
+	gTileMap->OnDraw( *gCamera );
+
 	FlushRenderer();
 }
 
@@ -40,6 +45,9 @@ void OnUpdate( float dt )
 	// Update the game here...
 	if ( gWidget )
 		gWidget->OnUpdate( dt );
+
+	if ( gTileMap )
+		gTileMap->OnUpdate( dt );
 }
 
 void OnScreenSizeChanged( int32 w, int32 h )
@@ -60,6 +68,13 @@ void OnWindowShown()
 	gWidget = new Widget( "ui/test.xml" );
 	gCamera = new Camera( gWindowWidth, gWindowHeight );
 	gFont = new BitmapFont( "fonts/font.fnt" );
+
+	// Create a new TileMap.
+	if ( !gTileMap )
+	{
+		gTileMap = new TileMap();
+		gTileMap->Load( "maps/Test.tmx" );
+	}
 }
 
 size_t OnSaveState( void* state )
