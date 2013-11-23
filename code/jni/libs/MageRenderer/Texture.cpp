@@ -7,9 +7,73 @@
 #   include <SDL_image.h>
 #endif
 
+
 using namespace mage;
 
 static void callback_read_png( png_structp pStruct, png_bytep pData, png_size_t pSize );
+
+HashMap< Texture2D* > Texture2D::mTextureRegistry;
+
+//---------------------------------------
+void Texture2D::RegisterTexture( const char* key, Texture2D* tx )
+{
+	mTextureRegistry[ key ] = tx;
+}
+//---------------------------------------
+void Texture2D::UnregisterTexture( const char* key )
+{
+	auto i = mTextureRegistry.find( key );
+	if ( i != mTextureRegistry.end() )
+	{
+		mTextureRegistry.erase( i );
+	}
+}
+//---------------------------------------
+void Texture2D::ReloadAllTextures()
+{
+	for ( auto itr = mTextureRegistry.begin(); itr != mTextureRegistry.end(); ++itr )
+	{
+		Texture2D* tx = itr->second;
+		//tx->Unload();
+		tx->mIsLoaded = false;
+		tx->Load();
+	}
+}
+//---------------------------------------
+Texture2D* Texture2D::CreateTexture( const char* filename )
+{
+	Texture2D*& tx = mTextureRegistry[ filename ];
+	if ( !tx )
+	{
+		tx = new Texture2D( filename );
+	}
+	return tx;
+}
+//---------------------------------------
+void Texture2D::DestroyAllTextures()
+{
+	for ( auto itr = mTextureRegistry.begin(); itr != mTextureRegistry.end(); ++itr )
+	{
+		Texture2D* tx = itr->second;
+		UnregisterTexture( tx->mFilename.c_str() );
+		delete tx;
+	}
+}
+//---------------------------------------
+void Texture2D::DestroyTexture( Texture2D*& tx )
+{
+	Texture2D*& tx2 = mTextureRegistry[ tx->mFilename ];
+	if ( tx2 )
+	{
+		UnregisterTexture( tx->mFilename.c_str() );
+		delete tx2;
+		tx = 0;
+	}
+}
+//---------------------------------------
+
+
+
 
 //---------------------------------------
 Texture2D::Texture2D( uint32 textureId, uint32 w, uint32 h )
@@ -26,7 +90,9 @@ Texture2D::Texture2D( const char* filename )
 	, mId( 0 )
 	, mWidth( 0 )
 	, mHeight( 0 )
-{}
+{
+	RegisterTexture( filename, this );
+}
 //---------------------------------------
 #ifdef ANDROID
 #else
@@ -75,7 +141,7 @@ void Texture2D::Unload()
 #ifdef ANDROID
 bool Texture2D::LoadPng()
 {
-	ConsolePrintf( "Loading texture %s", mFilename );
+	ConsolePrintf( "Loading texture %s", mFilename.c_str() );
 
 	png_byte lHeader[8];
 	png_structp lPngPtr = NULL;
@@ -87,7 +153,7 @@ bool Texture2D::LoadPng()
 	Resource* resource = NULL;
 	IRenderer::PixelFormat format;
 
-	resource = CreateResourceHandle( mFilename );
+	resource = CreateResourceHandle( mFilename.c_str() );
 	if ( !resource )
 		goto ERROR;
 
@@ -218,7 +284,7 @@ bool Texture2D::LoadPng()
 	delete[] lRowPtrs;
 
 	// Create the gl texture
-	CreateTexture( &mId, lImageBuffer, mWidth, mHeight, format );
+	::CreateTexture( &mId, lImageBuffer, mWidth, mHeight, format );
 
 	// Free pixels
 	delete lImageBuffer;

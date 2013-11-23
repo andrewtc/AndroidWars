@@ -256,10 +256,10 @@ obj/local/armeabi/objs/_magerenderer/libs/MageRenderer/GLRenderer/GLRenderer.o: 
  jni/libs/MageCore/IK/IKJoint.h jni/libs/MageCore/IK/IKChain.h \
  jni/libs/MageCore/IK/IKController.h jni/libs/MageCore/IK/IKNode.h \
  jni/libs/MageRenderer/MageRenderer.h jni/libs/MageRenderer/Texture.h \
- jni/libs/MageRenderer/Font.h jni/libs/MageRenderer/Shader.h \
- jni/libs/MageRenderer/Effect.h jni/libs/MageRenderer/Uniform.h \
- jni/libs/MageRenderer/Surface.h jni/libs/MageRenderer/BloomEffect.h \
- jni/libs/MageRenderer/Renderer.h \
+ jni/libs/MageRenderer/Font.h jni/libs/MageRenderer/BitmapFont.h \
+ jni/libs/MageRenderer/Shader.h jni/libs/MageRenderer/Effect.h \
+ jni/libs/MageRenderer/Uniform.h jni/libs/MageRenderer/Surface.h \
+ jni/libs/MageRenderer/BloomEffect.h jni/libs/MageRenderer/Renderer.h \
  jni/libs/MageRenderer/GLRenderer/GLRenderer.h \
  jni/libs/MageRenderer/IRenderer.h jni/libs/MageRenderer/Stroke.h \
  jni/libs/MageRenderer/ParticleManager.h \
@@ -845,6 +845,8 @@ jni/libs/MageRenderer/MageRenderer.h:
 jni/libs/MageRenderer/Texture.h:
 
 jni/libs/MageRenderer/Font.h:
+
+jni/libs/MageRenderer/BitmapFont.h:
 
 jni/libs/MageRenderer/Shader.h:
 

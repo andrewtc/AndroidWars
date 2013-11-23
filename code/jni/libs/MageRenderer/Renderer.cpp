@@ -85,7 +85,7 @@ void DrawRect( Texture2D* texture, float x, float y, float w, float h, bool yUp 
 
 void DrawRect( Texture2D* texture, float x, float y, bool yUp )
 {
-	DrawRect( texture, x, y, (float) texture->GetWidth(), (float) texture->GetHeight(), 0xFFFFFFFF, yUp );
+	DrawRect( texture, x, y, (float) texture->GetWidth(), (float) texture->GetHeight(), Color::WHITE, yUp );
 }
 
 void DrawRect( Texture2D* texture, float x, float y, const mage::Color& color )
@@ -126,6 +126,25 @@ void DrawRect( Texture2D* texture, float x, float y, int clipX, int clipY, int c
 	else
 	{
 		DrawRect( x, y, clipW, clipH, Color::PINK );
+	}
+}
+
+void DrawRect( Texture2D* texture, float x, float y, const mage::Color& color, int clipX, int clipY, int clipW, int clipH )
+{
+	if ( texture )
+	{
+		mage::RectF fclip;
+		fclip.Left   = clipX             / (float) texture->GetWidth();
+		fclip.Right  = ( clipX + clipW ) / (float) texture->GetWidth();
+		fclip.Top    = 1.0f - ( clipY             / (float) texture->GetHeight() );
+		fclip.Bottom = 1.0f - ( ( clipY + clipH ) / (float) texture->GetHeight() );
+
+
+		DrawRect( texture, x, y, (float) clipW, (float) clipH, fclip, color );
+	}
+	else
+	{
+		DrawRect( x, y, clipW, clipH, color );
 	}
 }
 
@@ -582,22 +601,28 @@ void DrawPartialCircle( float cx, float cy, float r, float minAngle, float maxAn
 	DrawPolyLine( &polyLine[0], polyLine.size() / 2, 1.0f, color.bgra, true );
 }
 
-void DrawText( float x, float y, Font* font, const mage::Color& color, const char* text )
+void DrawText( float x, float y, mage::BitmapFont* bmpFont, const mage::Color& color, float scale, int maxLineLength, const char* text )
 {
-	font->RenderTextDynamic( (int) x, (int) y, text, Color( color ), Font::Font_ULTRA );
+	if ( bmpFont )
+		bmpFont->RenderText( x, y, text, color, scale, maxLineLength );
 }
 
-void DrawText( float x, float y, const mage::Color& color, const char* text )
+void DrawText( float x, float y, mage::BitmapFont* bmpFont, const mage::Color& color, float scale, const char* text )
 {
-	DrawText( x, y, gDefaultFont, color, text );
+	DrawText( x, y, bmpFont, color, scale, -1, text );
 }
 
-void DrawText( float x, float y, const char* text )
+void DrawText( float x, float y, mage::BitmapFont* bmpFont, const mage::Color& color, const char* text )
 {
-	DrawText( x, y, gDefaultFont, Color::WHITE, text );
+	DrawText( x, y, bmpFont, color, 1.0f, -1, text );
 }
 
-void DrawTextFormat( float x, float y, Font* font, const mage::Color& color, const char* text, ... )
+void DrawText( float x, float y, mage::BitmapFont* bmpFont, const char* text )
+{
+	DrawText( x, y, bmpFont, Color::WHITE, 1.0f, -1, text );
+}
+
+void DrawTextFormat( float x, float y, mage::BitmapFont* bmpFont, const mage::Color& color, float scale, int maxLineLength, const char* text, ... )
 {
 	char textFormatBuffer[ 1024 ];
 
@@ -607,10 +632,10 @@ void DrawTextFormat( float x, float y, Font* font, const mage::Color& color, con
 	vsprintf_s( textFormatBuffer, text, vargs );
 	va_end( vargs );
 
-	DrawText( x, y, font, color, textFormatBuffer );
+	DrawText( x, y, bmpFont, color, scale, maxLineLength, textFormatBuffer );
 }
 
-void DrawTextFormat( float x, float y, const mage::Color& color, const char* text, ... )
+void DrawTextFormat( float x, float y, mage::BitmapFont* bmpFont, const mage::Color& color, float scale, const char* text, ... )
 {
 	char textFormatBuffer[ 1024 ];
 
@@ -620,10 +645,10 @@ void DrawTextFormat( float x, float y, const mage::Color& color, const char* tex
 	vsprintf_s( textFormatBuffer, text, vargs );
 	va_end( vargs );
 
-	DrawText( x, y, gDefaultFont, color, textFormatBuffer );
+	DrawText( x, y, bmpFont, color, scale, textFormatBuffer );
 }
 
-void DrawTextFormat( float x, float y, const char* text, ... )
+void DrawTextFormat( float x, float y, mage::BitmapFont* bmpFont, const mage::Color& color, const char* text, ... )
 {
 	char textFormatBuffer[ 1024 ];
 
@@ -633,7 +658,20 @@ void DrawTextFormat( float x, float y, const char* text, ... )
 	vsprintf_s( textFormatBuffer, text, vargs );
 	va_end( vargs );
 
-	DrawText( x, y, gDefaultFont, Color::WHITE, textFormatBuffer );
+	DrawText( x, y, bmpFont, color, textFormatBuffer );
+}
+
+void DrawTextFormat( float x, float y, mage::BitmapFont* bmpFont, const char* text, ... )
+{
+	char textFormatBuffer[ 1024 ];
+
+	// Apply text formating
+	va_list vargs;
+	va_start( vargs, text );
+	vsprintf_s( textFormatBuffer, text, vargs );
+	va_end( vargs );
+
+	DrawText( x, y, bmpFont, textFormatBuffer );
 }
 
 void SetViewMatrix( const float* view )

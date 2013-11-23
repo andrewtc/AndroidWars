@@ -13,6 +13,7 @@ Color gColor( 0xffff0000 );
 
 Camera* gCamera;
 Widget* gWidget;
+BitmapFont* gFont;
 
 EventFunc( TestWidgetButtonEvent )
 {
@@ -22,11 +23,14 @@ EventFunc( TestWidgetButtonEvent )
 
 void OnDraw()
 {
+	static int sTestCount = 0;
 	ClearScreen();
 
 	DrawRect( 50, 50, 150, 150, gColor);
 
 	gWidget->OnDraw( *gCamera );
+	DrawText( 150, 20, gFont, "Hello World!\nThis is some testing text." );
+	DrawTextFormat( 150, 20 + 2 * gFont->GetLineHeight(), gFont, "Counter: %d", sTestCount++ );
 
 	FlushRenderer();
 }
@@ -55,6 +59,7 @@ void OnWindowShown()
 
 	gWidget = new Widget( "ui/test.xml" );
 	gCamera = new Camera( gWindowWidth, gWindowHeight );
+	gFont = new BitmapFont( "fonts/font.fnt" );
 }
 
 size_t OnSaveState( void* state )

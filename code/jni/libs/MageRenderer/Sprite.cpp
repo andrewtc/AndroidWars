@@ -178,10 +178,10 @@ void Sprite::OnDraw( const Camera& camera ) const
 	}
 }
 //---------------------------------------
-void Sprite::PlayAnimation( const HashString& animName, int frame )
+void Sprite::PlayAnimation( const HashString& animName, int frame, bool restart )
 {
 	// Don't do anything if already in given state
-	if ( mSprAnimInfo.CurrentAnimationName != animName )
+	if ( restart || mSprAnimInfo.CurrentAnimationName != animName )
 	{
 		mSprAnimInfo.CurrentAnimationName = animName;
 		mSprAnimInfo.CurrentAnimationFrame = frame;

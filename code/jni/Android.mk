@@ -117,6 +117,7 @@ magerenderer_sources := \
  $(magerenderer_path)/Sprite.cpp \
  $(magerenderer_path)/SpriteManager.cpp \
  $(magerenderer_path)/TileMap.cpp \
+ $(magerenderer_path)/BitmapFont.cpp \
 
 
 

@@ -102,7 +102,7 @@ namespace mage
 		void OnUpdate( float dt );
 		void OnDraw( const Camera& camera ) const;
 
-		void PlayAnimation( const HashString& animName, int frame=0 );
+		void PlayAnimation( const HashString& animName, int frame=0, bool restart=true );
 		void RegisterOnCompletionEvent( const HashString& animName, const HashString& eventName );
 		void UnregisterOnCompletionEvent( const HashString& animName );
 		RectI GetClippingRectForCurrentAnimation() const;

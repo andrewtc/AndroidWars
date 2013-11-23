@@ -434,7 +434,7 @@ Texture2D* TileMap::LoadImage( const XmlReader::XmlReaderIterator& itr )
 	std::string sourcePath = std::string( "tilesets/" ) + imgSource;
 
 	// Load image
-	Texture2D* img = new Texture2D( sourcePath.c_str() );
+	Texture2D* img = Texture2D::CreateTexture( sourcePath.c_str() );
 	if ( !img || !img->Load() )
 	{
 		ConsolePrintf( CONSOLE_WARNING, "Failed to load texture '%s'\n", sourcePath.c_str() );

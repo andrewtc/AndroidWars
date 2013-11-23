@@ -41,6 +41,7 @@ namespace mage
 	void DrawRect( Texture2D* texture, float x, float y, const mage::RectI& clip, bool yUp=false );
 	void DrawRect( Texture2D* texture, float x, float y, const mage::RectF& uv, bool yUp=false );
     void DrawRect( Texture2D* texture, float x, float y, int clipX, int clipY, int clipW, int clipH );
+    void DrawRect( Texture2D* texture, float x, float y, const mage::Color& color, int clipX, int clipY, int clipW, int clipH );
 
 	void DrawLine( const mage::Vec2f& A, const mage::Vec2f& B, float width, const mage::Color& color );
 	void DrawLine( float x0, float y0, float x1, float y1, float width, const mage::Color& color );
@@ -65,14 +66,24 @@ namespace mage
 	void DrawCircle( float cx, float cy, float r, const mage::Color& color );
 	void DrawPartialCircle( float cx, float cy, float r, float minAngle, float maxAngle, const mage::Color& color );
 
-	// Draw text (dynamic text)
-	void DrawText( float x, float y, mage::Font* font, const mage::Color& color, const char* text );
-	void DrawText( float x, float y, const mage::Color& color, const char* text );
-	void DrawText( float x, float y, const char* text );
+	// Draw text
+	void DrawText( float x, float y, mage::BitmapFont* bmpFont, const mage::Color& color, float scale, int maxLineLength, const char* text );
+	void DrawText( float x, float y, mage::BitmapFont* bmpFont, const mage::Color& color, float scale, const char* text );
+	void DrawText( float x, float y, mage::BitmapFont* bmpFont, const mage::Color& color, const char* text );
+	void DrawText( float x, float y, mage::BitmapFont* bmpFont, const char* text );
+//	void DrawText( float x, float y, const mage::Color& color, const char* text );
+//	void DrawText( float x, float y, const char* text );
 	// Draw text (dynamic text) with formating
-	void DrawTextFormat( float x, float y, mage::Font* font, const mage::Color& color, const char* text, ... );
-	void DrawTextFormat( float x, float y, const mage::Color& color, const char* text, ... );
-	void DrawTextFormat( float x, float y, const char* text, ... );
+	// Default values:
+	//  color=Color::WHITE
+	//  scale=1.0f
+	//  maxLineLength=-1
+	void DrawTextFormat( float x, float y, mage::BitmapFont* bmpFont, const mage::Color& color, float scale, int maxLineLength, const char* text, ... );
+	void DrawTextFormat( float x, float y, mage::BitmapFont* bmpFont, const mage::Color& color, float scale, const char* text, ... );
+	void DrawTextFormat( float x, float y, mage::BitmapFont* bmpFont, const mage::Color& color, const char* text, ... );
+	void DrawTextFormat( float x, float y, mage::BitmapFont* bmpFont, const char* text, ... );
+//	void DrawTextFormat( float x, float y, const mage::Color& color, const char* text, ... );
+//	void DrawTextFormat( float x, float y, const char* text, ... );
 
 	void SetViewMatrix( const float* view );
 

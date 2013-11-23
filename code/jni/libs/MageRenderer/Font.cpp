@@ -42,13 +42,13 @@ Font::Font( const char* filename, int fontSize )
 //---------------------------------------
 Font::~Font()
 {
-	if ( mGlyphs[0] != NULL )
+	/*if ( mGlyphs[0] != NULL )
 	{
 		for( int i = 0; i < 96; ++i )
 		{
 			delete mGlyphs[i];
 		}
-	}
+	}*/
 }
 //---------------------------------------
 bool Font::LoadFont( const char* filename, int fontSize )

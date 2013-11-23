@@ -2,6 +2,7 @@
 
 #include "Texture.h"
 #include "Font.h"
+#include "BitmapFont.h"
 
 #define MAGE_USE_GLRENDERER
 

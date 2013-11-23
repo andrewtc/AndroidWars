@@ -40,7 +40,7 @@ bool LoadSpriteDefinition( const char* filename )
 	unsigned int size;
 	std::string spriteSheetName = std::string( filename ).substr( 0, std::string( filename ).find_last_of( "/" ) + 1 )
 		+ root.GetAttributeAsString( "name" );
-	sprDef->SpriteSheet = new Texture2D( spriteSheetName.c_str() );
+	sprDef->SpriteSheet = Texture2D::CreateTexture( spriteSheetName.c_str() );
 	sprDef->SpriteSheet->Load();
 	
 	// Loop through the definitions
