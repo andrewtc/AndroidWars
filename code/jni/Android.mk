@@ -144,8 +144,4 @@ LOCAL_CFLAGS += -std=c++11
 include $(BUILD_SHARED_LIBRARY)
 
 $(call import-module,android/native_app_glue)
-$(call import-module,MageMath)
-$(call import-module,MageCore)
-$(call import-module,MageRenderer)
 $(call import-module,libpng)
-$(call import-module,MageApp)
