@@ -15,6 +15,9 @@ namespace mage
 		MapTile()
 			: TileId( -1 )
 			, TileCollision( TC_NONE )
+			, mAnimLength( 0.0f )
+			, mFrameTime( 0.0f )
+			, now( 0 )
 		{}
 
 		int TileId;			// Tile ID used in tileset
@@ -29,6 +32,27 @@ namespace mage
 			TC_NONE,
 			TC_SOLID
 		};
+
+		void OnUpdate( float dt )
+		{
+			now += dt;
+			if ( now > mFrameTime )
+			{
+				++TileId;
+				if ( TileId > mAnimEndIndex )
+					TileId = mAnimStartIndex;
+				now = 0;
+			}
+		}
+
+		void SetAnimLength( float timeMS ) { mAnimLength = timeMS; }
+		void SetFrameIndexes( int start, int end ) { mAnimStartIndex = start; mAnimEndIndex = end; }
+	private:
+		int mAnimStartIndex;
+		int mAnimEndIndex;
+		float mAnimLength;
+		float mFrameTime;
+		float now;
 	};
 
 	// A MapObject is any Tiled Object.
@@ -151,6 +175,7 @@ namespace mage
 			int TileSetIndex;
 			uint32 FirstGid;
 			Texture2D* TilesetSurface;
+			int TileWidth, TileHeight;
 			std::map< int, Dictionary > TileProperties;
 		};
 

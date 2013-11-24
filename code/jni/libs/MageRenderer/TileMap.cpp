@@ -176,6 +176,8 @@ void TileMap::LoadTileset( const XmlReader::XmlReaderIterator& itr )
 	TileSet* tileset = new TileSet;
 
 	tileset->FirstGid = itr.GetAttributeAsInt( "firstgid" );
+	tileset->TileWidth = itr.GetAttributeAsInt( "tilewidth", mTileWidth );
+	tileset->TileHeight = itr.GetAttributeAsInt( "tileheight", mTileHeight );
 	const char* source = itr.GetAttributeAsCString( "source", 0 );
 
 	// Inline tileset
@@ -298,7 +300,8 @@ void TileMap::LoadTileLayer( const XmlReader::XmlReaderIterator& itr )
 						}
 					}
 
-					const int numXTiles = mTileSets[ tilesetIndex ]->TilesetSurface ? mTileSets[ tilesetIndex ]->TilesetSurface->GetWidth() / mTileWidth : 1;
+					TileSet* tileSet = mTileSets[ tilesetIndex ];
+					const int numXTiles = tileSet->TilesetSurface ? tileSet->TilesetSurface->GetWidth() / mTileWidth : 1;
 
 					tile.TileId = gid;
 					tile.TileIndex = k++;
@@ -306,8 +309,8 @@ void TileMap::LoadTileLayer( const XmlReader::XmlReaderIterator& itr )
 					tile.TilePositionX = ( gid % numXTiles ) * mTileWidth;
 					tile.TilePositionY = ( gid / numXTiles ) * mTileHeight;
 
-					auto tileProps = mTileSets[ tilesetIndex ]->TileProperties.find( gid );
-					if ( tileProps != mTileSets[ tilesetIndex ]->TileProperties.end() )
+					auto tileProps = tileSet->TileProperties.find( gid );
+					if ( tileProps != tileSet->TileProperties.end() )
 					{
 						// Check for collision properties
 						std::string collisionType;
@@ -317,6 +320,27 @@ void TileMap::LoadTileLayer( const XmlReader::XmlReaderIterator& itr )
 							{
 								tile.TileCollision = MapTile::TC_SOLID;
 							}
+						}
+
+						// Check animation properties
+						std::string animStr;
+						if ( tileProps->second.Get( "animLength", animStr ) == Dictionary::DErr_SUCCESS )
+						{
+							float animTime;
+							StringUtil::StringToType( animStr, &animTime );
+							tile.SetAnimLength( animTime );
+						}
+						if ( tileProps->second.Get( "frames", animStr ) == Dictionary::DErr_SUCCESS )
+						{
+							int startFrame = tile.TileIndex;
+							int endFrame;
+							StringUtil::StringToType( animStr, &endFrame );
+							endFrame += startFrame;
+							tile.SetFrameIndexes( startFrame, endFrame );
+						}
+						else
+						{
+							tile.SetFrameIndexes( tile.TileIndex, tile.TileIndex );
 						}
 					}
 				}
@@ -434,7 +458,7 @@ Texture2D* TileMap::LoadImage( const XmlReader::XmlReaderIterator& itr )
 	std::string sourcePath = std::string( "tilesets/" ) + imgSource;
 
 	// Load image
-	Texture2D* img = Texture2D::CreateTexture( sourcePath.c_str() );
+	Texture2D* img = new Texture2D( sourcePath.c_str() );
 	if ( !img || !img->Load() )
 	{
 		ConsolePrintf( CONSOLE_WARNING, "Failed to load texture '%s'\n", sourcePath.c_str() );
@@ -513,12 +537,13 @@ void TileMap::OnDraw( const Camera& camera )
 					if ( tileLayer->Tiles[ index ].TileId >= 0 )
 					{
 						const MapTile& tile = tileLayer->Tiles[ index ];
+						const TileSet* tileset = mTileSets[ tile.TileSetIndex ];
 
 						DrawRect(
-							mTileSets[ tile.TileSetIndex ]->TilesetSurface,
+							tileset->TilesetSurface,
 							x * mTileWidth - cameraX,
 							y * mTileHeight - cameraY,
-							tile.TilePositionX, tile.TilePositionY, mTileWidth, mTileHeight
+							tile.TilePositionX, tile.TilePositionY, tileset->TileWidth, tileset->TileHeight
 						);
 					}
 				}
@@ -683,6 +708,37 @@ void TileMap::OnUpdate( float dt )
 	for ( ArrayList< MapObject* >::const_iterator itr = mObjects.begin(); itr != mObjects.end(); ++itr )
 	{
 		(*itr)->OnUpdate( dt );
+	}
+
+	for ( auto layerItr = mLayers.begin(); layerItr != mLayers.end(); ++layerItr )
+	{
+		MapLayer* layer = *layerItr;
+
+		// Skip invisible layers
+		if ( !layer->Visible || layer->Opacity == 0.0f ) continue;
+
+
+		// Tile layer
+		if ( layer->Type == LT_TILE )
+		{
+			TileLayer* tileLayer = (TileLayer*) layer;
+
+			// Loop and update all tiles
+			for ( int y = 0; y <= mMapHeight-1; ++y )
+			{
+				for ( int x = 0; x <= mMapWidth-1; ++x )
+				{
+					int index = x + y * mMapWidth;
+
+					// Check if id is valid
+					if ( tileLayer->Tiles[ index ].TileId >= 0 )
+					{
+						MapTile& tile = tileLayer->Tiles[ index ];
+						tile.OnUpdate( dt );
+					}
+				}
+			}
+		}
 	}
 }
 //---------------------------------------
