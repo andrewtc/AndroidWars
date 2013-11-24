@@ -12,6 +12,68 @@ MapTile TileMap::INVALID_TILE;
 MAGE_IMPLEMENT_RTTI( Object, MapObject );
 
 //---------------------------------------
+// MapTile
+//---------------------------------------
+MapTile::MapTile()
+	: TileId( -1 )
+	, TileCollision( TC_NONE )
+	, mAnimLength( 0.0f )
+	, mFrameTime( 0.0f )
+	, mNumFrames( 0 )
+	, mFrame( 0 )
+	, mAnimPlaying( false )
+	, now( 0 )
+{}
+//---------------------------------------
+void MapTile::OnUpdate( float dt )
+{
+	if ( mFrameTime != 0 && mNumFrames != 0 && mAnimPlaying )
+	{
+		now += dt;
+		if ( now > mFrameTime )
+		{
+			SetFrame( ++mFrame );
+			now = 0;
+		}
+	}
+}
+//---------------------------------------
+void MapTile::SetAnimLength( float time )
+{
+	mAnimLength = time;
+	RecomputeFrameTime();
+}
+//---------------------------------------
+void MapTile::SetNumFrames( int n )
+{
+	mNumFrames = n;
+	RecomputeFrameTime();
+}
+//---------------------------------------
+void MapTile::RecomputeFrameTime()
+{
+	if ( mNumFrames > 0 )
+	{
+		mFrameTime = mAnimLength / mNumFrames;
+	}
+}
+//---------------------------------------
+void MapTile::SetFrame( int frame )
+{
+	if ( mFrame >= mNumFrames )
+		mFrame = 0;
+	TileAnimationOffsetX = mFrame * mTileset->TileWidth;
+	// TODO maybe account for wrapping the tile animation to the next row
+	/*if ( TilePositionX + TileAnimationOffsetX + mTileset->TileWidth >= mTileset->TilesetSurface->GetWidth() )
+	{
+		TileAnimationOffsetX = 0;
+		TileAnimationOffsetY += mTileset->TileHeight;
+	}*/
+}
+//---------------------------------------
+
+
+//---------------------------------------
 // Default MapObject drawing.
 // Draws an outlined rect with a red dot at the origin and a blue dot at the center.
 void MapObject::OnDraw( const Camera& camera ) const
@@ -186,6 +248,9 @@ void TileMap::LoadTileset( const XmlReader::XmlReaderIterator& itr )
 		XmlReader::XmlReaderIterator imageTag = itr.NextChild( "image" );
 		mCurrentPath = mMapDirectory;
 		tileset->TilesetSurface = LoadImage( imageTag );
+
+		LoadTilesetProperties( itr, *tileset );
+
 	}
 	// External tileset
 	else
@@ -201,20 +266,25 @@ void TileMap::LoadTileset( const XmlReader::XmlReaderIterator& itr )
 		mCurrentPath = tilesetDirectory;
 		tileset->TilesetSurface = LoadImage( imageTag );
 
-		for ( XmlReader::XmlReaderIterator tileItr = tilesetRoot.NextChild( "tile" );
-			tileItr.IsValid(); tileItr = tileItr.NextSibling( "tile" ) )
-		{
-			tileItr.ValidateXMLAttributes( "id","" );
-			tileItr.ValidateXMLChildElemnts( "properties","" );
-
-			int id = tileItr.GetAttributeAsInt( "id" );
-
-			LoadProperties( tileset->TileProperties[ id ], tileItr.NextChild( "properties" ) );
-		}
+		LoadTilesetProperties( tilesetRoot, *tileset );
 	}
 
 	tileset->TileSetIndex = (int) mTileSets.size();
 	mTileSets.push_back( tileset );
+}
+//---------------------------------------
+void TileMap::LoadTilesetProperties( const XmlReader::XmlReaderIterator& itr, TileSet& tileset )
+{
+	for ( XmlReader::XmlReaderIterator tileItr = itr.NextChild( "tile" );
+		tileItr.IsValid(); tileItr = tileItr.NextSibling( "tile" ) )
+	{
+		tileItr.ValidateXMLAttributes( "id","" );
+		tileItr.ValidateXMLChildElemnts( "properties","" );
+
+		int id = tileItr.GetAttributeAsInt( "id" );
+
+		LoadProperties( tileset.TileProperties[ id ], tileItr.NextChild( "properties" ) );
+	}
 }
 //---------------------------------------
 void TileMap::LoadTileLayer( const XmlReader::XmlReaderIterator& itr )
@@ -284,67 +354,9 @@ void TileMap::LoadTileLayer( const XmlReader::XmlReaderIterator& itr )
 					      TMX_FLIPPED_DIAGONALLY_FLAG );
 
 				// Figure out which tileset this tile belongs to
-				if ( gid > 0 )
-				{
-					int tilesetIndex = 0;
-					for ( int i = (int) mTileSets.size() - 1; i >= 0; --i )
-					{
-						TileSet* tileset = mTileSets[i];
-
-						if ( tileset->FirstGid <= gid )
-						{
-							tilesetIndex = tileset->TileSetIndex;
-							// Fix gid to be local to this tileset
-							gid = gid - tileset->FirstGid;
-							break;
-						}
-					}
-
-					TileSet* tileSet = mTileSets[ tilesetIndex ];
-					const int numXTiles = tileSet->TilesetSurface ? tileSet->TilesetSurface->GetWidth() / mTileWidth : 1;
-
-					tile.TileId = gid;
-					tile.TileIndex = k++;
-					tile.TileSetIndex = tilesetIndex;
-					tile.TilePositionX = ( gid % numXTiles ) * mTileWidth;
-					tile.TilePositionY = ( gid / numXTiles ) * mTileHeight;
-
-					auto tileProps = tileSet->TileProperties.find( gid );
-					if ( tileProps != tileSet->TileProperties.end() )
-					{
-						// Check for collision properties
-						std::string collisionType;
-						if ( tileProps->second.Get( "Collision", collisionType ) == Dictionary::DErr_SUCCESS )
-						{
-							if ( collisionType == "SOLID" )
-							{
-								tile.TileCollision = MapTile::TC_SOLID;
-							}
-						}
-
-						// Check animation properties
-						std::string animStr;
-						if ( tileProps->second.Get( "animLength", animStr ) == Dictionary::DErr_SUCCESS )
-						{
-							float animTime;
-							StringUtil::StringToType( animStr, &animTime );
-							tile.SetAnimLength( animTime );
-						}
-						if ( tileProps->second.Get( "frames", animStr ) == Dictionary::DErr_SUCCESS )
-						{
-							int startFrame = tile.TileIndex;
-							int endFrame;
-							StringUtil::StringToType( animStr, &endFrame );
-							endFrame += startFrame;
-							tile.SetFrameIndexes( startFrame, endFrame );
-						}
-						else
-						{
-							tile.SetFrameIndexes( tile.TileIndex, tile.TileIndex );
-						}
-					}
-				}
-
+				// and set its properties accordingly
+				SetTileId( gid, tile );
+				tile.TileIndex = k++;
 				layer->Tiles.push_back( tile );
 			}
 		}
@@ -459,7 +471,7 @@ Texture2D* TileMap::LoadImage( const XmlReader::XmlReaderIterator& itr )
 
 	// Load image
 	Texture2D* img = Texture2D::CreateTexture( sourcePath.c_str() );
-    img->Load();
+	img->Load();
 	if ( !img || !img->Load() )
 	{
 		ConsolePrintf( CONSOLE_WARNING, "Failed to load texture '%s'\n", sourcePath.c_str() );
@@ -538,13 +550,13 @@ void TileMap::OnDraw( const Camera& camera )
 					if ( tileLayer->Tiles[ index ].TileId >= 0 )
 					{
 						const MapTile& tile = tileLayer->Tiles[ index ];
-						const TileSet* tileset = mTileSets[ tile.TileSetIndex ];
+						const TileSet* tileset = tile.mTileset; //mTileSets[ tile.TileSetIndex ];
 
 						DrawRect(
 							tileset->TilesetSurface,
 							x * mTileWidth - cameraX,
 							y * mTileHeight - cameraY,
-							tile.TilePositionX, tile.TilePositionY, tileset->TileWidth, tileset->TileHeight
+							tile.TilePositionX + tile.TileAnimationOffsetX, tile.TilePositionY + tile.TileAnimationOffsetY, tileset->TileWidth, tileset->TileHeight
 						);
 					}
 				}
@@ -555,69 +567,6 @@ void TileMap::OnDraw( const Camera& camera )
 		else if ( layer->Type == LT_OBJ )
 		{
 			continue;
-			/*
-			ObjLayer* objLayer = (ObjLayer*) layer;
-
-			for ( auto itr = objLayer->Objs.begin(); itr != objLayer->Objs.end(); ++itr )
-			{
-				GameObject* obj = *itr;
-
-				obj->OnDraw( screen, camera );
-
-				/*
-				// Check if we can see the object before we draw it
-				if ( camera.RectInViewport( obj->BoundingRect ) )
-				{
-					int originX = obj->Position.x - cameraX;
-					int originY = obj->Position.y - cameraY;
-
-					// Outline
-					Surface::DrawRect(
-						screen,
-						obj->BoundingRect.Left - cameraX,
-						obj->BoundingRect.Top - cameraY,
-						obj->BoundingRect.Width(),
-						obj->BoundingRect.Height(),
-						0xffffffff, false );
-
-					//if ( obj->Shape == MapObject::Obj_RECT )
-					//{
-						// Transparent fill
-						Surface::DrawRect(
-							screen,
-							obj->BoundingRect.Left - cameraX,
-							obj->BoundingRect.Top - cameraY,
-							obj->BoundingRect.Width(),
-							obj->BoundingRect.Height(),
-							0xaaaaaaaa );
-					//}
-					//else if ( obj->Shape == MapObject::Obj_POLYLINE )
-					//{
-					//	// Path
-					//	int lastX = 0, lastY = 0;
-					//	for ( auto vertItr = obj->Verticies.begin();
-					//		vertItr != obj->Verticies.end(); ++vertItr )
-					//	{
-					//		Surface::DrawLine( screen, lastX + originX, lastY + originY,
-					//			vertItr->x + originX, vertItr->y + originY,
-					//			0xff00ffff );
-					//		lastX = vertItr->x;
-					//		lastY = vertItr->y;
-					//	}
-					//}
-
-					// Origin
-					Surface::DrawRect( screen, originX - 1, originY - 1, 2, 2,
-						0xffff0000, true );
-
-					// Center
-					Surface::DrawRect( screen,
-						obj->BoundingRect.Left + obj->BoundingRect.CenterX() - cameraX - 1,
-						obj->BoundingRect.Top + obj->BoundingRect.CenterY() - cameraY - 1,
-						2, 2,
-						0xff0000ff, true );
-				}
-			}*/
 		}
 
 		// Image layer
@@ -760,6 +709,106 @@ MapTile& TileMap::GetTile( int x, int y, unsigned int layerIndex ) const
 	return INVALID_TILE;
 }
 //---------------------------------------
+uint32 TileMap::GetTilesById( ArrayList< MapTile* >& tiles, uint32 tileId, uint32 layerIndex ) const
+{
+	if ( layerIndex < mLayers.size() )
+	{
+		MapLayer* layer = mLayers[ layerIndex ];
+		if ( layer->Type == LT_TILE )
+		{
+			TileLayer* tileLayer = (TileLayer*) layer;
+			// Loop and update all tiles
+			for ( int y = 0; y <= mMapHeight-1; ++y )
+			{
+				for ( int x = 0; x <= mMapWidth-1; ++x )
+				{
+					int index = x + y * mMapWidth;
+
+					// Check if id is valid
+					if ( tileLayer->Tiles[ index ].TileId == tileId )
+					{
+						tiles.push_back( &tileLayer->Tiles[ index ] );
+					}
+				}
+			}
+		}
+		else
+		{
+			WarnFail( "TileMap::GetTilesById() : layer type miss-match, expected TileLayer\n" );
+		}
+	}
+	else
+	{
+		WarnFail( "TileMap::GetTilesById() : layerIndex %u/%u 'Out-of-bounds'\n", layerIndex, mLayers.size() );
+	}
+	return tiles.size();
+}
+//---------------------------------------
+void TileMap::SetTileId( uint32 gid, MapTile& tile, bool loadProperties )
+{
+	// gid of 0 is invalid
+	if ( gid > 0 )
+	{
+		TileSet* tileSet = GetTileSetForGID( gid );
+		const int numXTiles = tileSet->TilesetSurface ? tileSet->TilesetSurface->GetWidth() / mTileWidth : 1;
+
+		tile.TileId = gid;
+		//tile.TileSetIndex = tilesetIndex;
+		tile.TilePositionX = ( gid % numXTiles ) * tileSet->TileWidth;
+		tile.TilePositionY = ( gid / numXTiles ) * tileSet->TileHeight;
+		tile.TileAnimationOffsetX = 0;
+		tile.TileAnimationOffsetY = 0;
+		tile.mTileset = tileSet;
+
+		// Load tile properties
+		if ( loadProperties )
+		{
+			auto tileProps = tileSet->TileProperties.find( gid );
+			if ( tileProps != tileSet->TileProperties.end() )
+			{
+				// Check for collision properties
+				std::string collisionType;
+				if ( tileProps->second.Get( "Collision", collisionType ) == Dictionary::DErr_SUCCESS )
+				{
+					if ( collisionType == "SOLID" )
+					{
+						tile.TileCollision = MapTile::TC_SOLID;
+					}
+				}
+
+				// Check animation properties
+				std::string animStr;
+				if ( tileProps->second.Get( "animLength", animStr ) == Dictionary::DErr_SUCCESS )
+				{
+					float animTime = 0;
+					StringUtil::StringToType( animStr, &animTime );
+					tile.SetAnimLength( animTime );
+				}
+				if ( tileProps->second.Get( "frames", animStr ) == Dictionary::DErr_SUCCESS )
+				{
+					int numFrames = 0;
+					StringUtil::StringToType( animStr, &numFrames );
+					tile.SetNumFrames( numFrames );
+				}
+				if ( tileProps->second.Get( "playing", animStr ) == Dictionary::DErr_SUCCESS )
+				{
+					if ( StringUtil::StringiCmp( animStr, "true" ) )
+						tile.PlayAnimation();
+				}
+				else
+				{
+					tile.PlayAnimation();
+				}
+			}
+		}
+	}
+	else
+	{
+		// Tile is null and will not be draw
+		tile.TileId = gid;
+	}
+}
+//---------------------------------------
 void TileMap::SetMapPropertyCB( MapPropertyFn fn )
 {
 	mMapPropertyCB = fn;
@@ -775,5 +824,24 @@ void TileMap::SetNewMapObjectCB( NewMapObjectFn fn )
 RectI TileMap::GetMapBounds() const
 {
 	return RectI( 0, 0, mTileWidth * mMapWidth, mTileHeight * mMapHeight );
+}
+//---------------------------------------
+TileMap::TileSet* TileMap::GetTileSetForGID( uint32& gid ) const
+{
+	int tilesetIndex = 0;
+	for ( int i = (int) mTileSets.size() - 1; i >= 0; --i )
+	{
+		TileSet* tileset = mTileSets[i];
+
+		if ( tileset->FirstGid <= gid )
+		{
+			tilesetIndex = tileset->TileSetIndex;
+			// Fix gid to be local to this tileset
+			gid = gid - tileset->FirstGid;
+			break;
+		}
+	}
+
+	return mTileSets[ tilesetIndex ];
 }
 //---------------------------------------

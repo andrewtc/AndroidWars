@@ -10,51 +10,6 @@
 namespace mage
 {
 
-	struct MapTile
-	{
-		MapTile()
-			: TileId( -1 )
-			, TileCollision( TC_NONE )
-			, mAnimLength( 0.0f )
-			, mFrameTime( 0.0f )
-			, now( 0 )
-		{}
-
-		int TileId;			// Tile ID used in tileset
-		int TileIndex;		// Index into Map tile array
-		int TileSetIndex;	// Index into tileset array
-		int TilePositionX;	// Position in Map space
-		int TilePositionY;
-		int TileCollision;	// How Entities react to collision with this tile
-
-		enum TileCollisionFlag
-		{
-			TC_NONE,
-			TC_SOLID
-		};
-
-		void OnUpdate( float dt )
-		{
-			now += dt;
-			if ( now > mFrameTime )
-			{
-				++TileId;
-				if ( TileId > mAnimEndIndex )
-					TileId = mAnimStartIndex;
-				now = 0;
-			}
-		}
-
-		void SetAnimLength( float timeMS ) { mAnimLength = timeMS; }
-		void SetFrameIndexes( int start, int end ) { mAnimStartIndex = start; mAnimEndIndex = end; }
-	private:
-		int mAnimStartIndex;
-		int mAnimEndIndex;
-		float mAnimLength;
-		float mFrameTime;
-		float now;
-	};
-
 	// A MapObject is any Tiled Object.
 	// All MapObjects are stored and managed by the map.
 	// When the map is destroyed (i.e. when loading a new map) all MapObjects will be destroyed.
@@ -95,7 +50,65 @@ namespace mage
 
 	class TileMap
 	{
+	private:
+		// Tileset
+		struct TileSet
+		{
+			int TileSetIndex;
+			uint32 FirstGid;
+			Texture2D* TilesetSurface;
+			int TileWidth, TileHeight;
+			std::map< int, Dictionary > TileProperties;
+		};
 	public:
+		// A tile on the map
+		// Tiles can have the following properties
+		//  - animLength : animation length in seconds
+		//  - frames     : number of frames in the animation, this tile + frames
+		//  - playing    : (default=true) true/false is animation playing
+		class MapTile
+		{
+		public:
+			friend class TileMap;
+			MapTile();
+
+		protected:
+			int TileId;					// Tile ID used in tileset
+			int TileIndex;				// Index into Map tile array
+			//int TileSetIndex;			// Index into tileset array
+			int TilePositionX;			// Position offset into tileset
+			int TilePositionY;
+			int TileAnimationOffsetX;	// Position offset for animation
+			int TileAnimationOffsetY;
+			int TileCollision;			// How Entities react to collision with this tile
+
+		public:
+			enum TileCollisionFlag
+			{
+				TC_NONE,
+				TC_SOLID
+			};
+
+			void OnUpdate( float dt );
+
+			void SetAnimLength( float time );
+			void SetNumFrames( int n );
+			void SetFrame( int frame );
+			void PlayAnimation() { mAnimPlaying = true; }
+			void StopAnimation() { mAnimPlaying = false; }
+		private:
+			void RecomputeFrameTime();
+
+			int mNumFrames;
+			int mFrame;
+			float mAnimLength;
+			float mFrameTime;
+			float now;
+			TileSet* mTileset;		// The tileset owning this 
+			bool mAnimPlaying;
+			bool mAnimLooping;
+		};
+
 		typedef void(*MapPropertyFn)( const XmlReader::XmlReaderIterator& prop );
 		typedef MapObject*(*NewMapObjectFn)( const XmlReader::XmlReaderIterator& objItr );
 
@@ -110,6 +123,14 @@ namespace mage
 		RectI GetMapBounds() const;
 
 		MapTile& GetTile( int x, int y, unsigned int layerIndex=0U ) const;
+		// Populates tiles array with all tiles of id tileId on the give layer
+		uint32 GetTilesById( ArrayList< MapTile* >& tiles, uint32 tileId, uint32 layerIndex=0U ) const;
+
+		// Set the TileID
+		// This will cause the tiles graphical components to be re-evaluated
+		// loadProperties determines if the property sheet for the new tile id is loaded or not
+		// an id of 0 will make the tile invalid and thus not drawn
+		void SetTileId( uint32 newId, MapTile& tile, bool loadProperties=true );
 
 		void SetMapPropertyCB( MapPropertyFn fn );
 		void SetNewMapObjectCB( NewMapObjectFn fn );
@@ -169,20 +190,11 @@ namespace mage
 			Vec2i ScrollSpeed;
 		};
 
-		// Tileset
-		struct TileSet
-		{
-			int TileSetIndex;
-			uint32 FirstGid;
-			Texture2D* TilesetSurface;
-			int TileWidth, TileHeight;
-			std::map< int, Dictionary > TileProperties;
-		};
-
 		// Private helper functions
 
 		// itr is <tileset>
 		void LoadTileset( const XmlReader::XmlReaderIterator& itr );
+		void LoadTilesetProperties( const XmlReader::XmlReaderIterator& itr, TileSet& tileset );
 		// itr is <layer>
 		void LoadTileLayer( const XmlReader::XmlReaderIterator& itr );
 		// itr is <objectgroup>
@@ -196,6 +208,10 @@ namespace mage
 		void LoadProperties( MapObject* obj, const XmlReader::XmlReaderIterator& itr );
 		// Load general layer info from a <layer> tag
 		void LoadLayerBaseInfo( MapLayer* layer, const XmlReader::XmlReaderIterator& itr );
+
+		// Get the tileset associated with this gid
+		// The gid will be offset to be local to the returned TileSet
+		TileSet* GetTileSetForGID( uint32& gid ) const;
 
 		// Containers
 		ArrayList< MapLayer* > mLayers;
@@ -215,5 +231,7 @@ namespace mage
 		NewMapObjectFn mNewMapObjectCB;
 
 	};
+
+	typedef TileMap::MapTile MapTile;
 
 }
