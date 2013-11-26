@@ -17,6 +17,7 @@ Widget* gWidget;
 BitmapFont* gFont;
 
 Game* gGame;
+Database* gDatabase;
 
 EventFunc( TestWidgetButtonEvent )
 {
@@ -71,8 +72,16 @@ void OnWindowShown()
 	gCamera = new Camera( gWindowWidth, gWindowHeight );
 	gFont = new BitmapFont( "fonts/font.fnt" );
 
+	// Create the global Database.
+	DebugPrintf( "Creating database..." );
+	gDatabase = new Database();
+
+	// Load all data into the Database.
+	DebugPrintf( "Loading game data..." );
+	gDatabase->LoadTerrainTypes( "data/Terrain.xml" );
+
 	// Create a new Game and start it.
-	gGame = Game::Create( 2, "Test" );
+	gGame = Game::Create( 2, "Cobra Cove" );
 	gGame->Start();
 }
 

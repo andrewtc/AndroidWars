@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<Terrain>
+
+	<TerrainType
+		name="Plain"
+		coverBonus="1"
+		/>
+		
+	<TerrainType
+		name="Sea"
+		coverBonus="1"
+		/>
+		
+	<TerrainType
+		name="City"
+		coverBonus="3"
+		capturable
+		/>
+
+</Terrain>
