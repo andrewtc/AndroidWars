@@ -1,7 +1,7 @@
 #include <MageApp.h>
 
 #include "ui/Widget.h"
-#include "TileMap.h"
+#include "androidwars.h"
 
 using namespace mage;
 
@@ -16,7 +16,7 @@ Camera* gCamera;
 Widget* gWidget;
 BitmapFont* gFont;
 
-TileMap* gTileMap;
+Game* gGame;
 
 EventFunc( TestWidgetButtonEvent )
 {
@@ -35,7 +35,9 @@ void OnDraw()
 	DrawText( 150, 20, gFont, "Hello World!\nThis is some testing text." );
 	DrawTextFormat( 150, 20 + 2 * gFont->GetLineHeight(), gFont, "Counter: %d", sTestCount++ );
 
-	gTileMap->OnDraw( *gCamera );
+	// Draw the game.
+	if ( gGame )
+		gGame->OnDraw();
 
 	FlushRenderer();
 }
@@ -46,8 +48,8 @@ void OnUpdate( float dt )
 	if ( gWidget )
 		gWidget->OnUpdate( dt );
 
-	if ( gTileMap )
-		gTileMap->OnUpdate( dt );
+	if ( gGame )
+		gGame->OnUpdate( dt );
 }
 
 void OnScreenSizeChanged( int32 w, int32 h )
@@ -69,12 +71,9 @@ void OnWindowShown()
 	gCamera = new Camera( gWindowWidth, gWindowHeight );
 	gFont = new BitmapFont( "fonts/font.fnt" );
 
-	// Create a new TileMap.
-	if ( !gTileMap )
-	{
-		gTileMap = new TileMap();
-		gTileMap->Load( "maps/Test.tmx" );
-	}
+	// Create a new Game and start it.
+	gGame = Game::Create( 2, "Test" );
+	gGame->Start();
 }
 
 size_t OnSaveState( void* state )

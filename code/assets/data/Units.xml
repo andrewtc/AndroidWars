@@ -1,0 +1,55 @@
+<Unit
+	name="Infantry"
+	movementType="Boots"
+	/>
+
+<Unit
+	name="AntiTank"
+	displayName="Anti-Tank"
+	movementType="Boots"
+	/>
+
+<Unit
+	name="Recon"
+	movementType="Tires"
+	/>
+
+<Unit
+	name="APC"
+	movementType="Tracks"
+	/>
+
+<Unit
+	name="Artillery"
+	movementType="Tracks"
+	/>
+
+<Unit
+	name="LightTank"
+	displayName="Light Tank"
+	movementType="Tracks"
+	/>
+
+<Unit
+	name="FlakCannon"
+	displayName="Flak Cannon"
+	movementType="Tracks"
+	/>
+	
+<Unit
+	name="MissileArtillery"
+	displayName="Missile Artillery"
+	movementType="Tires"
+	/>
+	
+<Unit
+	name="RocketArtillery"
+	displayName="Rocket Artillery"
+	movementType="Tires"
+	/>
+	
+<Unit
+	name="MediumTank"
+	displayName="Medium Tank"
+	movementType="Tracks"
+	/>

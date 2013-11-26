@@ -133,8 +133,12 @@ include $(BUILD_STATIC_LIBRARY)
 #android wars
 include $(CLEAR_VARS)
 
+awgame_path := game
+
 LOCAL_MODULE    := androidwars
 LOCAL_SRC_FILES := androidwars.cpp \
+$(awgame_path)/Game.cpp \
+$(awgame_path)/Player.cpp \
  ui/Widget.cpp
 
 LOCAL_LDLIBS := -llog -landroid -lEGL -lGLESv2

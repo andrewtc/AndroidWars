@@ -30,8 +30,13 @@ namespace mage
 	};
 
 }
-#	define assertion( condition, format, ... )											\
-		mage::Assertion( condition, __FILE__, __LINE__, format, __VA_ARGS__ )
+#	ifdef ANDROID
+#		define assertion( condition, ... )											\
+			mage::Assertion( condition, __FILE__, __LINE__, __VA_ARGS__ )
+#	else
+#		define assertion( condition, format, ... )											\
+			mage::Assertion( condition, __FILE__, __LINE__, format, __VA_ARGS__ )
+#	endif
 #ifdef _DEBUG
 #	define DebugAsssertion( condition, format, ... )									\
 		mage::Assertion( condition, __FILE__, __LINE__, format, __VA_ARGS__ )
@@ -39,5 +44,9 @@ namespace mage
 #	define DebugAsssertion( condition, format, ... )
 #endif
 #else
-#	define assertion( condition, format, ... ) assert( condition )
+#	ifdef ANDROID
+#		define assertion( condition, ... ) assert( condition )
+#	else
+#		define assertion( condition, format, ... ) assert( condition )
+#	endif
 #endif
