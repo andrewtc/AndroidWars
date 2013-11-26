@@ -94,6 +94,7 @@ void Game::AddPlayer( Player* player )
 {
 	// Make sure the Player is not in the Game already.
 	assertion( !HasPlayer( player ), "Cannot add Player to Game that is already part of the Game!" );
+	assertion( !player->HasGame(), "Cannot add Player to Game that is already part of another Game!" );
 
 	// Add the player to the list of Players.
 	mPlayers.push_back( player );
