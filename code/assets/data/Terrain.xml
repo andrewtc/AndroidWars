@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+
 <Terrain>
 
 	<TerrainType
@@ -14,7 +14,7 @@
 	<TerrainType
 		name="City"
 		coverBonus="3"
-		capturable
+		capturable="true"
 		/>
 
 </Terrain>

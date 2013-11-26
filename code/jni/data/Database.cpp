@@ -3,19 +3,47 @@
 using namespace mage;
 
 
+Record::Record( const HashString& name )
+	: mName( name )
+{ }
+
+
+Record::~Record() { }
+
+
+// ---------------------- TerrainTypesTable ----------------------
+
+TerrainTypesTable::TerrainTypesTable() { }
+
+
+TerrainTypesTable::~TerrainTypesTable() { }
+
+
+TerrainType* TerrainTypesTable::LoadRecordFromXml( XmlReader::XmlReaderIterator xmlIterator )
+{
+	// TODO
+	return nullptr;
+}
+
+
+// ---------------------- UnitTypesTable ----------------------
+
+UnitTypesTable::UnitTypesTable() { }
+
+
+UnitTypesTable::~UnitTypesTable() { }
+
+
+UnitType* UnitTypesTable::LoadRecordFromXml( XmlReader::XmlReaderIterator xmlIterator )
+{
+	// TODO
+	return nullptr;
+}
+
+
+// ---------------------- Database ----------------------
+
 Database::Database() { }
 
 
 Database::~Database() { }
-
-
-void Database::LoadTerrainTypes( const char* file )
-{
-	// Open the terrain types file.
-	XmlReader xmlReader( file );
-
-	if( !xmlReader.Fail() )
-	{
-		DebugPrintf( "Successfully opened terrain file \"%s\"!", file );
-	}
-}

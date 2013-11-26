@@ -78,7 +78,7 @@ void OnWindowShown()
 
 	// Load all data into the Database.
 	DebugPrintf( "Loading game data..." );
-	gDatabase->LoadTerrainTypes( "data/Terrain.xml" );
+	gDatabase->TerrainTypes.LoadRecordsFromFile( "data/Terrain.xml" );
 
 	// Create a new Game and start it.
 	gGame = Game::Create( 2, "Cobra Cove" );

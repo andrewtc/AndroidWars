@@ -7,3 +7,4 @@
 
 #include "data/Database.h"
 #include "data/TerrainType.h"
+#include "data/UnitType.h"

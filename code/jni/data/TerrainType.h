@@ -5,14 +5,15 @@ namespace mage
 	/**
 	 * Represents all non-changing aspects of a tile.
 	 */
-	class TerrainType
+	class TerrainType : public Record
 	{
 	public:
-		TerrainType( const std::string& name );
-		~TerrainType();
+		TerrainType( const HashString& name );
+		virtual ~TerrainType();
+
+		std::string GetDisplayName() const;
 
 	protected:
-		int mNameHash;
-		std::string mName;
+		std::string mDisplayName;
 	};
 }
