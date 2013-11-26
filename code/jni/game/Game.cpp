@@ -6,8 +6,6 @@ using namespace mage;
 const char* Game::MAPS_FOLDER_PATH = "maps";
 const char* Game::MAP_FILE_EXTENSION = "tmx";
 
-extern Camera gCamera;
-
 
 Game* Game::Create( int numPlayers, const std::string& mapName )
 {
@@ -39,6 +37,7 @@ std::string Game::FormatMapPath( const std::string& mapName )
 Game::Game()
 	: mNextPlayerIndex( 0 )
 	, mStatus( STATUS_NOT_STARTED )
+	, mCamera( nullptr )
 { }
 
 
@@ -82,10 +81,10 @@ void Game::OnUpdate( float dt )
 
 void Game::OnDraw()
 {
-	if( IsInProgress() )
+	if( IsInProgress() && mCamera )
 	{
 		// Draw the world.
-		mMap.OnDraw( gCamera );
+		mMap.OnDraw( *mCamera );
 	}
 }
 

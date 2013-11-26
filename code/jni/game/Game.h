@@ -37,6 +37,9 @@ namespace mage
 		bool IsInProgress() const;
 		bool IsGameOver() const;
 
+		void SetCamera( Camera* camera );
+		Camera* GetCamera() const;
+
 		void OnUpdate( float dt );
 		void OnDraw();
 
@@ -48,6 +51,7 @@ namespace mage
 		typedef std::vector< Player* > Players;
 
 		int mNextPlayerIndex;
+		Camera* mCamera;
 		Status mStatus;
 		Players mPlayers;
 		std::string mMapName;
@@ -76,6 +80,18 @@ namespace mage
 	inline bool Game::IsGameOver() const
 	{
 		return ( mStatus == STATUS_GAME_OVER );
+	}
+
+
+	inline void Game::SetCamera( Camera* camera )
+	{
+		mCamera = camera;
+	}
+
+
+	inline Camera* Game::GetCamera() const
+	{
+		return mCamera;
 	}
 
 

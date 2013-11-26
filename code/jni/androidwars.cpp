@@ -32,15 +32,15 @@ void OnDraw()
 	static int sTestCount = 0;
 	ClearScreen();
 
+	// Draw the game.
+	if ( gGame )
+		gGame->OnDraw();
+
 	DrawRect( 50, 50, 150, 150, gColor);
 
 	Widget::DrawAllWidgets( *gCamera );
 	DrawText( 150, 20, gFont, "Hello World!\nThis is some testing text." );
 	DrawTextFormat( 150, 20 + 2 * gFont->GetLineHeight(), gFont, "Counter: %d", sTestCount++ );
-
-	// Draw the game.
-	if ( gGame )
-		gGame->OnDraw();
 
 	FlushRenderer();
 }
@@ -83,6 +83,7 @@ void OnWindowShown()
 
 	// Create a new Game and start it.
 	gGame = Game::Create( 2, "Cobra Cove" );
+	gGame->SetCamera( gCamera );
 	gGame->Start();
 }
 
