@@ -467,7 +467,15 @@ Texture2D* TileMap::LoadImage( const XmlReader::XmlReaderIterator& itr )
 
 	// Build image path
 	const char* imgSource = itr.GetAttributeAsCString( "source" );
-	std::string sourcePath = std::string( "tilesets/" ) + imgSource;
+	// Remove ../ or ./ or / from beginning of path
+	int s = 0;
+	int len = strlen( imgSource );
+	if ( len > 0 && imgSource[0] == '.' ) ++s;
+	if ( len > 0 && imgSource[0] == '/' ) ++s;
+	if ( len > 1 && imgSource[1] == '.' ) ++s;
+	if ( len > 1 && imgSource[1] == '/' ) ++s;
+	if ( len > 2 && imgSource[2] == '/' ) ++s;
+	std::string sourcePath = imgSource + s;
 
 	// Load image
 	Texture2D* img = Texture2D::CreateTexture( sourcePath.c_str() );
@@ -806,6 +814,32 @@ void TileMap::SetTileId( uint32 gid, MapTile& tile, bool loadProperties )
 	{
 		// Tile is null and will not be draw
 		tile.TileId = gid;
+	}
+}
+//---------------------------------------
+void TileMap::AddMapObject( MapObject* obj, uint32 layerIndex )
+{
+	if ( obj )
+	{
+		// TODO this should be a set or otherwise prevent duplicate insertion
+		mObjects.push_back( obj );
+	}
+	else
+	{
+		WarnCrit( "Passed NULL MapObject to AddMapObject()\n" );
+	}
+}
+//---------------------------------------
+void TileMap::RemoveObject( MapObject*& obj, bool free )
+{
+	if ( obj )
+	{
+		mObjects.remove_elem( obj );
+		if ( free )
+		{
+			delete obj;
+			obj = 0;
+		}
 	}
 }
 //---------------------------------------
