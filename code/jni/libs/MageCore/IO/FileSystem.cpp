@@ -221,6 +221,7 @@ int _OpenFileFileSystem( const char* fname, char*& _out_file, unsigned int& _out
     _out_file[ _out_len ] = 0;
     _out_len = AAsset_read( asset, _out_file, _out_len );
     AAsset_close( asset );
+    return FSE_NO_ERROR;
 #else
 	char dataPath[ FILESYSTEM_MAX_PATH + 1 ];
 	char filenameInArchive[ MAX_FILENAME ];
