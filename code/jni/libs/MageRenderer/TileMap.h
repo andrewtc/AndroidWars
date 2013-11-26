@@ -132,6 +132,13 @@ namespace mage
 		// an id of 0 will make the tile invalid and thus not drawn
 		void SetTileId( uint32 newId, MapTile& tile, bool loadProperties=true );
 
+		// Add an object to the map
+		// The object will now be managed by the map
+		void AddMapObject( MapObject* obj, uint32 layerIndex=0U );
+		// Remove the object from the map
+		// If free == true, obj will be cleaned up
+		void RemoveObject( MapObject*& obj, bool free=true );
+
 		void SetMapPropertyCB( MapPropertyFn fn );
 		void SetNewMapObjectCB( NewMapObjectFn fn );
 
