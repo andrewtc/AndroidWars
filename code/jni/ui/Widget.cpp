@@ -1,45 +1,137 @@
 #include <MageApp.h>
 #include "Widget.h"
+#include "Button.h"
 
 using namespace mage;
 
 //---------------------------------------
-Widget::Widget( const char* ui_file )
-	: Object( "Widget" )
-	, mSprite( 0 )
+// Static
+//---------------------------------------
+HashMap< Widget* > Widget::sWidgets;
+//---------------------------------------
+Widget* Widget::LoadWidget( const char* file )
 {
-	XmlReader reader( ui_file );
+	XmlReader reader( file );
+	if ( reader.Fail() )
+		return 0;
 	XmlReader::XmlReaderIterator itr = reader.ReadRoot();
+	std::string name = itr.GetAttributeAsString( "name", "Widget" );
+	Widget* w = new Widget( name, itr );
 
-	const char* backgroundAnim = itr.GetAttributeAsCString( "sprite" );
-
-	// Create the background
-	mSprite = SpriteManager::CreateSprite( backgroundAnim, Vec2f::ZERO, "n" );
-	if ( mSprite )
+	for ( XmlReader::XmlReaderIterator jtr = itr.NextChild();
+		  jtr.IsValid(); jtr = jtr.NextSibling() )
 	{
-		// Ignore camera offset
-		mSprite->RelativeToCamera = false;
+		Widget* child = LoadComponent( w, jtr );
+		if ( child )
+			w->mChildren.push_back( child );
+	}
+
+	sWidgets[ w->mName ] = w;
+	return w;
+}
+//---------------------------------------
+Widget* Widget::LoadComponent( Widget* parent, const XmlReader::XmlReaderIterator& itr )
+{
+	Widget* w = 0;
+	std::string name = itr.GetAttributeAsString( "name", "Widget" );
+	if ( itr.ElementNameEquals( "Widget" ) )
+	{
+		w = new Widget( name, itr );
+	}
+	else if ( itr.ElementNameEquals( "Button" ) )
+	{
+		w = new Button( name, itr );
 	}
 	else
 	{
-		WarnFail( "Failed to create widget sprite '%s'\n", backgroundAnim );
+		WarnFail( "Widget : Unknown element : %s\n", itr.ElementName() );
+		return 0;
 	}
 
-	// Create Buttons
-	for ( XmlReader::XmlReaderIterator btnItr = itr.NextChild( "Button" );
-		  btnItr.IsValid(); btnItr = btnItr.NextSibling( "Button" ) )
+	if ( w )
 	{
-		Button b;
+		w->mParent = parent;
+		sWidgets[ w->mName ] = w;
 
-		const char* btnSprite = btnItr.GetAttributeAsCString( "sprite" );
-		Vec2f pos = btnItr.GetAttributeAsVec2f( "offset", Vec2f::ZERO );
+		for ( XmlReader::XmlReaderIterator jtr = itr.NextChild();
+			  jtr.IsValid(); jtr = jtr.NextSibling() )
+		{
+			Widget* child = LoadComponent( w, jtr );
+			if ( child )
+				w->mChildren.push_back( child );
+		}
+	}
 
-		b.ButtonSprite = SpriteManager::CreateSprite( btnSprite, pos );
-		b.OnClickEvent = btnItr.GetAttributeAsString( "onClickEvent", "__DUMMY_EVENT__" );
-		b.OnClickAnim = btnItr.GetAttributeAsString( "onClickAnim", "" );
-		b.State = Button::READY;
+	return w;
+}
+//---------------------------------------
+void Widget::DestroyWidget( Widget*& w )
+{
+	if ( w )
+	{
+		auto i = sWidgets.find( w->mName );
+		if ( i != sWidgets.end() )
+			sWidgets.erase( i );
+		delete w;
+		w = 0;
+	}
+}
+//---------------------------------------
+void Widget::DestroyAllWidgets()
+{
+	for ( auto itr = sWidgets.begin(); itr != sWidgets.end(); ++itr )
+	{
+		delete itr->second;
+	}
+	sWidgets.clear();
+}
+//---------------------------------------
+void Widget::UpdateAllWidgets( float dt )
+{
+	for ( auto itr = sWidgets.begin(); itr != sWidgets.end(); ++itr )
+	{
+		itr->second->OnUpdate( dt );
+	}
+}
+//---------------------------------------
+void Widget::DrawAllWidgets( const Camera& camera )
+{
+	for ( auto itr = sWidgets.begin(); itr != sWidgets.end(); ++itr )
+	{
+		itr->second->OnDraw( camera );
+	}
+}
+//---------------------------------------
+void Widget::ProcessOnClick( float x, float y )
+{
+	for ( auto itr = sWidgets.begin(); itr != sWidgets.end(); ++itr )
+	{
+		itr->second->OnClick( x, y );
+	}
+}
+//---------------------------------------
+// Widget
+//---------------------------------------
+Widget::Widget( const std::string& name, const XmlReader::XmlReaderIterator& itr )
+	: Object( name )
+	, mSprite( 0 )
+	, mParent( 0 )
+{
+	const char* backgroundAnim = itr.GetAttributeAsCString( "sprite", 0 );
 
-		mButtons.push_back( b );
+	// Create the background
+	if ( backgroundAnim )
+	{
+		mSprite = SpriteManager::CreateSprite( backgroundAnim, Vec2f::ZERO, "n" );
+		if ( mSprite )
+		{
+			// Ignore camera offset
+			mSprite->RelativeToCamera = false;
+		}
+		else
+		{
+			WarnFail( "Failed to create widget sprite '%s'\n", backgroundAnim );
+		}
 	}
 }
 //---------------------------------------
@@ -50,9 +142,9 @@ void Widget::OnUpdate( float dt )
 {
 	if ( mSprite )
 		mSprite->OnUpdate( dt );
-	for ( auto itr = mButtons.begin(); itr != mButtons.end(); ++itr )
+	for ( auto itr = mChildren.begin(); itr != mChildren.end(); ++itr )
 	{
-		itr->ButtonSprite->OnUpdate( dt );
+		(*itr)->OnUpdate( dt );
 	}
 }
 //---------------------------------------
@@ -60,22 +152,20 @@ void Widget::OnDraw( const Camera& camera ) const
 {
 	if ( mSprite )
 		mSprite->OnDraw( camera );
-	for ( auto itr = mButtons.begin(); itr != mButtons.end(); ++itr )
+	for ( auto itr = mChildren.begin(); itr != mChildren.end(); ++itr )
 	{
-		itr->ButtonSprite->OnDraw( camera );
+		(*itr)->OnDraw( camera );
 	}
 }
 //---------------------------------------
-void Widget::OnClick( float x, float y )
+bool Widget::OnClick( float x, float y )
 {
-	for ( auto itr = mButtons.begin(); itr != mButtons.end(); ++itr )
+	// Check children from top to bottom
+	for ( auto itr = mChildren.rbegin(); itr != mChildren.rend(); ++itr )
 	{
-		Button& b = *itr;
-		if ( b.ButtonSprite->GetClippingRectForCurrentAnimation().Contains( (int) x, (int) y ) )
-		{
-			b.ButtonSprite->PlayAnimation( b.OnClickAnim );
-			EventManager::FireEvent( b.OnClickEvent );
-		}
+		if ( (*itr)->OnClick( x, y ) )
+			return true;
 	}
+	return false;
 }
 //---------------------------------------

@@ -1,6 +1,8 @@
 #include <MageApp.h>
 
 #include "ui/Widget.h"
+#include "ui/Button.h"
+
 #include "androidwars.h"
 
 using namespace mage;
@@ -32,7 +34,7 @@ void OnDraw()
 
 	DrawRect( 50, 50, 150, 150, gColor);
 
-	gWidget->OnDraw( *gCamera );
+	Widget::DrawAllWidgets( *gCamera );
 	DrawText( 150, 20, gFont, "Hello World!\nThis is some testing text." );
 	DrawTextFormat( 150, 20 + 2 * gFont->GetLineHeight(), gFont, "Counter: %d", sTestCount++ );
 
@@ -46,8 +48,7 @@ void OnDraw()
 void OnUpdate( float dt )
 {
 	// Update the game here...
-	if ( gWidget )
-		gWidget->OnUpdate( dt );
+	Widget::UpdateAllWidgets( dt );
 
 	if ( gGame )
 		gGame->OnUpdate( dt );
@@ -68,7 +69,7 @@ void OnWindowShown()
 	SpriteManager::LoadSpriteAnimations( "ui/button.anim" );
 	SpriteManager::LoadSpriteAnimations( "ui/background.anim" );
 
-	gWidget = new Widget( "ui/test.xml" );
+	gWidget = Widget::LoadWidget( "ui/test.xml" );
 	gCamera = new Camera( gWindowWidth, gWindowHeight );
 	gFont = new BitmapFont( "fonts/font.fnt" );
 
@@ -105,8 +106,7 @@ void OnPointerDown( float x, float y, size_t which )
 	else
 		gColor = Color::RED;
 
-	if ( gWidget )
-		gWidget->OnClick( x, y );
+	Widget::ProcessOnClick( x, y );
 }
 
 void OnPointerUp( float x, float y, size_t which )
