@@ -9,7 +9,7 @@ namespace mage
 	{
 	public:
 		UnitType( const HashString& name );
-		~UnitType();
+		virtual ~UnitType();
 
 	protected:
 	};

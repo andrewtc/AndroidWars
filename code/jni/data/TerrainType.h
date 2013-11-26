@@ -12,8 +12,18 @@ namespace mage
 		virtual ~TerrainType();
 
 		std::string GetDisplayName() const;
+		int GetCoverBonus() const;
 
 	protected:
 		std::string mDisplayName;
+		int mCoverBonus;
+
+		friend class TerrainTypesTable;
 	};
+
+
+	inline int TerrainType::GetCoverBonus() const
+	{
+		return mCoverBonus;
+	}
 }

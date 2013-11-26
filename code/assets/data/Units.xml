@@ -1,56 +1,56 @@
 <Units>
 
-	<Unit
+	<UnitType
 		name="Infantry"
 		movementType="Boots"
 		/>
 
-	<Unit
+	<UnitType
 		name="AntiTank"
 		displayName="Anti-Tank"
 		movementType="Boots"
 		/>
 
-	<Unit
+	<UnitType
 		name="Recon"
 		movementType="Tires"
 		/>
 
-	<Unit
+	<UnitType
 		name="APC"
 		movementType="Tracks"
 		/>
 
-	<Unit
+	<UnitType
 		name="Artillery"
 		movementType="Tracks"
 		/>
 
-	<Unit
+	<UnitType
 		name="LightTank"
 		displayName="Light Tank"
 		movementType="Tracks"
 		/>
 
-	<Unit
+	<UnitType
 		name="AntiAir"
 		displayName="Anti-Air"
 		movementType="Tracks"
 		/>
 		
-	<Unit
+	<UnitType
 		name="MissileArtillery"
 		displayName="Missile Artillery"
 		movementType="Tires"
 		/>
 		
-	<Unit
+	<UnitType
 		name="RocketArtillery"
 		displayName="Rocket Artillery"
 		movementType="Tires"
 		/>
 		
-	<Unit
+	<UnitType
 		name="MediumTank"
 		displayName="Medium Tank"
 		movementType="Tracks"

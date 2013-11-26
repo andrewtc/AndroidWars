@@ -19,10 +19,10 @@ TerrainTypesTable::TerrainTypesTable() { }
 TerrainTypesTable::~TerrainTypesTable() { }
 
 
-TerrainType* TerrainTypesTable::LoadRecordFromXml( XmlReader::XmlReaderIterator xmlIterator )
+void TerrainTypesTable::LoadRecordFromXml( TerrainType* terrainType, XmlReader::XmlReaderIterator xmlIterator )
 {
-	// TODO
-	return nullptr;
+	// Read in all attributes.
+	terrainType->mCoverBonus = xmlIterator.GetAttributeAsInt( "coverBonus", 0 );
 }
 
 
@@ -34,10 +34,9 @@ UnitTypesTable::UnitTypesTable() { }
 UnitTypesTable::~UnitTypesTable() { }
 
 
-UnitType* UnitTypesTable::LoadRecordFromXml( XmlReader::XmlReaderIterator xmlIterator )
+void UnitTypesTable::LoadRecordFromXml( UnitType* unitType, XmlReader::XmlReaderIterator xmlIterator )
 {
 	// TODO
-	return nullptr;
 }
 
 
@@ -47,3 +46,11 @@ Database::Database() { }
 
 
 Database::~Database() { }
+
+
+void Database::LoadGameData()
+{
+	// Load all game data.
+	TerrainTypes.LoadRecordsFromFile( "data/Terrain.xml" );
+	UnitTypes.LoadRecordsFromFile( "data/Units.xml" );
+}

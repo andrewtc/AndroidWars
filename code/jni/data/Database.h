@@ -48,7 +48,8 @@ namespace mage
 		const T* FindByName( const HashString& name ) const;
 
 	protected:
-		virtual T* LoadRecordFromXml( XmlReader::XmlReaderIterator xmlIterator ) = 0;
+		virtual const char* GetXmlElementName() const = 0;
+		virtual void LoadRecordFromXml( T* record, XmlReader::XmlReaderIterator xmlIterator ) = 0;
 
 		typedef HashMap< T* > RecordsByHashedName;
 		RecordsByHashedName mRecords;
@@ -72,23 +73,33 @@ namespace mage
 		if( !xmlReader.Fail() )
 		{
 			XmlReader::XmlReaderIterator iterator;
+
+			// Get the root element.
 			iterator = xmlReader.ReadRoot();
+
+			if( iterator.IsValid() )
+			{
+				// Go to the first XML element in the file.
+				iterator = iterator.NextChild( GetXmlElementName() );
+			}
 
 			while ( iterator.IsValid() )
 			{
-				// Try to load another record from the file.
-				T* record = LoadRecordFromXml( iterator );
+				// Get the name of the TerrainType.
+				HashString name = iterator.GetAttributeAsString( "name" );
+
+				// Create a new record with the name.
+				T* record = CreateRecord( name );
 
 				if( record )
 				{
-					// If another record was loaded, add it to the table.
-					AddRecord( record );
+					// Load the record properties.
+					LoadRecordFromXml( record, iterator );
+					DebugPrintf( "Loaded %s \"%s\".", GetXmlElementName(), name.GetString().c_str() );
 				}
-				else
-				{
-					// If the last record was reached, stop loading records.
-					break;
-				}
+
+				// Go to the next XML element in the file.
+				iterator = iterator.NextSibling( GetXmlElementName() );
 			}
 		}
 	}
@@ -101,7 +112,7 @@ namespace mage
 		assertion( name.GetHash() != 0, "Cannot create record without a valid name!" );
 
 		// Create a new record with the specified name and add it to the Table.
-		Record* record = new T( name );
+		T* record = new T( name );
 		AddRecord( record );
 
 		return record;
@@ -171,8 +182,15 @@ namespace mage
 		virtual ~TerrainTypesTable();
 
 	protected:
-		virtual TerrainType* LoadRecordFromXml( XmlReader::XmlReaderIterator xmlIterator );
+		virtual const char* GetXmlElementName() const;
+		virtual void LoadRecordFromXml( TerrainType* terrainType, XmlReader::XmlReaderIterator xmlIterator );
 	};
+
+
+	inline const char* TerrainTypesTable::GetXmlElementName() const
+	{
+		return "TerrainType";
+	}
 
 
 	/**
@@ -185,8 +203,15 @@ namespace mage
 		virtual ~UnitTypesTable();
 
 	protected:
-		virtual UnitType* LoadRecordFromXml( XmlReader::XmlReaderIterator xmlIterator );
+		virtual const char* GetXmlElementName() const;
+		virtual void LoadRecordFromXml( UnitType* unitType, XmlReader::XmlReaderIterator xmlIterator );
 	};
+
+
+	inline const char* UnitTypesTable::GetXmlElementName() const
+	{
+		return "UnitType";
+	}
 
 
 	/**
@@ -197,6 +222,8 @@ namespace mage
 	public:
 		Database();
 		~Database();
+
+		void LoadGameData();
 
 		TerrainTypesTable TerrainTypes;
 		UnitTypesTable UnitTypes;

@@ -142,6 +142,7 @@ $(aw_game_path)/Game.cpp \
 $(aw_game_path)/Player.cpp \
 $(aw_data_path)/Database.cpp \
 $(aw_data_path)/TerrainType.cpp \
+$(aw_data_path)/UnitType.cpp \
  ui/Widget.cpp \
  ui/Button.cpp
 
