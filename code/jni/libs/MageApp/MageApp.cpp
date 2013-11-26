@@ -40,6 +40,7 @@ namespace mage
 	static OnWindowShownFn gOnWindowShownFn = DefaultOnWindowShownFn;
 	static OnPointerDownFn gOnPointerDown = 0;
 	static OnPointerUpFn gOnPointerUp = 0;
+	static OnPointerMotionFn gOnPointerMotionFn = 0;
 
 	static void handleAppCmd( struct android_app* app, int32_t cmd );
 	static int32_t handleInputEvent( struct android_app* app, AInputEvent* event );
@@ -198,6 +199,11 @@ namespace mage
 		gOnPointerUp = fn;
 	}
 	//---------------------------------------
+	void RegisterOnPointerMotionFn( OnPointerMotionFn fn )
+	{
+		gOnPointerMotionFn = fn;
+	}
+	//---------------------------------------
 	// Input handling
 	//---------------------------------------
 	void handleAppCmd( struct android_app* app, int32_t cmd )
@@ -350,6 +356,10 @@ namespace mage
 			{
 				//DebugPrintf( "Received motion event from pointer %zu: (%.1f, %.1f)",
 				//      i, AMotionEvent_getX( pEvent, i ), AMotionEvent_getY( pEvent, i ) );
+				if ( gOnPointerMotionFn )
+				{
+					gOnPointerMotionFn( AMotionEvent_getX( pEvent, i ), AMotionEvent_getY( pEvent, i ), i );
+				}
 			}
 			return 1;
 		}
