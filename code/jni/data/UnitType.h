@@ -8,9 +8,28 @@ namespace mage
 	class UnitType : public Record
 	{
 	public:
+		static const char* const SPRITE_DIRECTORY;
+		static const char* const ANIMATION_FILE_EXTENSION;
+
+		static std::string FormatAnimationPath( const std::string& animationName );
+
 		UnitType( const HashString& name );
 		virtual ~UnitType();
 
+		HashString GetAnimationSetName() const;
+
 	protected:
+		void LoadAnimation();
+
+		HashString mAnimationSetName;
+		std::string mDisplayName;
+
+		friend class UnitTypesTable;
 	};
+
+
+	inline HashString UnitType::GetAnimationSetName() const
+	{
+		return mAnimationSetName;
+	}
 }

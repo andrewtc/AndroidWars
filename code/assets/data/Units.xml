@@ -2,56 +2,66 @@
 
 	<UnitType
 		name="Infantry"
+		animationSet="Tank"
 		movementType="Boots"
 		/>
 
 	<UnitType
 		name="AntiTank"
 		displayName="Anti-Tank"
+		animationSet="Tank"
 		movementType="Boots"
 		/>
 
 	<UnitType
 		name="Recon"
+		animationSet="Tank"
 		movementType="Tires"
 		/>
 
 	<UnitType
 		name="APC"
+		animationSet="Tank"
 		movementType="Tracks"
 		/>
 
 	<UnitType
 		name="Artillery"
+		animationSet="Tank"
 		movementType="Tracks"
 		/>
 
 	<UnitType
 		name="LightTank"
+		animationSet="Tank"
 		displayName="Light Tank"
 		movementType="Tracks"
 		/>
 
 	<UnitType
 		name="AntiAir"
+		animationSet="Tank"
 		displayName="Anti-Air"
 		movementType="Tracks"
 		/>
 		
 	<UnitType
 		name="MissileArtillery"
+		animationSet="Tank"
 		displayName="Missile Artillery"
 		movementType="Tires"
 		/>
 		
 	<UnitType
 		name="RocketArtillery"
+		animationSet="Tank"
 		displayName="Rocket Artillery"
 		movementType="Tires"
 		/>
 		
 	<UnitType
 		name="MediumTank"
+		animationSet="Tank"
 		displayName="Medium Tank"
 		movementType="Tracks"
 		/>

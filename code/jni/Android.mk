@@ -138,11 +138,15 @@ aw_data_path := data
 
 LOCAL_MODULE    := androidwars
 LOCAL_SRC_FILES := androidwars.cpp \
+$(aw_data_path)/Table.cpp \
+$(aw_data_path)/TerrainType.cpp \
+$(aw_data_path)/TerrainTypesTable.cpp \
+$(aw_data_path)/UnitType.cpp \
+$(aw_data_path)/UnitTypesTable.cpp \
+$(aw_data_path)/Database.cpp \
 $(aw_game_path)/Game.cpp \
 $(aw_game_path)/Player.cpp \
-$(aw_data_path)/Database.cpp \
-$(aw_data_path)/TerrainType.cpp \
-$(aw_data_path)/UnitType.cpp \
+$(aw_game_path)/Unit.cpp \
  ui/Widget.cpp \
  ui/Button.cpp
 

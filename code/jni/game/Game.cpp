@@ -22,6 +22,11 @@ Game* Game::Create( int numPlayers, const std::string& mapName )
 		game->AddPlayer( player );
 	}
 
+	// Spawn a test Unit.
+	UnitType* unitType = gDatabase->UnitTypes.FindByName( "Infantry" );
+	Unit* testUnit = game->SpawnUnit( unitType, 5, 5 );
+	game->mMap.AddMapObject( testUnit );
+
 	return game;
 }
 
@@ -38,7 +43,10 @@ Game::Game()
 	: mNextPlayerIndex( 0 )
 	, mStatus( STATUS_NOT_STARTED )
 	, mCamera( nullptr )
-{ }
+{
+	// Add map object creation callback.
+	mMap.SetNewMapObjectCB( &SpawnObjectFromXml );
+}
 
 
 Game::~Game() { }
@@ -102,4 +110,39 @@ void Game::AddPlayer( Player* player )
 	player->mGame = this;
 	player->mIndex = mNextPlayerIndex;
 	++mNextPlayerIndex;
+}
+
+
+MapObject* Game::SpawnObjectFromXml( const XmlReader::XmlReaderIterator& xmlIterator )
+{
+	MapObject* result = nullptr;
+
+	// Get the name of the element in question.
+	std::string className = xmlIterator.GetAttributeAsString( "Class" );
+
+	if( className == "Unit" )
+	{
+		// Get the type of unit to spawn.
+		HashString unitTypeName = xmlIterator.GetAttributeAsString( "UnitType" );
+		UnitType* unitType = gDatabase->UnitTypes.FindByName( unitTypeName );
+		assertion( unitType, "UnitType \"%s\" not found!", unitTypeName.GetString().c_str() );
+
+		// Spawn a new unit with the specified UnitType.
+		result = new Unit( unitType );
+	}
+
+	return result;
+}
+
+
+Unit* Game::SpawnUnit( UnitType* unitType, int x, int y )
+{
+	// Create a new Unit of the specified type at the specified location on the map.
+	Unit* unit = new Unit( unitType );
+	unit->SetTilePos( x, y );
+
+	// Initialize the Unit.
+	unit->Init();
+
+	return unit;
 }

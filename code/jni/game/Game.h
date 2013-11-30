@@ -4,6 +4,7 @@
 namespace mage
 {
 	class Player;
+	class Unit;
 
 	/**
 	 * Represents a single play session of AndroidWars.
@@ -40,6 +41,8 @@ namespace mage
 		void SetCamera( Camera* camera );
 		Camera* GetCamera() const;
 
+		Vec2f TileToWorldCoords( const Vec2i& tileCoords ) const;
+
 		void OnUpdate( float dt );
 		void OnDraw();
 
@@ -47,8 +50,12 @@ namespace mage
 		bool HasPlayer( Player* player ) const;
 		int GetNumPlayers() const;
 
+		Unit* SpawnUnit( UnitType* unitType, int tileX, int tileY );
+
 	protected:
 		typedef std::vector< Player* > Players;
+
+		static MapObject* SpawnObjectFromXml( const XmlReader::XmlReaderIterator& xmlIterator );
 
 		int mNextPlayerIndex;
 		Camera* mCamera;
@@ -92,6 +99,13 @@ namespace mage
 	inline Camera* Game::GetCamera() const
 	{
 		return mCamera;
+	}
+
+
+	inline Vec2f Game::TileToWorldCoords( const Vec2i& tileCoords ) const
+	{
+		// TODO: Make this dynamic.
+		return Vec2f( tileCoords.x * 64.0f, tileCoords.y * 96.0f );
 	}
 
 
