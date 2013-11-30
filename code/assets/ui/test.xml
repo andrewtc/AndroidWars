@@ -1,3 +1,7 @@
-<Widget name="test" sprite="background.anim">
-    <Button name="button" sprite="button.anim" offset="4,6" onClickEvent="TestWidgetButtonEvent" onClickAnim="s"/>
+<Widget name="test" sprite="background.anim" position="400,100">
+    <Button name="button" sprite="button.anim" onClickEvent="TestWidgetButtonEvent" onClickAnim="s"/>
+    <Label name="label" text="below" font="fonts/font.fnt" layout_below="button"/>
+    <Label name="label2" text="above" font="fonts/font.fnt" layout_above="button"/>
+    <Label name="label3" text="toRightOf" font="fonts/font.fnt" layout_toRightOf="button"/>
+    <Label name="label4" text="toLeftOf" font="fonts/font.fnt" layout_toLeftOf="button"/>
 </Widget>
