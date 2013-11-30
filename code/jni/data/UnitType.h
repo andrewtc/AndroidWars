@@ -12,6 +12,7 @@ namespace mage
 		static const char* const ANIMATION_FILE_EXTENSION;
 
 		static std::string FormatAnimationPath( const std::string& animationName );
+		static std::string FormatAnimationName( const std::string& animationName );
 
 		UnitType( const HashString& name );
 		virtual ~UnitType();
@@ -21,7 +22,8 @@ namespace mage
 	protected:
 		void LoadAnimation();
 
-		HashString mAnimationSetName;
+		HashString mAnimationSetName;		// Name of the animation set, Tank.anim
+		std::string mAnimationSetPath;		// Path to the animation set, sprites/Tank.anim
 		std::string mDisplayName;
 
 		friend class UnitTypesTable;

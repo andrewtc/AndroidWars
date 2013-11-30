@@ -126,3 +126,33 @@ void BitmapFont::RenderText( float x, float y, const char* text, const Color& co
 	PopMatrix();
 }
 //---------------------------------------
+float BitmapFont::GetLineWidth( const char* text, float scale )
+{
+	int c;
+	float fx = 0;
+
+	for ( int i = 0; text[i]; ++i )
+	{
+		// Tab
+		if ( text[i] == '\t' )
+		{
+			fx += mSpaceWidth * TabSize;
+			continue;
+		}
+
+		// Use a space for non-printable char
+		c = text[i] < ' ' ? ' ' : text[i];
+
+		auto gi = mGlyphs.find( c );
+		if ( gi != mGlyphs.end() )
+		{
+			const Glyph& g = gi->second;
+
+			// TODO kerning...
+			fx += g.a * scale;
+		}
+	}
+
+	return fx;
+}
+//---------------------------------------

@@ -8,12 +8,15 @@ namespace mage
 	class Unit : public MapObject
 	{
 	public:
+		Unit( const std::string& name );
 		Unit( UnitType* unitType );
 		virtual ~Unit();
 
 		void Init();
 
-		virtual void OnDraw( const Camera& camera );
+		virtual void OnLoadProperty( const std::string& name, const std::string& value );
+		virtual void OnLoadFinished();
+		virtual void OnDraw( const Camera& camera ) const;
 
 		UnitType* GetUnitType() const;
 		void SetTilePos( int x, int y );

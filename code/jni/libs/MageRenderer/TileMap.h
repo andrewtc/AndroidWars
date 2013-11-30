@@ -28,7 +28,10 @@ namespace mage
 
 		// Override this to access custom property data.
 		// Properties are stored "name" "value"
-		virtual void OnLoadProperty( const XmlReader::XmlReaderIterator& propItr ) {}
+		virtual void OnLoadProperty( const std::string& name, const std::string& value ) {}
+
+		// Called when the MapObject has finished loading all properties
+		virtual void OnLoadFinished() {}
 
 		// Override this to control drawing of the object.
 		// By default draws an outlined rect with a red dot at the origin and a blue dot at the center if the Visible flag is true.
@@ -120,7 +123,7 @@ namespace mage
 		void OnDraw( const Camera& camera );
 		void OnUpdate( float dt );
 
-		RectI GetMapBounds() const;
+		RectF GetMapBounds() const;
 
 		MapTile& GetTile( int x, int y, unsigned int layerIndex=0U ) const;
 		// Populates tiles array with all tiles of id tileId on the give layer
@@ -145,6 +148,11 @@ namespace mage
 		inline int GetTileWidth() const           { return mTileWidth;          }
 		inline int GetTileHeight() const          { return mTileHeight;         }
 		inline int GetCollisionLayerIndex() const { return CollisionLayerIndex; }
+
+		Vec2f TileToWorld( int x, int y ) const;
+		Vec2f TileToWorld( const Vec2i& pos ) const;
+		Vec2i WorldToTile( float x, float y ) const;
+		Vec2i WorldToTile( const Vec2f& pos ) const;
 
 		// Creates the default MapObject from data
 		static MapObject* DefaultNewMapObjectFn( const XmlReader::XmlReaderIterator& objItr );

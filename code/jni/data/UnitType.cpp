@@ -16,6 +16,15 @@ std::string UnitType::FormatAnimationPath( const std::string& animationName )
 }
 
 
+std::string UnitType::FormatAnimationName( const std::string& animationName )
+{
+	// Construct a name for the animation and return the result.
+	std::stringstream formatter;
+	formatter << animationName << "." << ANIMATION_FILE_EXTENSION;
+	return formatter.str();
+}
+
+
 UnitType::UnitType( const HashString& name )
 	: Record( name )
 { }
@@ -27,5 +36,5 @@ UnitType::~UnitType() { }
 void UnitType::LoadAnimation()
 {
 	// Load the animation.
-	SpriteManager::LoadSpriteAnimations( mAnimationSetName.GetString().c_str() );
+	SpriteManager::LoadSpriteAnimations( mAnimationSetPath.c_str() );
 }

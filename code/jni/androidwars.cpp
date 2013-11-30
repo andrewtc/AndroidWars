@@ -1,7 +1,6 @@
 #include <MageApp.h>
 
 #include "ui/Widget.h"
-#include "ui/Button.h"
 
 #include "androidwars.h"
 
@@ -13,6 +12,8 @@ int32 gWindowHeight;
 
 RectF gRect( 50, 50, 200, 200 );
 Color gColor( 0xffff0000 );
+
+Vec2f gCameraTarget;
 
 Camera* gCamera;
 Widget* gWidget;
@@ -36,11 +37,11 @@ void OnDraw()
 	if ( gGame )
 		gGame->OnDraw();
 
-	DrawRect( 50, 50, 150, 150, gColor);
+//	DrawRect( 50, 50, 150, 150, gColor);
 
 	Widget::DrawAllWidgets( *gCamera );
-	DrawText( 150, 20, gFont, "Hello World!\nThis is some testing text." );
-	DrawTextFormat( 150, 20 + 2 * gFont->GetLineHeight(), gFont, "Counter: %d", sTestCount++ );
+//	DrawText( 150, 20, gFont, "Hello World!\nThis is some testing text." );
+//	DrawTextFormat( 150, 20 + 2 * gFont->GetLineHeight(), gFont, "Counter: %d", sTestCount++ );
 
 	FlushRenderer();
 }
@@ -52,6 +53,10 @@ void OnUpdate( float dt )
 
 	if ( gGame )
 		gGame->OnUpdate( dt );
+
+	// Camera test
+	if ( gCamera )
+		gCamera->LookAt( gCameraTarget );
 }
 
 void OnScreenSizeChanged( int32 w, int32 h )
@@ -69,7 +74,7 @@ void OnWindowShown()
 	SpriteManager::LoadSpriteAnimations( "ui/button.anim" );
 	SpriteManager::LoadSpriteAnimations( "ui/background.anim" );
 
-	gWidget = Widget::LoadWidget( "ui/test.xml" );
+//	gWidget = Widget::LoadWidget( "ui/test.xml" );
 	gCamera = new Camera( gWindowWidth, gWindowHeight );
 	gFont = new BitmapFont( "fonts/font.fnt" );
 
@@ -115,6 +120,12 @@ void OnPointerUp( float x, float y, size_t which )
 
 }
 
+void OnPointerMotion( float x, float y, float dx, float dy, size_t which )
+{
+	DebugPrintf( "Motion (%3.f %.3f) d(%3.f %.3f) ", x, y, dx, dy );
+	gCameraTarget += Vec2f( dx, dy );
+}
+
 void main()
 {
 	// Initialize the application
@@ -128,6 +139,7 @@ void main()
 	RegisterOnSaveStateRestoredFn( OnSaveStateRestore );
 	RegisterOnPointerUpFn( OnPointerUp );
 	RegisterOnPointerDownFn( OnPointerDown );
+	RegisterOnPointerMotionFn( OnPointerMotion );
 
 	RegisterEventFunc( TestWidgetButtonEvent );
 

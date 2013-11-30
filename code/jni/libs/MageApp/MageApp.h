@@ -28,7 +28,7 @@ namespace mage
 	typedef void(*OnWindowShownFn)( void );
 	typedef void(*OnPointerDownFn)( float x, float y, size_t which );
 	typedef void(*OnPointerUpFn)( float x, float y, size_t which );
-	typedef void(*OnPointerMotionFn)( float x, float y, size_t which );
+	typedef void(*OnPointerMotionFn)( float x, float y, float dx, float dy, size_t which );
 
 
 	// Initialize the app - do this before calling Run(). If a savestate exists, you will get that callback before this function returns.

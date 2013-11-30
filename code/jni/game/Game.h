@@ -104,8 +104,9 @@ namespace mage
 
 	inline Vec2f Game::TileToWorldCoords( const Vec2i& tileCoords ) const
 	{
+		return mMap.TileToWorld( tileCoords );
 		// TODO: Make this dynamic.
-		return Vec2f( tileCoords.x * 64.0f, tileCoords.y * 96.0f );
+		//return Vec2f( tileCoords.x * 64.0f, tileCoords.y * 96.0f );
 	}
 
 

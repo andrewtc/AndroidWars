@@ -414,6 +414,8 @@ void TileMap::LoadObjectGroup( const XmlReader::XmlReaderIterator& itr )
 			{
 				LoadProperties( obj, propItr );
 			}
+			// Finished loading object
+			obj->OnLoadFinished();
 		}
 		else
 		{
@@ -505,7 +507,9 @@ void TileMap::LoadProperties( MapObject* obj, const XmlReader::XmlReaderIterator
 	for ( XmlReader::XmlReaderIterator propItr = itr.NextChild( "property" );
 		propItr.IsValid(); propItr = propItr.NextSibling( "property" ) )
 	{
-		obj->OnLoadProperty( propItr );
+		std::string name  = propItr.GetAttributeAsString( "name" );
+		std::string value = propItr.GetAttributeAsString( "value" );
+		obj->OnLoadProperty( name, value );
 	}
 }
 //---------------------------------------
@@ -855,9 +859,9 @@ void TileMap::SetNewMapObjectCB( NewMapObjectFn fn )
 	mNewMapObjectCB = fn;
 }
 //---------------------------------------
-RectI TileMap::GetMapBounds() const
+RectF TileMap::GetMapBounds() const
 {
-	return RectI( 0, 0, mTileWidth * mMapWidth, mTileHeight * mMapHeight );
+	return RectF( 0, 0, mTileWidth * mMapWidth, mTileHeight * mMapHeight );
 }
 //---------------------------------------
 TileMap::TileSet* TileMap::GetTileSetForGID( uint32& gid ) const
@@ -877,5 +881,26 @@ TileMap::TileSet* TileMap::GetTileSetForGID( uint32& gid ) const
 	}
 
 	return mTileSets[ tilesetIndex ];
+}
+//---------------------------------------
+Vec2f TileMap::TileToWorld( int x, int y ) const
+{
+	return Vec2f( x * mTileWidth, y * mTileHeight );
+}
+//---------------------------------------
+Vec2f TileMap::TileToWorld( const Vec2i& pos ) const
+{
+	return TileToWorld( pos.x, pos.y );
+}
+//---------------------------------------
+Vec2i TileMap::WorldToTile( float x, float y ) const
+{
+	return Vec2i( (int) ( x / mTileWidth ),
+				  (int) ( y / mTileHeight ) );
+}
+//---------------------------------------
+Vec2i TileMap::WorldToTile( const Vec2f& pos ) const
+{
+	return WorldToTile( pos.x, pos.y );
 }
 //---------------------------------------

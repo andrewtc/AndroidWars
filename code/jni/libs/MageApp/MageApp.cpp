@@ -340,6 +340,23 @@ namespace mage
 	//			DebugPrintf( "Touch Pointer Up!" );
 				break;
 			}
+			case AMOTION_EVENT_ACTION_MOVE:
+			{
+				// A finger or fingers have moved on the screen
+				const size_t pointerIndex = 0;
+				const float x = AMotionEvent_getX( pEvent, pointerIndex );
+				const float y = AMotionEvent_getY( pEvent, pointerIndex );
+
+				if ( gOnPointerMotionFn )
+				{
+					gOnPointerMotionFn( x, y, gLastTouchX - x, gLastTouchY - y, pointerIndex );
+				}
+
+				gLastTouchX = x;
+				gLastTouchY = y;
+				break;
+			}
+
 			case AMOTION_EVENT_ACTION_CANCEL:
 			{
 	//			DebugPrintf( "Touch Cancel" );
@@ -356,10 +373,6 @@ namespace mage
 			{
 				//DebugPrintf( "Received motion event from pointer %zu: (%.1f, %.1f)",
 				//      i, AMotionEvent_getX( pEvent, i ), AMotionEvent_getY( pEvent, i ) );
-				if ( gOnPointerMotionFn )
-				{
-					gOnPointerMotionFn( AMotionEvent_getX( pEvent, i ), AMotionEvent_getY( pEvent, i ), i );
-				}
 			}
 			return 1;
 		}

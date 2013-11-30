@@ -148,7 +148,8 @@ $(aw_game_path)/Game.cpp \
 $(aw_game_path)/Player.cpp \
 $(aw_game_path)/Unit.cpp \
  ui/Widget.cpp \
- ui/Button.cpp
+ ui/Button.cpp \
+ ui/Label.cpp
 
 LOCAL_LDLIBS := -llog -landroid -lEGL -lGLESv2
 LOCAL_STATIC_LIBRARIES := android_native_app_glue _magemath _magecore _magerenderer png _mageapp

@@ -12,10 +12,10 @@ namespace mage
 {
 
 	class Button
-		: public Widget
+		: public Label
 	{
 	public:
-		Button( const std::string& name, const XmlReader::XmlReaderIterator& itr );
+		Button( const std::string& name, const XmlReader::XmlReaderIterator& itr, Widget* parent );
 	protected:
 		virtual ~Button();
 

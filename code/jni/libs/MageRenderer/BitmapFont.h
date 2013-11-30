@@ -21,7 +21,8 @@ namespace mage
 
 		void RenderText( float x, float y, const char* text, const Color& color=Color::WHITE, float scale=1.0f, int maxLineLength=-1 ) const;
 
-		inline const float GetLineHeight() const { return mLineHeight; }
+		inline const float GetLineHeight( float scale=1.0f ) const { return mLineHeight * scale; }
+		float GetLineWidth( const char* text, float scale=1.0f );
 
 	private:
 		struct Glyph

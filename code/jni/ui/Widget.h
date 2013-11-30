@@ -11,10 +11,9 @@ namespace mage
 {
 
 	class Widget
-		: public Object
 	{
 	protected:
-		Widget( const std::string& name, const XmlReader::XmlReaderIterator& itr );
+		Widget( const std::string& name, const XmlReader::XmlReaderIterator& itr, Widget* parent );
 		virtual ~Widget();
 
 		virtual void OnUpdate( float dt );
@@ -36,11 +35,26 @@ namespace mage
 	protected:
 		static Widget* LoadComponent( Widget* parent, const XmlReader::XmlReaderIterator& itr );
 
+		Widget* GetChildByName( const HashString& name );
+		void LoadLayoutParam( Widget*& target, const XmlReader::XmlReaderIterator& itr, const char* paramName );
+
+		Vec2f GetPosition() const;
+
 		HashString mName;
 		Sprite* mSprite;
 
-		ArrayList< Widget* > mChildren;
+		HashMap< Widget* > mChildren;
 		Widget* mParent;
+
+		// Layout
+		Widget* mBelow;
+		Widget* mAbove;
+		Widget* mToLeftOf;
+		Widget* mToRightOf;
+
+		Vec2f mPosition;
+		float mHeight;
+		float mWidth;
 
 		static HashMap< Widget* > sWidgets;
 	};

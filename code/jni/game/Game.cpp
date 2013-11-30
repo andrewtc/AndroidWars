@@ -22,11 +22,6 @@ Game* Game::Create( int numPlayers, const std::string& mapName )
 		game->AddPlayer( player );
 	}
 
-	// Spawn a test Unit.
-	UnitType* unitType = gDatabase->UnitTypes.FindByName( "Infantry" );
-	Unit* testUnit = game->SpawnUnit( unitType, 5, 5 );
-	game->mMap.AddMapObject( testUnit );
-
 	return game;
 }
 
@@ -74,6 +69,14 @@ void Game::Start()
 	// Create a TileMap for this Game.
 	std::string pathToMapFile = FormatMapPath( mMapName );
 	mMap.Load( pathToMapFile.c_str() );
+
+	mCamera->SetWorldBounds( mMap.GetMapBounds() );
+
+	// Spawn a test Unit. TODO remove this
+	UnitType* unitType = gDatabase->UnitTypes.FindByName( "Infantry" );
+	Unit* testUnit = SpawnUnit( unitType, 5, 5 );
+	mMap.AddMapObject( testUnit );
+
 }
 
 
@@ -118,17 +121,21 @@ MapObject* Game::SpawnObjectFromXml( const XmlReader::XmlReaderIterator& xmlIter
 	MapObject* result = nullptr;
 
 	// Get the name of the element in question.
-	std::string className = xmlIterator.GetAttributeAsString( "Class" );
+	std::string name = xmlIterator.GetAttributeAsString( "name", "" );
+	std::string type = xmlIterator.GetAttributeAsString( "type", "" );
 
-	if( className == "Unit" )
+	if( type == "Unit" )
 	{
-		// Get the type of unit to spawn.
-		HashString unitTypeName = xmlIterator.GetAttributeAsString( "UnitType" );
-		UnitType* unitType = gDatabase->UnitTypes.FindByName( unitTypeName );
-		assertion( unitType, "UnitType \"%s\" not found!", unitTypeName.GetString().c_str() );
-
 		// Spawn a new unit with the specified UnitType.
-		result = new Unit( unitType );
+		result = new Unit( name );
+
+		// Load generic properties
+		TileMap::LoadDefaultMapObjectFields( *result, xmlIterator );
+	}
+	// Object is unknown - just use the default loading
+	else
+	{
+		result = TileMap::DefaultNewMapObjectFn( xmlIterator );
 	}
 
 	return result;
