@@ -2,10 +2,13 @@
 
 using namespace mage;
 
+MAGE_IMPLEMENT_RTTI( MapObject, Unit );
+
 Unit::Unit( const std::string& name )
 : MapObject( name )
 	, mUnitType( nullptr )
 	, mSprite( nullptr )
+	, DrawSelected( false )
 {}
 
 
@@ -13,6 +16,7 @@ Unit::Unit( UnitType* unitType )
 	: MapObject( "Unit" )
 	, mUnitType( unitType )
 	, mSprite( nullptr )
+	, DrawSelected( false )
 { }
 
 
@@ -49,6 +53,7 @@ void Unit::Init()
 	if ( mUnitType )
 	{
 		mSprite = SpriteManager::CreateSprite( mUnitType->GetAnimationSetName(), Position, "Idle" );
+		BoundingRect = mSprite->GetClippingRectForCurrentAnimation();
 		DebugPrintf( "Unit \"%s\" initialized!", mName.GetString().c_str() );
 	}
 	else
@@ -65,6 +70,13 @@ void Unit::OnDraw( const Camera& camera ) const
 		// Draw the sprite at the location of the Unit.
 		mSprite->Position = Position;
 		mSprite->OnDraw( camera );
+
+		if ( DrawSelected )
+		{
+			const RectI& bounds = mSprite->GetClippingRectForCurrentAnimation();
+			const Vec2f pos = Position - camera.GetPosition();
+			DrawRectOutline( pos.x, pos.y, bounds.Width(), bounds.Height(), Color::CYAN, 2.0f );
+		}
 	}
 	// Fallback to debugdraw on missing graphics
 	else

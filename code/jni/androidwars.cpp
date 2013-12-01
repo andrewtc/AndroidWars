@@ -125,7 +125,8 @@ void OnPointerDown( float x, float y, size_t which )
 
 void OnPointerUp( float x, float y, size_t which )
 {
-
+	if ( gGame )
+		gGame->OnTouchEvent( x, y );
 }
 
 void OnPointerMotion( float x, float y, float dx, float dy, size_t which )

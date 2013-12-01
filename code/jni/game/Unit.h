@@ -7,6 +7,7 @@ namespace mage
 	 */
 	class Unit : public MapObject
 	{
+		DECLARE_RTTI;
 	public:
 		Unit( const std::string& name );
 		Unit( UnitType* unitType );
@@ -22,6 +23,8 @@ namespace mage
 		void SetTilePos( int x, int y );
 		void SetTilePos( const Vec2i& tilePos );
 		Vec2i GetTilePos() const;
+
+		bool DrawSelected;
 
 	protected:
 		UnitType* mUnitType;

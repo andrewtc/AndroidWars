@@ -52,6 +52,8 @@ namespace mage
 
 		Unit* SpawnUnit( UnitType* unitType, int tileX, int tileY );
 
+		void OnTouchEvent( float x, float y );
+
 	protected:
 		typedef std::vector< Player* > Players;
 

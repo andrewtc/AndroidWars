@@ -153,3 +153,16 @@ Unit* Game::SpawnUnit( UnitType* unitType, int x, int y )
 
 	return unit;
 }
+
+
+void Game::OnTouchEvent( float x, float y )
+{
+	static void( *fn )( Unit* ) = []( Unit* unit ) -> void { unit->DrawSelected = false; };
+	MapObject* obj = mMap.GetFirstObjectAt( Vec2f( x, y ) + mCamera->GetPosition() );
+	mMap.ForeachObjectOfType( fn );
+	if ( obj && obj->IsExactly( Unit::TYPE ) )
+	{
+		Unit* unit = (Unit*) obj;
+		unit->DrawSelected = true;
+	}
+}
