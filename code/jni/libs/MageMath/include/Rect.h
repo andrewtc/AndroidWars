@@ -23,6 +23,18 @@ namespace mage
 		inline TReal Height() const;
 		inline TReal Width() const;
 
+		// Casting
+		template< typename TOther >
+		operator Rect< TOther >()
+		{
+			return Rect< TOther >(
+					static_cast< TOther >( Left ),
+					static_cast< TOther >( Top ),
+					static_cast< TOther >( Right ),
+					static_cast< TOther >( Bottom )
+					);
+		}
+
 		// Returns true if left < right && top < bottom
 		inline bool IsValid() const;
 		// Swap left/right and/or top/bottom as needed to make this rect valid

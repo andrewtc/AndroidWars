@@ -43,6 +43,17 @@ inline TReal Rect< TReal >::Width() const
 	return (TReal) ( Right - Left );
 }
 //---------------------------------------
+/*template< typename TReal, typename TOther >
+Rect< TReal >::operator Rect< TOther >()
+{
+	return Rect(
+			static_cast< TOther >( Left ),
+			static_cast< TOther >( Top ),
+			static_cast< TOther >( Right ),
+			static_cast< TOther >( Bottom )
+			);
+}*/
+//---------------------------------------
 template< typename TReal >
 inline bool Rect< TReal >::IsValid() const
 {
