@@ -69,6 +69,12 @@ void Camera::LookAt( const Vec2f& pos )
 	}
 }
 //---------------------------------------
+void Camera::LookAtClamp( Vec2f& pos )
+{
+	LookAt( pos );
+	pos = mPosition + Vec2f( mViewportRect.Right * 0.5f, mViewportRect.Bottom * 0.5f );
+}
+//---------------------------------------
 void Camera::SetWorldBounds( const RectF& worldBounds )
 {
 	mWorldBounds = worldBounds;

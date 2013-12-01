@@ -37,6 +37,8 @@ void OnDraw()
 	if ( gGame )
 		gGame->OnDraw();
 
+	DrawRect( gCameraTarget.x - 5, gCameraTarget.y - 5, 10, 10, Color::PINK );
+
 //	DrawRect( 50, 50, 150, 150, gColor);
 
 	Widget::DrawAllWidgets( *gCamera );
@@ -56,13 +58,16 @@ void OnUpdate( float dt )
 
 	// Camera test
 	if ( gCamera )
-		gCamera->LookAt( gCameraTarget );
+		gCamera->LookAtClamp( gCameraTarget );
 }
 
 void OnScreenSizeChanged( int32 w, int32 h )
 {
 	gWindowWidth = w;
 	gWindowHeight = h;
+
+	gCameraTarget.x = w / 2.0f;
+	gCameraTarget.y = h / 2.0f;
 }
 
 void OnWindowShown()

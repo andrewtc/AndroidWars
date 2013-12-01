@@ -22,6 +22,7 @@ namespace mage
 		void SetPositin( const Vec2f& pos );
 		void SetViewport( float width, float height );
 		void LookAt( const Vec2f& pos );
+		void LookAtClamp( Vec2f& pos );
 		// Limit the movement of the camera to these bounds
 		void SetWorldBounds( const RectF& worldBounds );
 		// Test a rect against this viewport

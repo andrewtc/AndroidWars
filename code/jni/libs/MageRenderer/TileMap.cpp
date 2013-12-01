@@ -545,7 +545,6 @@ void TileMap::OnDraw( const Camera& camera )
 		// Skip invisible layers
 		if ( !layer->Visible || layer->Opacity == 0.0f ) continue;
 
-
 		// Tile layer
 		if ( layer->Type == LT_TILE )
 		{
@@ -563,11 +562,12 @@ void TileMap::OnDraw( const Camera& camera )
 					{
 						const MapTile& tile = tileLayer->Tiles[ index ];
 						const TileSet* tileset = tile.mTileset; //mTileSets[ tile.TileSetIndex ];
+						int tileHeightDiff = mTileHeight - tileset->TileHeight;
 
 						DrawRect(
 							tileset->TilesetSurface,
 							x * mTileWidth - cameraX,
-							y * mTileHeight - cameraY,
+							y * mTileHeight - cameraY + tileHeightDiff,
 							tile.TilePositionX + tile.TileAnimationOffsetX, tile.TilePositionY + tile.TileAnimationOffsetY, tileset->TileWidth, tileset->TileHeight
 						);
 					}
