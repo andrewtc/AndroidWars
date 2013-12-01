@@ -144,6 +144,44 @@ namespace mage
 		// If free == true, obj will be cleaned up
 		void RemoveObject( MapObject*& obj, bool free=true );
 
+		// Get the first MapObject* at the given position
+		MapObject* GetFirstObjectAt( const Vec2f& position ) const;
+
+		// Get all objects at given position
+		// Uses the object type of the container to type check objects
+		template< typename TObject >
+		size_t GetAllObjectsAt( const Vec2f& position, ArrayList< TObject* >& objects, bool canBeDerived=false ) const
+		{
+			for ( auto itr = mObjects.begin(); itr != mObjects.end(); ++itr )
+			{
+				MapObject* obj = *itr;
+				bool typematch = canBeDerived ? obj->IsDerived( TObject::TYPE ) : obj->IsExactly( TObject::TYPE );
+				if ( typematch && obj->Contains( position ) )
+				{
+					objects.push_back( (TObject*) obj );
+				}
+			}
+			return objects.size();
+		}
+
+		// Type matching version of GetFirstObjectAt()
+		template< typename TObject >
+		TObject* GetFirstObjectAtOfType( const Vec2f& position, bool canBeDerived=false ) const
+		{
+			MapObject* _ret = 0;
+			for ( auto itr = mObjects.begin(); itr != mObjects.end(); ++itr )
+			{
+				MapObject* obj = *itr;
+				bool typematch = canBeDerived ? obj->IsDerived( TObject::TYPE ) : obj->IsExactly( TObject::TYPE );
+				if ( typematch && obj->Contains( position ) )
+				{
+					_ret = obj;
+					break;
+				}
+			}
+			return _ret;
+		}
+
 		void SetMapPropertyCB( MapPropertyFn fn );
 		void SetNewMapObjectCB( NewMapObjectFn fn );
 
@@ -151,10 +189,42 @@ namespace mage
 		inline int GetTileHeight() const          { return mTileHeight;         }
 		inline int GetCollisionLayerIndex() const { return CollisionLayerIndex; }
 
+		// Coord conversion functions
 		Vec2f TileToWorld( int x, int y ) const;
 		Vec2f TileToWorld( const Vec2i& pos ) const;
 		Vec2i WorldToTile( float x, float y ) const;
 		Vec2i WorldToTile( const Vec2f& pos ) const;
+
+		// Iterate over all MapObjects in this map
+		// TFunction: void fn( MapObject* obj );
+		template< typename TFunction >
+		void ForeachObject( TFunction fn )
+		{
+			for ( auto itr = mObjects.begin(); itr != mObjects.end(); ++itr )
+				fn( *itr );
+		}
+
+		// Iterate over MapObjects of given type
+		// Use the canBeDerived flag to get MapObjects derived from type as well
+		// These derived objects will be passed into your callback as TObject*
+		template< typename TObject >
+		void ForeachObjectOfType( void( *fn )( TObject* ), bool canBeDerived=false )
+		{
+			for ( auto itr = mObjects.begin(); itr != mObjects.end(); ++itr )
+			{
+				MapObject* obj = *itr;
+				if ( canBeDerived )
+				{
+					if ( obj->IsDerived( TObject::TYPE ) )
+						fn( (TObject*) obj );
+				}
+				else
+				{
+					if ( obj->IsExactly( TObject::TYPE ) )
+						fn( (TObject*) obj );
+				}
+			}
+		}
 
 		// Creates the default MapObject from data
 		static MapObject* DefaultNewMapObjectFn( const XmlReader::XmlReaderIterator& objItr );

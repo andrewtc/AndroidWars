@@ -879,6 +879,21 @@ void TileMap::RemoveObject( MapObject*& obj, bool free )
 	}
 }
 //---------------------------------------
+MapObject* TileMap::GetFirstObjectAt( const Vec2f& position ) const
+{
+	MapObject* _ret = 0;
+	for ( auto itr = mObjects.begin(); itr != mObjects.end(); ++itr )
+	{
+		MapObject* obj = *itr;
+		if ( obj->Contains( position ) )
+		{
+			_ret = obj;
+			break;
+		}
+	}
+	return _ret;
+}
+//---------------------------------------
 void TileMap::SetMapPropertyCB( MapPropertyFn fn )
 {
 	mMapPropertyCB = fn;
