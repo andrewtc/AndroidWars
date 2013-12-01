@@ -8,7 +8,7 @@ MAGE_IMPLEMENT_RTTI( Object, Camera );
 Camera::Camera( float viewWidth, float viewHeight )
 	: Object( "Camera" )
 	, mViewWidth( viewWidth )
-	, mViewHeight( viewWidth )
+	, mViewHeight( viewHeight )
 {
 	SetViewport( viewWidth, viewHeight );
 	mWorldBounds.Set( -1, -1, 0, 0 );
@@ -18,7 +18,7 @@ Camera::Camera( float viewWidth, float viewHeight )
 Camera::Camera( float viewWidth, float viewHeight, const std::string& name )
 	: Object( name )
 	, mViewWidth( viewWidth )
-	, mViewHeight( viewWidth )
+	, mViewHeight( viewHeight )
 {
 	SetViewport( viewWidth, viewHeight );
 	mWorldBounds.Set( -1, -1, 0, 0 );

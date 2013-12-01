@@ -115,6 +115,8 @@ namespace mage
 		typedef void(*MapPropertyFn)( const XmlReader::XmlReaderIterator& prop );
 		typedef MapObject*(*NewMapObjectFn)( const XmlReader::XmlReaderIterator& objItr );
 
+		static const int INVALID_TILE_ID = -1;
+
 		TileMap();
 		~TileMap();
 
@@ -203,6 +205,12 @@ namespace mage
 			Texture2D* ImageSurface;
 			Vec2i ScrollOffset;
 			Vec2i ScrollSpeed;
+			int BackgroundMode;
+
+			static const int BG_MODE_NONE        = 0;
+			static const int BG_MODE_FILL_MAP    = 1;
+			static const int BG_MODE_FILL_SCREEN = 2;
+			static const int BG_MODE_TILE        = 3;
 		};
 
 		// Private helper functions

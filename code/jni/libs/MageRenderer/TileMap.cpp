@@ -441,6 +441,7 @@ void TileMap::LoadImageLayer( const XmlReader::XmlReaderIterator& itr )
 	if ( imageItr.IsValid() )
 	{
 		layer->ImageSurface = LoadImage( imageItr );
+		layer->BackgroundMode = ImgLayer::BG_MODE_NONE;
 
 		// Custom properties
 		if ( itr.NextChild( "properties" ).IsValid() )
@@ -451,6 +452,27 @@ void TileMap::LoadImageLayer( const XmlReader::XmlReaderIterator& itr )
 				std::string k = propItr.GetAttributeAsString( "name" );
 				if ( k == "ScrollSpeed" )
 					layer->ScrollSpeed = (Vec2i) propItr.GetAttributeAsVec2f( "value", Vec2f::ZERO );
+				if ( k == "background" )
+				{
+					std::string bgType = propItr.GetAttributeAsString( "value", "fill_map" );
+					if ( bgType == "fill_map" )
+					{
+						layer->BackgroundMode = ImgLayer::BG_MODE_FILL_MAP;
+					}
+					else if ( bgType == "fill_screen" )
+					{
+						layer->BackgroundMode = ImgLayer::BG_MODE_FILL_SCREEN;
+					}
+					else if ( bgType == "tile" )
+					{
+						// TODO implement tiled background images
+						layer->BackgroundMode = ImgLayer::BG_MODE_TILE;
+					}
+					else
+					{
+						WarnInfo( "Unknown background type specified '%s' - will use NONE.", bgType.c_str() );
+					}
+				}
 			}
 		}
 	}
@@ -530,8 +552,8 @@ void TileMap::OnDraw( const Camera& camera )
 	int cameraY = (int) camera.GetPosition().y;// - ( ((int) camera.GetViewHeight()) % mTileHeight );
 	int startX = (int) ( camera.GetPosition().x / mTileWidth );
 	int startY = (int) ( camera.GetPosition().y / mTileHeight );
-	int endX = startX + camera.GetViewWidth() / mTileWidth;// - 1;
-	int endY = startY + camera.GetViewHeight() / mTileHeight;// - 1;
+	int endX = startX + camera.GetViewWidth() / mTileWidth + 1;
+	int endY = startY + camera.GetViewHeight() / mTileHeight + 1;
 
 	Mathi::ClampToRange( startX, 0, mMapWidth  - 1 );
 	Mathi::ClampToRange( startY, 0, mMapHeight - 1 );
@@ -588,8 +610,18 @@ void TileMap::OnDraw( const Camera& camera )
 
 			if ( imgLayer->ImageSurface )
 			{
-				DrawRect( imgLayer->ImageSurface,
-					imgLayer->ScrollOffset.x, imgLayer->ScrollOffset.y );
+				if ( imgLayer->BackgroundMode == ImgLayer::BG_MODE_NONE )
+				{
+					DrawRect( imgLayer->ImageSurface, imgLayer->ScrollOffset.x, imgLayer->ScrollOffset.y );
+				}
+				else if ( imgLayer->BackgroundMode == ImgLayer::BG_MODE_FILL_MAP )
+				{
+					DrawRect( imgLayer->ImageSurface, 0, 0, mTileWidth * mMapWidth, mTileHeight * mMapHeight, true );
+				}
+				else if ( imgLayer->BackgroundMode == ImgLayer::BG_MODE_FILL_SCREEN )
+				{
+					DrawRect( imgLayer->ImageSurface, 0, 0, camera.GetViewWidth(), camera.GetViewHeight(), true );
+				}
 				
 				// @TODO some of this should go in update
 				imgLayer->ScrollOffset += imgLayer->ScrollSpeed;
@@ -817,7 +849,7 @@ void TileMap::SetTileId( uint32 gid, MapTile& tile, bool loadProperties )
 	else
 	{
 		// Tile is null and will not be draw
-		tile.TileId = gid;
+		tile.TileId = INVALID_TILE_ID;
 	}
 }
 //---------------------------------------

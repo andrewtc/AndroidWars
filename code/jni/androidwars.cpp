@@ -14,6 +14,7 @@ RectF gRect( 50, 50, 200, 200 );
 Color gColor( 0xffff0000 );
 
 Vec2f gCameraTarget;
+Vec2f gCameraVelocity;
 
 Camera* gCamera;
 Widget* gWidget;
@@ -57,6 +58,8 @@ void OnUpdate( float dt )
 		gGame->OnUpdate( dt );
 
 	// Camera test
+	gCameraTarget += gCameraVelocity;
+	gCameraVelocity *= 0.9f;
 	if ( gCamera )
 		gCamera->LookAtClamp( gCameraTarget );
 }
@@ -128,7 +131,8 @@ void OnPointerUp( float x, float y, size_t which )
 void OnPointerMotion( float x, float y, float dx, float dy, size_t which )
 {
 	DebugPrintf( "Motion (%3.f %.3f) d(%3.f %.3f) ", x, y, dx, dy );
-	gCameraTarget += Vec2f( dx, dy );
+	//gCameraTarget += Vec2f( dx, dy );
+	gCameraVelocity.Set( dx, dy );
 }
 
 void main()
