@@ -113,20 +113,7 @@ void DrawRect( Texture2D* texture, float x, float y, const mage::RectI& clip, bo
 
 void DrawRect( Texture2D* texture, float x, float y, int clipX, int clipY, int clipW, int clipH )
 {
-	if ( texture )
-	{
-		mage::RectF fclip;
-		fclip.Left   = clipX             / (float) texture->GetWidth();
-		fclip.Right  = ( clipX + clipW ) / (float) texture->GetWidth();
-		fclip.Top    = 1.0f - ( clipY             / (float) texture->GetHeight() );
-		fclip.Bottom = 1.0f - ( ( clipY + clipH ) / (float) texture->GetHeight() );
-
-		DrawRect( texture, x, y, (float) clipW, (float) clipH, fclip, Color::WHITE );
-	}
-	else
-	{
-		DrawRect( x, y, clipW, clipH, Color::PINK );
-	}
+	DrawRect( texture, x, y, Color::WHITE, clipX, clipY, clipW, clipH );
 }
 
 void DrawRect( Texture2D* texture, float x, float y, const mage::Color& color, int clipX, int clipY, int clipW, int clipH )
@@ -144,7 +131,7 @@ void DrawRect( Texture2D* texture, float x, float y, const mage::Color& color, i
 	}
 	else
 	{
-		DrawRect( x, y, clipW, clipH, color );
+		DrawRect( x, y, clipW, clipH, Color::PINK );
 	}
 }
 

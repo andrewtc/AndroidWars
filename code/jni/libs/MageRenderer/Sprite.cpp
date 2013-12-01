@@ -74,6 +74,7 @@ SpriteComponent* SpriteDefinition::GetComponentFromPath( const std::string& path
 //---------------------------------------
 Sprite::Sprite( SpriteAnimationSet& animation, const HashString& initialAnimName )
 	: mAnimationSet( animation )
+	, DrawColor( Color::WHITE)
 	, RelativeToCamera( true )
 {
 	HashMap< SpriteAnimation >::const_iterator anim = animation.Animations.find( initialAnimName );
@@ -165,6 +166,7 @@ void Sprite::OnDraw( const Camera& camera ) const
 				DrawRect( texture,
 					px - camera.GetPosition().x,
 					py - camera.GetPosition().y,
+					DrawColor,
 					(int) clip.Left, (int) clip.Top, (int) clip.Width(), (int) clip.Height() );
 			}
 		}
@@ -173,6 +175,7 @@ void Sprite::OnDraw( const Camera& camera ) const
 			DrawRect( texture,
 				px,
 				py,
+				DrawColor,
 				(int) clip.Left, (int) clip.Top, (int) clip.Width(), (int) clip.Height() );
 		}
 	}

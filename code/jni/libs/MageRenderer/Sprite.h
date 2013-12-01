@@ -111,6 +111,7 @@ namespace mage
 		bool IsCurrentAnimationFinished() const;
 
 		Vec2f Position;
+		Color DrawColor;
 		bool RelativeToCamera;
 	private:
 		// Stores info on the current animation
