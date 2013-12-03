@@ -71,6 +71,21 @@ void MapTile::SetFrame( int frame )
 	}*/
 }
 //---------------------------------------
+const std::string& MapTile::GetPropertyAsString( const HashString& propName ) const
+{
+	return mTileset->TileProperties[ TileId ].Get< std::string >( propName );
+}
+//---------------------------------------
+bool MapTile::operator==( const MapTile& tile ) const
+{
+	return TileId == tile.TileId;
+}
+//---------------------------------------
+bool MapTile::operator!=( const MapTile& tile ) const
+{
+	return !( *this == tile );
+}
+//---------------------------------------
 
 
 //---------------------------------------

@@ -99,6 +99,12 @@ namespace mage
 			void SetFrame( int frame );
 			void PlayAnimation() { mAnimPlaying = true; }
 			void StopAnimation() { mAnimPlaying = false; }
+
+			const std::string& GetPropertyAsString( const HashString& propName ) const;
+
+			bool operator==( const MapTile& tile ) const;
+			bool operator!=( const MapTile& tile ) const;
+
 		private:
 			void RecomputeFrameTime();
 
