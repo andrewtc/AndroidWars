@@ -18,7 +18,8 @@ namespace mage
 
 		virtual void OnUpdate( float dt );
 		virtual void OnDraw( const Camera& camera ) const;
-		virtual bool OnClick( float x, float y );
+		virtual bool OnPointerDown( float x, float y );
+		virtual bool OnPointerUp( float x, float y );
 
 	public:
 		// Load a widget from xml definition
@@ -30,7 +31,8 @@ namespace mage
 
 		static void UpdateAllWidgets( float dt );
 		static void DrawAllWidgets( const Camera& camera );
-		static void ProcessOnClick( float x, float y );
+		static bool ProcessOnPointerDown( float x, float y );
+		static bool ProcessOnPointerUp( float x, float y );
 		static void LoadDefinitions( const char* file );
 
 		float GetWidth() const;
@@ -42,8 +44,8 @@ namespace mage
 
 		Widget* GetChildByName( const HashString& name );
 		void LoadLayoutParam( Widget*& target, const XmlReader::XmlReaderIterator& itr, const char* paramName );
-
 		Vec2f GetPosition() const;
+		void SetSprite( const HashString& spriteName );
 
 		HashString mName;
 		Sprite* mSprite;

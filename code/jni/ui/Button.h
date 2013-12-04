@@ -16,14 +16,24 @@ namespace mage
 	{
 	public:
 		Button( const std::string& name, const XmlReader::XmlReaderIterator& itr, Widget* parent );
+
+		struct ButtonStyle
+		{
+			HashString SpriteName;
+			HashString DefaultAnimName;
+			HashString PressedAnimName;
+			HashString SelectedAnimName;
+		};
+		static HashMap< ButtonStyle > sButtonStyles;
 	protected:
 		virtual ~Button();
 
-		virtual bool OnClick( float x, float y );
+		virtual bool OnPointerDown( float x, float y );
+		virtual bool OnPointerUp( float x, float y );
 
 	private:
 		HashString mOnClickEvent;
-		HashString mOnClickAnim;
+		HashString mStyleName;
 	};
 
 }

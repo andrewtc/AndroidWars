@@ -105,12 +105,26 @@ void Widget::DrawAllWidgets( const Camera& camera )
 	}
 }
 //---------------------------------------
-void Widget::ProcessOnClick( float x, float y )
+bool Widget::ProcessOnPointerDown( float x, float y )
 {
+	bool ret = false;
 	for ( auto itr = sWidgets.begin(); itr != sWidgets.end(); ++itr )
 	{
-		itr->second->OnClick( x, y );
+		if ( itr->second->OnPointerDown( x, y ) )
+			ret = true;
 	}
+	return ret;
+}
+//---------------------------------------
+bool Widget::ProcessOnPointerUp( float x, float y )
+{
+	bool ret = false;
+	for ( auto itr = sWidgets.begin(); itr != sWidgets.end(); ++itr )
+	{
+		if ( itr->second->OnPointerUp( x, y ) )
+			ret = true;
+	}
+	return ret;
 }
 //---------------------------------------
 void Widget::LoadDefinitions( const char* file )
@@ -121,6 +135,7 @@ void Widget::LoadDefinitions( const char* file )
 	for ( XmlReader::XmlReaderIterator itr = root.NextChild();
 		  itr.IsValid(); itr = itr.NextSibling() )
 	{
+		// Fonts to load
 		if ( itr.ElementNameEquals( "Font" ) )
 		{
 			const char* file = itr.GetAttributeAsCString( "file" );
@@ -128,14 +143,28 @@ void Widget::LoadDefinitions( const char* file )
 			BitmapFont* fnt = new BitmapFont( file );
 			sFonts[ name ] = fnt;
 		}
+		// Sprites to load
 		else if ( itr.ElementNameEquals( "Sprite" ) )
 		{
 			const char* file = itr.GetAttributeAsCString( "file" );
 			SpriteManager::LoadSpriteAnimations( file );
 		}
+		// Button styles
+		else if ( itr.ElementNameEquals( "ButtonStyle" ) )
+		{
+			Button::ButtonStyle s;
+			HashString name = itr.GetAttributeAsString( "name" );
+
+			s.SpriteName = itr.GetAttributeAsString( "sprite" );
+			s.DefaultAnimName = itr.GetAttributeAsString( "default", "d" );
+			s.PressedAnimName = itr.GetAttributeAsString( "pressed", "p" );
+			s.SelectedAnimName= itr.GetAttributeAsString( "selected", "s" );
+
+			Button::sButtonStyles[ name ] = s;
+		}
 	}
 
-	DebugPrintf( "Widget : Loaded definitions" );
+	DebugPrintf( "Widget : Loaded UI definitions" );
 }
 //---------------------------------------
 BitmapFont* Widget::GetFontByName( const HashString& name )
@@ -167,20 +196,7 @@ Widget::Widget( const std::string& name, const XmlReader::XmlReaderIterator& itr
 	// Create the background
 	if ( backgroundAnim )
 	{
-		mSprite = SpriteManager::CreateSprite( backgroundAnim, Vec2f::ZERO, "n" );
-		if ( mSprite )
-		{
-			// Ignore camera offset
-			mSprite->RelativeToCamera = false;
-
-			const RectI& r = mSprite->GetClippingRectForCurrentAnimation();
-			mHeight = r.Height();
-			mWidth = r.Width();
-		}
-		else
-		{
-			WarnFail( "Failed to create widget sprite '%s'\n", backgroundAnim );
-		}
+		SetSprite( backgroundAnim );
 	}
 
 	DebugPrintf( "Widget : Created '%s' w=%.3f h=%.3f\n", mName.GetString().c_str(), mWidth, mHeight );
@@ -231,17 +247,27 @@ void Widget::OnDraw( const Camera& camera ) const
 	}
 }
 //---------------------------------------
-bool Widget::OnClick( float x, float y )
+bool Widget::OnPointerDown( float x, float y )
 {
 	// Check children from top to bottom
 	for ( auto itr = mChildren.rbegin(); itr != mChildren.rend(); ++itr )
 	{
-		if ( itr->second->OnClick( x, y ) )
+		if ( itr->second->OnPointerDown( x, y ) )
 			return true;
 	}
 	return false;
 }
 //---------------------------------------
+bool Widget::OnPointerUp( float x, float y )
+{
+	// Check children from top to bottom
+	for ( auto itr = mChildren.rbegin(); itr != mChildren.rend(); ++itr )
+	{
+		if ( itr->second->OnPointerUp( x, y ) )
+			return true;
+	}
+	return false;
+}
 Widget* Widget::GetChildByName( const HashString& name )
 {
 	Widget* child = 0;
@@ -310,5 +336,23 @@ float Widget::GetWidth() const
 float Widget::GetHeight() const
 {
 	return mHeight + mMargins[1] + mMargins[3];
+}
+//---------------------------------------
+void Widget::SetSprite( const HashString& spriteName )
+{
+	mSprite = SpriteManager::CreateSprite( spriteName, Vec2f::ZERO, "n" );
+	if ( mSprite )
+	{
+		// Ignore camera offset
+		mSprite->RelativeToCamera = false;
+
+		const RectI& r = mSprite->GetClippingRectForCurrentAnimation();
+		mHeight = r.Height();
+		mWidth = r.Width();
+	}
+	else
+	{
+		WarnFail( "Failed to create widget sprite '%s'\n", spriteName.GetString().c_str() );
+	}
 }
 //---------------------------------------

@@ -3,8 +3,8 @@
     <Label name="label2" text="Cost:" font="default_s.fnt" layout_below="label" margins="5,1,10,1"/>
     <Label name="label3" text="500" font="default_s.fnt" layout_below="label" layout_toRightOf="label2" margins="0,1,0,1"/>
     
-    <Button name="button" sprite="button.anim" onClickEvent="TestWidgetButtonEvent" onClickAnim="s" layout_below="label3"/>
-    <Button name="button2" sprite="button.anim" onClickEvent="TestWidgetButtonEvent" onClickAnim="s" layout_below="label3" layout_toRightOf="button"/>
+    <Button name="button" style="testButtonStyle" onClickEvent="TestWidgetButtonEvent" layout_below="label3"/>
+    <Button name="button2" style="testButtonStyle" onClickEvent="TestWidgetButtonEvent" layout_below="label3" layout_toRightOf="button"/>
     
  <!--
     <Label name="label" text="below" font="default_s.fnt" layout_below="button"/>

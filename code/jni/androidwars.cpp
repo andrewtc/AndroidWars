@@ -122,20 +122,23 @@ void OnPointerDown( float x, float y, size_t which )
 	else
 		gColor = Color::RED;
 
-	Widget::ProcessOnClick( x, y );
+	Widget::ProcessOnPointerDown( x, y );
 }
 
 void OnPointerUp( float x, float y, size_t which )
 {
-	if ( gGame )
-		gGame->OnTouchEvent( x, y );
+	if ( !Widget::ProcessOnPointerUp( x, y ) )
+	{
+		if ( gGame )
+			gGame->OnTouchEvent( x, y );
+	}
 }
 
 void OnPointerMotion( float x, float y, float dx, float dy, size_t which )
 {
 	DebugPrintf( "Motion (%3.f %.3f) d(%3.f %.3f) ", x, y, dx, dy );
-	//gCameraTarget += Vec2f( dx, dy );
-	gCameraVelocity.Set( dx, dy );
+	if ( !Widget::ProcessOnPointerDown( x, y ) )
+		gCameraVelocity.Set( dx, dy );
 }
 
 void main()

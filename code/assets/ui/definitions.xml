@@ -6,4 +6,7 @@
     <!-- Sprites used in UI -->
     <Sprite file="ui/background.anim"/>
     <Sprite file="ui/button.anim"/>
+    
+    <!-- Button styles -->
+    <ButtonStyle name="testButtonStyle" sprite="button.anim" default="d" pressed="p" selected="s"/>
 </UIDefinitions>
