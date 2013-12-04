@@ -31,9 +31,14 @@ namespace mage
 		static void UpdateAllWidgets( float dt );
 		static void DrawAllWidgets( const Camera& camera );
 		static void ProcessOnClick( float x, float y );
+		static void LoadDefinitions( const char* file );
+
+		float GetWidth() const;
+		float GetHeight() const;
 
 	protected:
 		static Widget* LoadComponent( Widget* parent, const XmlReader::XmlReaderIterator& itr );
+		static BitmapFont* GetFontByName( const HashString& name );
 
 		Widget* GetChildByName( const HashString& name );
 		void LoadLayoutParam( Widget*& target, const XmlReader::XmlReaderIterator& itr, const char* paramName );
@@ -55,8 +60,18 @@ namespace mage
 		Vec2f mPosition;
 		float mHeight;
 		float mWidth;
+		Vec4f mMargins;
+
+		enum MarginIndex
+		{
+			MARGIN_LEFT,
+			MARGIN_TOP,
+			MARGIN_RIGHT,
+			MARGIN_BOTTOM,
+		};
 
 		static HashMap< Widget* > sWidgets;
+		static HashMap< BitmapFont* > sFonts;
 	};
 
 }

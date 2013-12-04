@@ -79,12 +79,14 @@ void OnWindowShown()
 	// Now is ok to load graphics
 
 	// TODO this needs to be pre-loaded someplace better...
-	SpriteManager::LoadSpriteAnimations( "ui/button.anim" );
-	SpriteManager::LoadSpriteAnimations( "ui/background.anim" );
+//	SpriteManager::LoadSpriteAnimations( "ui/button.anim" );
+//	SpriteManager::LoadSpriteAnimations( "ui/background.anim" );
 
-//	gWidget = Widget::LoadWidget( "ui/test.xml" );
+	Widget::LoadDefinitions( "ui/definitions.xml" );
+
+	gWidget = Widget::LoadWidget( "ui/test.xml" );
 	gCamera = new Camera( gWindowWidth, gWindowHeight );
-	gFont = new BitmapFont( "fonts/font.fnt" );
+//	gFont = new BitmapFont( "fonts/font.fnt" );
 
 	// Create the global Database.
 	DebugPrintf( "Creating database..." );

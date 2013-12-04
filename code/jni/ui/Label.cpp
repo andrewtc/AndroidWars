@@ -7,7 +7,7 @@ using namespace mage;
 //---------------------------------------
 Label::Label( const std::string& name, const XmlReader::XmlReaderIterator& itr, Widget* parent )
 	: Widget( name, itr, parent )
-	, TextScale( 0.5f )
+	, TextScale( 1.0f )
 	, TextColor( Color::WHITE )
 	, MaxLineLength( -1 )
 	, mFont( 0 )
@@ -16,7 +16,7 @@ Label::Label( const std::string& name, const XmlReader::XmlReaderIterator& itr, 
 	const char* fontName = itr.GetAttributeAsCString( "font", 0 );
 	if ( fontName )
 	{
-		mFont = new BitmapFont( fontName );
+		mFont = GetFontByName( fontName );
 		// Use text area if no sprite
 		if ( !mSprite )
 		{

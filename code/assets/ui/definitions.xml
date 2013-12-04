@@ -1,0 +1,9 @@
+<UIDefinitions>
+    <!-- Fonts used in UI -->
+    <Font name="test.fnt" file="fonts/font.fnt"/>
+    <Font name="default_s.fnt" file="fonts/small.fnt"/>
+    
+    <!-- Sprites used in UI -->
+    <Sprite file="ui/background.anim"/>
+    <Sprite file="ui/button.anim"/>
+</UIDefinitions>

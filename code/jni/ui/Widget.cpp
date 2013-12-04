@@ -9,6 +9,7 @@ using namespace mage;
 // Static
 //---------------------------------------
 HashMap< Widget* > Widget::sWidgets;
+HashMap< BitmapFont* > Widget::sFonts;
 //---------------------------------------
 Widget* Widget::LoadWidget( const char* file )
 {
@@ -112,6 +113,42 @@ void Widget::ProcessOnClick( float x, float y )
 	}
 }
 //---------------------------------------
+void Widget::LoadDefinitions( const char* file )
+{
+	XmlReader reader( file );
+	XmlReader::XmlReaderIterator root = reader.ReadRoot();
+
+	for ( XmlReader::XmlReaderIterator itr = root.NextChild();
+		  itr.IsValid(); itr = itr.NextSibling() )
+	{
+		if ( itr.ElementNameEquals( "Font" ) )
+		{
+			const char* file = itr.GetAttributeAsCString( "file" );
+			const char* name = itr.GetAttributeAsCString( "name" );
+			BitmapFont* fnt = new BitmapFont( file );
+			sFonts[ name ] = fnt;
+		}
+		else if ( itr.ElementNameEquals( "Sprite" ) )
+		{
+			const char* file = itr.GetAttributeAsCString( "file" );
+			SpriteManager::LoadSpriteAnimations( file );
+		}
+	}
+
+	DebugPrintf( "Widget : Loaded definitions" );
+}
+//---------------------------------------
+BitmapFont* Widget::GetFontByName( const HashString& name )
+{
+	BitmapFont* fnt = 0;
+	auto itr = sFonts.find( name );
+	if ( itr != sFonts.end() )
+	{
+		fnt = itr->second;
+	}
+	return fnt;
+}
+//---------------------------------------
 // Widget
 //---------------------------------------
 Widget::Widget( const std::string& name, const XmlReader::XmlReaderIterator& itr, Widget* parent )
@@ -157,6 +194,8 @@ Widget::Widget( const std::string& name, const XmlReader::XmlReaderIterator& itr
 		LoadLayoutParam( mToRightOf, itr, "layout_toRightOf" );
 	}
 
+	mMargins = itr.GetAttributeAsVec4f( "margins", Vec4f::ZERO );
+
 	mPosition = itr.GetAttributeAsVec2f( "position", Vec2f::ZERO );
 }
 //---------------------------------------
@@ -183,6 +222,9 @@ void Widget::OnDraw( const Camera& camera ) const
 {
 	if ( mSprite )
 		mSprite->OnDraw( camera );
+
+	Vec2f pos = GetPosition();
+	DrawRectOutline( pos.x, pos.y, mWidth, mHeight, Color::PINK, 1.5f );
 	for ( auto itr = mChildren.begin(); itr != mChildren.end(); ++itr )
 	{
 		itr->second->OnDraw( camera );
@@ -217,32 +259,33 @@ Widget* Widget::GetChildByName( const HashString& name )
 //---------------------------------------
 Vec2f Widget::GetPosition() const
 {
-	Vec2f pos = mPosition;
-
-	// Layout adjustments
-	if ( mBelow )
-	{
-		pos.y = mBelow->mPosition.y + mBelow->mHeight;
-	}
-	else if ( mAbove )
-	{
-		pos.y = mAbove->mPosition.y - mHeight;
-	}
-
-	if ( mToLeftOf )
-	{
-		pos.x = mToLeftOf->mPosition.x - mWidth;
-	}
-	else if ( mToRightOf )
-	{
-		pos.x = mToRightOf->mPosition.x + mToRightOf->mWidth;
-	}
+	Vec2f pos = mPosition + Vec2f( mMargins[MARGIN_LEFT], mMargins[MARGIN_TOP] );
 
 	// Parent offset
 	if ( mParent )
 	{
 		pos += mParent->GetPosition();
 	}
+
+	// Layout adjustments
+	if ( mBelow )
+	{
+		pos.y = mBelow->GetPosition().y + mBelow->mHeight + mBelow->mMargins[MARGIN_BOTTOM] + mMargins[MARGIN_TOP];
+	}
+	else if ( mAbove )
+	{
+		pos.y = mAbove->GetPosition().y - mHeight - mAbove->mMargins[MARGIN_TOP] - mMargins[MARGIN_BOTTOM];
+	}
+
+	if ( mToLeftOf )
+	{
+		pos.x = mToLeftOf->GetPosition().x - mWidth - mToLeftOf->mMargins[MARGIN_LEFT] - mMargins[MARGIN_RIGHT];
+	}
+	else if ( mToRightOf )
+	{
+		pos.x = mToRightOf->GetPosition().x + mToRightOf->mWidth + mToRightOf->mMargins[MARGIN_RIGHT] + mMargins[MARGIN_LEFT];
+	}
+
 	return pos;
 }
 //---------------------------------------
@@ -257,5 +300,15 @@ void Widget::LoadLayoutParam( Widget*& target, const XmlReader::XmlReaderIterato
 	{
 		WarnInfo( "Widget %s : no such param '%s'\n", mName.GetString().c_str(), paramName );
 	}*/
+}
+//---------------------------------------
+float Widget::GetWidth() const
+{
+	return mWidth + mMargins[0] + mMargins[2];
+}
+//---------------------------------------
+float Widget::GetHeight() const
+{
+	return mHeight + mMargins[1] + mMargins[3];
 }
 //---------------------------------------
