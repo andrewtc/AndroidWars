@@ -19,13 +19,17 @@ namespace mage
 
 		virtual void OnDraw( const Camera& camera ) const;
 
-		std::string Text;
-		float TextScale;
+		void SetText( const std::string& text );
+		virtual void SetText( const char* text );
+
 		Color TextColor;
-		int MaxLineLength;
 
 	protected:
 		BitmapFont* mFont;
+		std::string mText;
+		float mTextScale;
+		int mMaxLineLength;
+		Vec2f mTextDrawOffset;
 	};
 
 }

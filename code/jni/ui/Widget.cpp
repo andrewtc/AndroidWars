@@ -147,7 +147,7 @@ void Widget::LoadDefinitions( const char* file )
 		else if ( itr.ElementNameEquals( "Sprite" ) )
 		{
 			const char* file = itr.GetAttributeAsCString( "file" );
-			SpriteManager::LoadSpriteAnimations( file );
+			SpriteManager::LoadSpriteAnimations( file, false );
 		}
 		// Button styles
 		else if ( itr.ElementNameEquals( "ButtonStyle" ) )
@@ -159,6 +159,8 @@ void Widget::LoadDefinitions( const char* file )
 			s.DefaultAnimName = itr.GetAttributeAsString( "default", "d" );
 			s.PressedAnimName = itr.GetAttributeAsString( "pressed", "p" );
 			s.SelectedAnimName= itr.GetAttributeAsString( "selected", "s" );
+			s.WrapText        = itr.GetAttributeAsBool( "wrapText", true );
+			s.PressedColor    = itr.GetAttributeAsColor( "pressedColor", Color::WHITE );
 
 			Button::sButtonStyles[ name ] = s;
 		}
@@ -193,6 +195,21 @@ Widget::Widget( const std::string& name, const XmlReader::XmlReaderIterator& itr
 {
 	const char* backgroundAnim = itr.GetAttributeAsCString( "sprite", 0 );
 
+	mMargins = itr.GetAttributeAsVec4f( "margins", Vec4f::ZERO );
+	mPosition = itr.GetAttributeAsVec2f( "position", Vec2f::ZERO );
+	mCenterInParent = itr.GetAttributeAsBool( "layout_centerParent", false );
+	mDrawColor = itr.GetAttributeAsColor( "color", Color::WHITE );
+
+	Vec2f size = itr.GetAttributeAsVec2f( "size", Vec2f::ZERO );
+
+	// If size is non-zero, the Widget is a fixed size and so should the sprite be
+	mFixedSizeSprite = size.LengthSqr() != 0;
+	if ( mFixedSizeSprite )
+	{
+		mWidth = size.x;
+		mHeight = size.y;
+	}
+
 	// Create the background
 	if ( backgroundAnim )
 	{
@@ -209,10 +226,6 @@ Widget::Widget( const std::string& name, const XmlReader::XmlReaderIterator& itr
 		LoadLayoutParam( mToLeftOf, itr, "layout_toLeftOf" );
 		LoadLayoutParam( mToRightOf, itr, "layout_toRightOf" );
 	}
-
-	mMargins = itr.GetAttributeAsVec4f( "margins", Vec4f::ZERO );
-
-	mPosition = itr.GetAttributeAsVec2f( "position", Vec2f::ZERO );
 }
 //---------------------------------------
 Widget::~Widget()
@@ -236,11 +249,18 @@ void Widget::OnUpdate( float dt )
 //---------------------------------------
 void Widget::OnDraw( const Camera& camera ) const
 {
+	// Sprite background
 	if ( mSprite )
 		mSprite->OnDraw( camera );
 
-	Vec2f pos = GetPosition();
-	DrawRectOutline( pos.x, pos.y, mWidth, mHeight, Color::PINK, 1.5f );
+	// Layout debug visual
+	if ( DebugLayout )
+	{
+		Vec2f pos = GetPosition();
+		DrawRectOutline( pos.x, pos.y, mWidth, mHeight, Color::PINK, 1.5f );
+	}
+
+	// Draw children
 	for ( auto itr = mChildren.begin(); itr != mChildren.end(); ++itr )
 	{
 		itr->second->OnDraw( camera );
@@ -345,14 +365,39 @@ void Widget::SetSprite( const HashString& spriteName )
 	{
 		// Ignore camera offset
 		mSprite->RelativeToCamera = false;
+		mSprite->FixedSize = mFixedSizeSprite;
+		mSprite->DrawColor = mDrawColor;
 
-		const RectI& r = mSprite->GetClippingRectForCurrentAnimation();
-		mHeight = r.Height();
-		mWidth = r.Width();
+		if ( !mFixedSizeSprite )
+		{
+			const RectI& r = mSprite->GetClippingRectForCurrentAnimation();
+			mHeight = r.Height();
+			mWidth = r.Width();
+		}
+		else
+		{
+			mSprite->Size.Set( mWidth, mHeight );
+		}
+
+		// Update the layout offsets
+		UpdateLayout();
 	}
 	else
 	{
 		WarnFail( "Failed to create widget sprite '%s'\n", spriteName.GetString().c_str() );
+	}
+}
+//---------------------------------------
+void Widget::UpdateLayout()
+{
+	if ( mCenterInParent )
+	{
+		if ( mParent )
+		{
+			mPosition.x = ( mParent->mWidth - mWidth ) / 2.0f;
+			mPosition.y = ( mParent->mHeight - mHeight ) / 2.0f;
+		}
+		// TODO should center in screen if no parent
 	}
 }
 //---------------------------------------

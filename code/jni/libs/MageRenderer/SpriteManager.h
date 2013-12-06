@@ -19,9 +19,9 @@ namespace mage
 	//	~SpriteManager();
 	//public:
 		// Load sprite definition file
-		bool LoadSpriteDefinition( const char* filename );
+		bool LoadSpriteDefinition( const char* filename, bool linearFilter=true );
 		// Load animation info
-		bool LoadSpriteAnimations( const char* filename );
+		bool LoadSpriteAnimations( const char* filename, bool linearFilter=true );
 
 		// Update all Sprite animations
 		void OnUpdate( float dt );

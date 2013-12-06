@@ -38,6 +38,8 @@ namespace mage
 		float GetWidth() const;
 		float GetHeight() const;
 
+		bool DebugLayout;
+
 	protected:
 		static Widget* LoadComponent( Widget* parent, const XmlReader::XmlReaderIterator& itr );
 		static BitmapFont* GetFontByName( const HashString& name );
@@ -46,6 +48,7 @@ namespace mage
 		void LoadLayoutParam( Widget*& target, const XmlReader::XmlReaderIterator& itr, const char* paramName );
 		Vec2f GetPosition() const;
 		void SetSprite( const HashString& spriteName );
+		void UpdateLayout();
 
 		HashString mName;
 		Sprite* mSprite;
@@ -58,11 +61,15 @@ namespace mage
 		Widget* mAbove;
 		Widget* mToLeftOf;
 		Widget* mToRightOf;
+		bool mCenterInParent;
+
+		bool mFixedSizeSprite;
 
 		Vec2f mPosition;
 		float mHeight;
 		float mWidth;
 		Vec4f mMargins;
+		Color mDrawColor;
 
 		enum MarginIndex
 		{

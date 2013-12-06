@@ -23,8 +23,12 @@ namespace mage
 			HashString DefaultAnimName;
 			HashString PressedAnimName;
 			HashString SelectedAnimName;
+			Color PressedColor;
+			bool WrapText;
 		};
 		static HashMap< ButtonStyle > sButtonStyles;
+
+		virtual void SetText( const char* text );
 	protected:
 		virtual ~Button();
 
@@ -34,6 +38,8 @@ namespace mage
 	private:
 		HashString mOnClickEvent;
 		HashString mStyleName;
+		Color mDefaultColor;
+		Color mPressedColor;
 	};
 
 }

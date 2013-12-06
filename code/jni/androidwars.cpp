@@ -10,23 +10,40 @@ using namespace mage;
 int32 gWindowWidth;
 int32 gWindowHeight;
 
-RectF gRect( 50, 50, 200, 200 );
-Color gColor( 0xffff0000 );
-
 Vec2f gCameraTarget;
 Vec2f gCameraVelocity;
 
 Camera* gCamera;
-Widget* gWidget;
 BitmapFont* gFont;
 
 Game* gGame;
 Database* gDatabase;
 
+// Test
+Widget* gWidget;
+Widget* gTestWidget;
+
+
+// Closes the test widget
 EventFunc( TestWidgetButtonEvent )
 {
 	DebugPrintf( "The Test Button Was Pressed" );
-	gColor = Color::ORANGE;
+	Widget::DestroyWidget( gWidget );
+}
+
+// Show the test widget
+EventFunc( ShowTestWidgetEvent )
+{
+	if ( !gWidget )
+	{
+		gWidget = Widget::LoadWidget( "ui/test.xml" );
+	}
+}
+
+void RegisterEventFuncs()
+{
+	RegisterEventFunc( TestWidgetButtonEvent );
+	RegisterEventFunc( ShowTestWidgetEvent );
 }
 
 void OnDraw()
@@ -37,15 +54,11 @@ void OnDraw()
 	// Draw the game.
 	if ( gGame )
 		gGame->OnDraw();
-
-	DrawRect( gCameraTarget.x - 5, gCameraTarget.y - 5, 10, 10, Color::PINK );
-
-//	DrawRect( 50, 50, 150, 150, gColor);
-
+	// Draw the UI
 	Widget::DrawAllWidgets( *gCamera );
-//	DrawText( 150, 20, gFont, "Hello World!\nThis is some testing text." );
-//	DrawTextFormat( 150, 20 + 2 * gFont->GetLineHeight(), gFont, "Counter: %d", sTestCount++ );
 
+	// Camera debug
+//	DrawRect( gCameraTarget.x - 5, gCameraTarget.y - 5, 10, 10, Color::PINK );
 	FlushRenderer();
 }
 
@@ -78,13 +91,12 @@ void OnWindowShown()
 	// The window is shown
 	// Now is ok to load graphics
 
-	// TODO this needs to be pre-loaded someplace better...
-//	SpriteManager::LoadSpriteAnimations( "ui/button.anim" );
-//	SpriteManager::LoadSpriteAnimations( "ui/background.anim" );
-
+	// Load Widget definitions
 	Widget::LoadDefinitions( "ui/definitions.xml" );
 
-	gWidget = Widget::LoadWidget( "ui/test.xml" );
+	gTestWidget = Widget::LoadWidget( "ui/show_test.xml" );
+
+	// Create a camera
 	gCamera = new Camera( gWindowWidth, gWindowHeight );
 //	gFont = new BitmapFont( "fonts/font.fnt" );
 
@@ -117,11 +129,6 @@ void OnSaveStateRestore( const void* state )
 void OnPointerDown( float x, float y, size_t which )
 {
 	DebugPrintf( "Touch at %f %f\n", x, y );
-	if ( gRect.Contains( x, y ) )
-		gColor = Color::GREEN;
-	else
-		gColor = Color::RED;
-
 	Widget::ProcessOnPointerDown( x, y );
 }
 
@@ -136,7 +143,7 @@ void OnPointerUp( float x, float y, size_t which )
 
 void OnPointerMotion( float x, float y, float dx, float dy, size_t which )
 {
-	DebugPrintf( "Motion (%3.f %.3f) d(%3.f %.3f) ", x, y, dx, dy );
+//	DebugPrintf( "Motion (%3.f %.3f) d(%3.f %.3f) ", x, y, dx, dy );
 	if ( !Widget::ProcessOnPointerDown( x, y ) )
 		gCameraVelocity.Set( dx, dy );
 }
@@ -156,7 +163,7 @@ void main()
 	RegisterOnPointerDownFn( OnPointerDown );
 	RegisterOnPointerMotionFn( OnPointerMotion );
 
-	RegisterEventFunc( TestWidgetButtonEvent );
+	RegisterEventFuncs();
 
 	// Run the application
 	Run();

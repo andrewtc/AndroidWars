@@ -40,12 +40,12 @@ void Texture2D::ReloadAllTextures()
 	}
 }
 //---------------------------------------
-Texture2D* Texture2D::CreateTexture( const char* filename )
+Texture2D* Texture2D::CreateTexture( const char* filename, bool linearFilter )
 {
 	Texture2D*& tx = mTextureRegistry[ filename ];
 	if ( !tx )
 	{
-		tx = new Texture2D( filename );
+		tx = new Texture2D( filename, linearFilter );
 	}
 	return tx;
 }
@@ -82,14 +82,16 @@ Texture2D::Texture2D( uint32 textureId, uint32 w, uint32 h )
 	, mId( textureId )
 	, mWidth( w )
 	, mHeight( h )
+	, mLinearFilter( true )
 {}
 //---------------------------------------
-Texture2D::Texture2D( const char* filename )
+Texture2D::Texture2D( const char* filename, bool linearFilter )
 	: mIsLoaded( false )
 	, mFilename( filename )
 	, mId( 0 )
 	, mWidth( 0 )
 	, mHeight( 0 )
+	, mLinearFilter( linearFilter )
 {
 	RegisterTexture( filename, this );
 }
@@ -284,7 +286,7 @@ bool Texture2D::LoadPng()
 	delete[] lRowPtrs;
 
 	// Create the gl texture
-	::CreateTexture( &mId, lImageBuffer, mWidth, mHeight, format );
+	::CreateTexture( &mId, lImageBuffer, mWidth, mHeight, format, mLinearFilter );
 
 	// Free pixels
 	delete lImageBuffer;

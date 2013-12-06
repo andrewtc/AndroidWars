@@ -7,23 +7,26 @@ using namespace mage;
 //---------------------------------------
 Label::Label( const std::string& name, const XmlReader::XmlReaderIterator& itr, Widget* parent )
 	: Widget( name, itr, parent )
-	, TextScale( 1.0f )
+	, mTextScale( 1.0f )
 	, TextColor( Color::WHITE )
-	, MaxLineLength( -1 )
+	, mMaxLineLength( -1 )
 	, mFont( 0 )
 {
-	Text = itr.GetAttributeAsString( "text", "" );
+	mText = itr.GetAttributeAsCString( "text", "" );
+	TextColor = itr.GetAttributeAsColor( "textColor", Color::WHITE );
 	const char* fontName = itr.GetAttributeAsCString( "font", 0 );
 	if ( fontName )
 	{
 		mFont = GetFontByName( fontName );
-		// Use text area if no sprite
-		if ( !mSprite )
-		{
-			mHeight = mFont->GetLineHeight( TextScale );
-			mWidth = mFont->GetLineWidth( Text.c_str(), TextScale );
-			DebugPrintf( "Widget : Dim Adjusted : '%s' w=%.3f h=%.3f\n", mName.GetString().c_str(), mWidth, mHeight );
-		}
+	}
+	// Use text area if no sprite
+	if ( mFont && !mSprite && !mFixedSizeSprite )
+	{
+		mHeight = mFont->GetLineHeight( mTextScale );
+		mWidth = mFont->GetLineWidth( mText.c_str(), mTextScale );
+
+		UpdateLayout();
+		DebugPrintf( "Widget : Dim Adjusted : '%s' w=%.3f h=%.3f\n", mName.GetString().c_str(), mWidth, mHeight );
 	}
 }
 //---------------------------------------
@@ -35,8 +38,18 @@ void Label::OnDraw( const Camera& camera ) const
 	Widget::OnDraw( camera );
 	if ( mFont )
 	{
-		Vec2f pos = GetPosition();
-		DrawText( pos.x, pos.y, mFont, TextColor, TextScale, MaxLineLength, Text.c_str() );
+		Vec2f pos = GetPosition() + mTextDrawOffset;
+		DrawText( pos.x, pos.y, mFont, TextColor, mTextScale, mMaxLineLength, mText.c_str() );
 	}
+}
+//---------------------------------------
+void Label::SetText( const std::string& text )
+{
+	SetText( text.c_str() );
+}
+//---------------------------------------
+void Label::SetText( const char* text )
+{
+	mText = text;
 }
 //---------------------------------------

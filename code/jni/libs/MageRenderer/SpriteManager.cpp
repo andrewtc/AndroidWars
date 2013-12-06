@@ -11,7 +11,7 @@ HashMap< SpriteDefinition* > mSpriteDefinitions;
 HashMap< SpriteAnimationSet* > mSpriteAnimationSets;
 ArrayList< Sprite* > mSprites;
 
-bool LoadSpriteDefinition( const char* filename )
+bool LoadSpriteDefinition( const char* filename, bool linearFilter )
 {
 	/* Definition file layout
 	<img name"image.png" w="" h="" >
@@ -40,7 +40,7 @@ bool LoadSpriteDefinition( const char* filename )
 	unsigned int size;
 	std::string spriteSheetName = std::string( filename ).substr( 0, std::string( filename ).find_last_of( "/" ) + 1 )
 		+ root.GetAttributeAsString( "name" );
-	sprDef->SpriteSheet = Texture2D::CreateTexture( spriteSheetName.c_str() );
+	sprDef->SpriteSheet = Texture2D::CreateTexture( spriteSheetName.c_str(), linearFilter );
 	sprDef->SpriteSheet->Load();
 	
 	// Loop through the definitions
@@ -101,7 +101,7 @@ SpriteComponent* LoadSpriteDefinitionDirectory( SpriteComponent* parent,
 	return sprComp;
 }
 //---------------------------------------
-bool LoadSpriteAnimations( const char* filename )
+bool LoadSpriteAnimations( const char* filename, bool linearFilter )
 {
 	/* Animation file
 	<animations spriteSheet="img.png" ver="1.2">
@@ -152,7 +152,7 @@ bool LoadSpriteAnimations( const char* filename )
 		// Definition not loaded - try to load it
 		std::string basePath = StringUtil::StripFilenameFromPath( filename );
 		std::string sprdefPath = basePath + definitionName;
-		if ( LoadSpriteDefinition( sprdefPath.c_str() ) )
+		if ( LoadSpriteDefinition( sprdefPath.c_str(), linearFilter ) )
 		{
 			animSet->MyDefinition = mSpriteDefinitions[ definitionName ];
 		}

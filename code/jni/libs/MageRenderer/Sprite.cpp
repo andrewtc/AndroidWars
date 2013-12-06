@@ -76,6 +76,7 @@ Sprite::Sprite( SpriteAnimationSet& animation, const HashString& initialAnimName
 	: mAnimationSet( animation )
 	, DrawColor( Color::WHITE)
 	, RelativeToCamera( true )
+	, Scale( Vec2f::ONE )
 {
 	HashMap< SpriteAnimation >::const_iterator anim = animation.Animations.find( initialAnimName );
 	if ( anim != animation.Animations.end() )
@@ -156,6 +157,17 @@ void Sprite::OnDraw( const Camera& camera ) const
 
 		float px = Position.x + sprComp->FrameOffsetX * 2;
 		float py = Position.y + sprComp->FrameOffsetY * 2;
+		float w = clip.Width();
+		float h = clip.Height();
+
+		if ( FixedSize )
+		{
+			w = Size.x;
+			h = Size.y;
+		}
+
+		w *= Scale.x;
+		h *= Scale.y;
 
 		RectF worldClip( px, py, px + clip.Width(), py + clip.Height() );
 
@@ -166,6 +178,8 @@ void Sprite::OnDraw( const Camera& camera ) const
 				DrawRect( texture,
 					px - camera.GetPosition().x,
 					py - camera.GetPosition().y,
+					w,
+					h,
 					DrawColor,
 					(int) clip.Left, (int) clip.Top, (int) clip.Width(), (int) clip.Height() );
 			}
@@ -175,6 +189,8 @@ void Sprite::OnDraw( const Camera& camera ) const
 			DrawRect( texture,
 				px,
 				py,
+				w,
+				h,
 				DrawColor,
 				(int) clip.Left, (int) clip.Top, (int) clip.Width(), (int) clip.Height() );
 		}

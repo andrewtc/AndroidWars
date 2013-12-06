@@ -42,6 +42,7 @@ namespace mage
 	void DrawRect( Texture2D* texture, float x, float y, const mage::RectF& uv, bool yUp=false );
     void DrawRect( Texture2D* texture, float x, float y, int clipX, int clipY, int clipW, int clipH );
     void DrawRect( Texture2D* texture, float x, float y, const mage::Color& color, int clipX, int clipY, int clipW, int clipH );
+    void DrawRect( Texture2D* texture, float x, float y, float width, float height, const mage::Color& color, int clipX, int clipY, int clipW, int clipH );
 
 	void DrawLine( const mage::Vec2f& A, const mage::Vec2f& B, float width, const mage::Color& color );
 	void DrawLine( float x0, float y0, float x1, float y1, float width, const mage::Color& color );

@@ -14,7 +14,7 @@ namespace mage
 		Texture2D( uint32 textureId, uint32 w, uint32 h );
 	private:
 		// Called by CreateTexture()
-		Texture2D( const char* filename );
+		Texture2D( const char* filename, bool linearFilter=true );
 #ifndef ANDROID
 		Texture2D( SDL_Surface* surf );
 #endif
@@ -35,7 +35,7 @@ namespace mage
 		inline unsigned int GetId() const { return mId; }
 
 		// Creates and registers a new Texture2D
-		static Texture2D* CreateTexture( const char* filename );
+		static Texture2D* CreateTexture( const char* filename, bool linearFilter=true );
 
 		// Only call this if the graphics context was destroyed and texture ids have been invalidated
 		// Calling this when texture ids are valid will cause duplicate textures to be loaded
@@ -53,6 +53,7 @@ namespace mage
 
 		unsigned int mWidth, mHeight;
 		bool mIsLoaded;
+		bool mLinearFilter;
 		std::string mFilename;
 		unsigned int mId;
 

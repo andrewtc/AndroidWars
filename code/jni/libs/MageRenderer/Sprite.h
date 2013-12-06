@@ -111,8 +111,11 @@ namespace mage
 		bool IsCurrentAnimationFinished() const;
 
 		Vec2f Position;
+		Vec2f Scale;
+		Vec2f Size;
 		Color DrawColor;
 		bool RelativeToCamera;
+		bool FixedSize;
 	private:
 		// Stores info on the current animation
 		struct AnimationInfo
