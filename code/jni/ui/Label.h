@@ -13,6 +13,7 @@ namespace mage
 	class Label
 		: public Widget
 	{
+	DECLARE_RTTI;
 	public:
 		Label( const std::string& name, const XmlReader::XmlReaderIterator& itr, Widget* parent );
 		virtual ~Label();

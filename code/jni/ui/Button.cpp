@@ -5,6 +5,8 @@
 
 using namespace mage;
 
+MAGE_IMPLEMENT_RTTI( Label, Button );
+
 //---------------------------------------
 HashMap< Button::ButtonStyle > Button::sButtonStyles;
 //---------------------------------------
@@ -98,7 +100,9 @@ bool Button::OnPointerUp( float x, float y )
 				mSprite->PlayAnimation( style.SelectedAnimName );
 				mSprite->DrawColor = mDefaultColor;
 				// Fire pressed event
-				EventManager::FireEvent( mOnClickEvent );
+				Dictionary params;
+				params.Set( "Widget", (Widget*) this );
+				EventManager::FireEvent( mOnClickEvent, params );
 				return true;
 			}
 		}

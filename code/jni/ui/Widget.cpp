@@ -5,6 +5,8 @@
 
 using namespace mage;
 
+const RTTI Widget::TYPE( "mage.Widget", 0 );
+
 //---------------------------------------
 // Static
 //---------------------------------------
@@ -93,7 +95,9 @@ void Widget::UpdateAllWidgets( float dt )
 {
 	for ( auto itr = sWidgets.begin(); itr != sWidgets.end(); ++itr )
 	{
-		itr->second->OnUpdate( dt );
+		Widget* w = itr->second;
+//		if ( w->Visible )
+			w->OnUpdate( dt );
 	}
 }
 //---------------------------------------
@@ -101,7 +105,9 @@ void Widget::DrawAllWidgets( const Camera& camera )
 {
 	for ( auto itr = sWidgets.begin(); itr != sWidgets.end(); ++itr )
 	{
-		itr->second->OnDraw( camera );
+		Widget* w = itr->second;
+		if ( w->Visible )
+			w->OnDraw( camera );
 	}
 }
 //---------------------------------------
@@ -110,7 +116,8 @@ bool Widget::ProcessOnPointerDown( float x, float y )
 	bool ret = false;
 	for ( auto itr = sWidgets.begin(); itr != sWidgets.end(); ++itr )
 	{
-		if ( itr->second->OnPointerDown( x, y ) )
+		Widget* w = itr->second;
+		if ( w->Visible && w->OnPointerDown( x, y ) )
 			ret = true;
 	}
 	return ret;
@@ -121,7 +128,8 @@ bool Widget::ProcessOnPointerUp( float x, float y )
 	bool ret = false;
 	for ( auto itr = sWidgets.begin(); itr != sWidgets.end(); ++itr )
 	{
-		if ( itr->second->OnPointerUp( x, y ) )
+		Widget* w = itr->second;
+		if ( w->Visible && w->OnPointerUp( x, y ) )
 			ret = true;
 	}
 	return ret;
@@ -192,6 +200,8 @@ Widget::Widget( const std::string& name, const XmlReader::XmlReaderIterator& itr
 	, mToRightOf( 0 )
 	, mHeight( 0 )
 	, mWidth( 0 )
+	, Visible( true )
+	, DebugLayout( false )
 {
 	const char* backgroundAnim = itr.GetAttributeAsCString( "sprite", 0 );
 
@@ -399,5 +409,13 @@ void Widget::UpdateLayout()
 		}
 		// TODO should center in screen if no parent
 	}
+}
+//---------------------------------------
+Widget* Widget::GetRootWidget()
+{
+	Widget* root = this;
+	while ( root->mParent )
+		root = root->mParent;
+	return root;
 }
 //---------------------------------------

@@ -12,6 +12,7 @@ namespace mage
 
 	class Widget
 	{
+	DECLARE_RTTI;
 	protected:
 		Widget( const std::string& name, const XmlReader::XmlReaderIterator& itr, Widget* parent );
 		virtual ~Widget();
@@ -38,6 +39,16 @@ namespace mage
 		float GetWidth() const;
 		float GetHeight() const;
 
+		Widget* GetParent() const { return mParent; }
+		// Get the Widget that is the base for this widgets hierarchy
+		Widget* GetRootWidget();
+
+		void Show() { Visible = true; }
+		void Hide() { Visible = false; }
+
+		const HashString& GetName() const { return mName; }
+
+		bool Visible;
 		bool DebugLayout;
 
 	protected:

@@ -28,16 +28,27 @@ Widget* gTestWidget;
 EventFunc( TestWidgetButtonEvent )
 {
 	DebugPrintf( "The Test Button Was Pressed" );
-	Widget::DestroyWidget( gWidget );
+	// Widget events always have a pointer to themselves in the params as Widget*
+	// Use the RTTI to see what kind of widget it is
+	Widget* w = params.Get( "Widget", (Widget*)0 );
+	// Hide the entire widget set
+	w->GetRootWidget()->Hide();
+	// You could also destroy the widget but this will
+	// cause the widget to be constructed from disk
+	// when we need to show it again
+	//Widget::DestroyWidget( gWidget );
 }
 
 // Show the test widget
 EventFunc( ShowTestWidgetEvent )
 {
+	// Make widget if does not exist
 	if ( !gWidget )
 	{
 		gWidget = Widget::LoadWidget( "ui/test.xml" );
 	}
+	// Show the widget
+	gWidget->Show();
 }
 
 void RegisterEventFuncs()

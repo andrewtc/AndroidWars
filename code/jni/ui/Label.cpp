@@ -4,6 +4,8 @@
 
 using namespace mage;
 
+MAGE_IMPLEMENT_RTTI( Widget, Label );
+
 //---------------------------------------
 Label::Label( const std::string& name, const XmlReader::XmlReaderIterator& itr, Widget* parent )
 	: Widget( name, itr, parent )

@@ -14,6 +14,7 @@ namespace mage
 	class Button
 		: public Label
 	{
+	DECLARE_RTTI;
 	public:
 		Button( const std::string& name, const XmlReader::XmlReaderIterator& itr, Widget* parent );
 
