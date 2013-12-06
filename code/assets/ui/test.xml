@@ -1,10 +1,10 @@
-<Widget name="test" sprite="background.anim" position="400,100">
-    <Label name="label" text="This is a test." font="default_s.fnt" margins="5,1,0,1"/>
-    <Label name="label2" text="Cost:" font="default_s.fnt" layout_below="label" margins="5,1,10,1"/>
+<Widget name="test" sprite="background.anim" position="400,100" size="256,128" color="#FF0000FF">
+    <Label name="label" text="This is a test." font="default_s.fnt" margins="15,15,0,1" textColor="#FFFFFF00"/>
+    <Label name="label2" text="Cost:" font="default_s.fnt" layout_below="label" margins="15,1,10,1"/>
     <Label name="label3" text="500" font="default_s.fnt" layout_below="label" layout_toRightOf="label2" margins="0,1,0,1"/>
     
-    <Button name="button" style="testButtonStyle" onClickEvent="TestWidgetButtonEvent" layout_below="label3"/>
-    <Button name="button2" style="testButtonStyle" onClickEvent="TestWidgetButtonEvent" layout_below="label3" layout_toRightOf="button"/>
+    <Button name="button" text="OK" font="default_s.fnt" style="testButtonStyle" onClickEvent="TestWidgetButtonEvent" layout_below="label3" margins="15,0,5,0" color="#FF00FF00"/>
+    <Button name="button2" text="Cancel" font="default_s.fnt" style="testButtonStyle" onClickEvent="TestWidgetButtonEvent" layout_below="label3" layout_toRightOf="button" color="#FFFF0000"/>
     
  <!--
     <Label name="label" text="below" font="default_s.fnt" layout_below="button"/>
