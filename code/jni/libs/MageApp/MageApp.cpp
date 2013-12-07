@@ -41,6 +41,8 @@ namespace mage
 	static OnPointerDownFn gOnPointerDown = 0;
 	static OnPointerUpFn gOnPointerUp = 0;
 	static OnPointerMotionFn gOnPointerMotionFn = 0;
+	static OnFocusLostFn gOnFocusLostFn = 0;
+	static OnFocusGainedFn gOnFocusGainedFn = 0;
 
 	static void handleAppCmd( struct android_app* app, int32_t cmd );
 	static int32_t handleInputEvent( struct android_app* app, AInputEvent* event );
@@ -204,6 +206,16 @@ namespace mage
 		gOnPointerMotionFn = fn;
 	}
 	//---------------------------------------
+	void RegisterOnFocusLostFn( OnFocusLostFn fn )
+	{
+		gOnFocusLostFn = fn;
+	}
+	//---------------------------------------
+	void RegisterOnFocusGainedFn( OnFocusGainedFn fn )
+	{
+		gOnFocusGainedFn = fn;
+	}
+	//---------------------------------------
 	// Input handling
 	//---------------------------------------
 	void handleAppCmd( struct android_app* app, int32_t cmd )
@@ -249,12 +261,16 @@ namespace mage
 				DebugPrintf( "Focus gained...\n" );
 				if ( gNeedTextureReload )
 					Texture2D::ReloadAllTextures();
+				if ( gOnFocusGainedFn )
+					gOnFocusGainedFn();
 			}
 			break;
 
 			case APP_CMD_LOST_FOCUS:
 			{
 				DebugPrintf( "Focus lost...\n" );
+				if ( gOnFocusLostFn )
+					gOnFocusLostFn();
 				gNeedTextureReload = true;
 				shutdownGL();
 			}

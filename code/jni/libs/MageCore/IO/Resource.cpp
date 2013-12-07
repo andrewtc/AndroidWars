@@ -35,3 +35,18 @@ Resource::ResourceStatus Resource::Read( void* pBuffer, size_t count )
     return readCount == count ? RS_OK : RS_FAIL;
 }
 //---------------------------------------
+ResourceDescriptor Resource::GetDescriptor() const
+{
+	 ResourceDescriptor descriptor = { -1, 0, 0 };
+
+	AAsset* asset = AAssetManager_open( mAssetManager, mPath, AASSET_MODE_UNKNOWN );
+
+	if( asset != NULL )
+	{
+		descriptor.mDescriptor = AAsset_openFileDescriptor( asset, &descriptor.mStart, &descriptor.mLength );
+		AAsset_close( asset );
+	}
+
+	return descriptor;
+}
+//---------------------------------------

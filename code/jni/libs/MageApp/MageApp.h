@@ -29,6 +29,8 @@ namespace mage
 	typedef void(*OnPointerDownFn)( float x, float y, size_t which );
 	typedef void(*OnPointerUpFn)( float x, float y, size_t which );
 	typedef void(*OnPointerMotionFn)( float x, float y, float dx, float dy, size_t which );
+	typedef void(*OnFocusLostFn)( void );
+	typedef void(*OnFocusGainedFn)( void );
 
 
 	// Initialize the app - do this before calling Run(). If a savestate exists, you will get that callback before this function returns.
@@ -60,5 +62,7 @@ namespace mage
 	void RegisterOnPointerDownFn( OnPointerDownFn fn );
 	void RegisterOnPointerUpFn( OnPointerUpFn fn );
 	void RegisterOnPointerMotionFn( OnPointerMotionFn fn );
+	void RegisterOnFocusLostFn( OnFocusLostFn fn );
+	void RegisterOnFocusGainedFn( OnFocusGainedFn fn );
 
 }

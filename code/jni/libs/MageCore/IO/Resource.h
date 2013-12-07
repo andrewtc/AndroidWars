@@ -14,6 +14,13 @@
 namespace mage
 {
 
+	struct ResourceDescriptor
+	{
+	    int mDescriptor;
+	    off_t mStart;
+	    off_t mLength;
+	};
+
 	class Resource
 	{
 	public:
@@ -29,8 +36,10 @@ namespace mage
         ResourceStatus Open();
         void Close();
         ResourceStatus Read( void* pBuffer, size_t count );
+        ResourceDescriptor GetDescriptor() const;
         
         inline const char* GetPath() const { return mPath; }
+        off_t GetLength() const { return AAsset_getLength( mAsset ); }
         
     private:
         const char* mPath;

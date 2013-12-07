@@ -1,5 +1,5 @@
 #include <MageApp.h>
-
+#include "sound/SoundManager.h"
 #include "ui/Widget.h"
 
 #include "androidwars.h"
@@ -15,6 +15,7 @@ Vec2f gCameraVelocity;
 
 Camera* gCamera;
 BitmapFont* gFont;
+SoundManager* gSoundManager;
 
 Game* gGame;
 Database* gDatabase;
@@ -22,6 +23,8 @@ Database* gDatabase;
 // Test
 Widget* gWidget;
 Widget* gTestWidget;
+SoundClip* gJumpSoundFx;
+SoundClip* gDieSoundFx;
 
 
 // Closes the test widget
@@ -37,6 +40,9 @@ EventFunc( TestWidgetButtonEvent )
 	// cause the widget to be constructed from disk
 	// when we need to show it again
 	//Widget::DestroyWidget( gWidget );
+
+	// Play a sfx
+	gSoundManager->PlaySound( gDieSoundFx );
 }
 
 // Show the test widget
@@ -49,6 +55,9 @@ EventFunc( ShowTestWidgetEvent )
 	}
 	// Show the widget
 	gWidget->Show();
+
+	// Play a sfx
+	gSoundManager->PlaySound( gJumpSoundFx );
 }
 
 void RegisterEventFuncs()
@@ -159,11 +168,32 @@ void OnPointerMotion( float x, float y, float dx, float dy, size_t which )
 		gCameraVelocity.Set( dx, dy );
 }
 
+void OnFocusLost()
+{
+	if ( gSoundManager )
+		gSoundManager->Stop();
+}
+
+void OnFocusGained()
+{
+	if ( gSoundManager )
+		gSoundManager->Start();
+}
+
 void main()
 {
 	// Initialize the application
 	MageAppInit( "Test" );
 	// Do user initialization here
+
+	// Sounds can either be .wav or .pcm files, but they must be saved as mono with a sampling rate of 44,100 Hz.
+	gSoundManager = new SoundManager( app );
+	gJumpSoundFx = gSoundManager->LoadSoundClip( "sfx/super_mario_jump.wav", "jump.sfx" );
+	gDieSoundFx = gSoundManager->LoadSoundClip( "sfx/super_mario_die.wav", "die.sfx" );
+	gSoundManager->Start();
+	// Starts background music.
+	gSoundManager->PlayMusic( "music/super_mario_overworld.mp3" );
+
 	RegisterRenderFn( OnDraw );
 	RegisterUpdateFn( OnUpdate );
 	RegisterOnWindowShownFn( OnWindowShown );
@@ -173,9 +203,13 @@ void main()
 	RegisterOnPointerUpFn( OnPointerUp );
 	RegisterOnPointerDownFn( OnPointerDown );
 	RegisterOnPointerMotionFn( OnPointerMotion );
+	RegisterOnFocusLostFn( OnFocusLost );
+	RegisterOnFocusGainedFn( OnFocusGained );
 
 	RegisterEventFuncs();
 
 	// Run the application
 	Run();
+
+	gSoundManager->Stop();
 }
