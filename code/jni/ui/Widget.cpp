@@ -118,7 +118,7 @@ bool Widget::ProcessOnPointerDown( float x, float y )
 	for ( auto itr = sWidgets.begin(); itr != sWidgets.end(); ++itr )
 	{
 		Widget* w = itr->second;
-		if ( w->Visible && w->OnPointerDown( x, y ) )
+		if ( w->Visible && ( w->OnPointerDown( x, y ) || w->Contains( x, y ) ) )
 			ret = true;
 	}
 	return ret;
@@ -430,5 +430,13 @@ Widget* Widget::GetRootWidget()
 	while ( root->mParent )
 		root = root->mParent;
 	return root;
+}
+//---------------------------------------
+bool Widget::Contains( float x, float y )
+{
+	Widget* root = GetRootWidget();
+	Vec2f pos = root->GetPosition();
+	RectF r( pos.x, pos.y, pos.x + root->mWidth, pos.y + root->mHeight );
+	return r.Contains( (int) x, (int) y );
 }
 //---------------------------------------

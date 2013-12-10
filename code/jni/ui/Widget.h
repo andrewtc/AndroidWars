@@ -43,6 +43,8 @@ namespace mage
 		// Get the Widget that is the base for this widgets hierarchy
 		Widget* GetRootWidget();
 
+		bool Contains( float x, float y );
+
 		void Show() { Visible = true; }
 		void Hide() { Visible = false; }
 
