@@ -73,6 +73,10 @@ namespace mage
 		static Vec2i GetAdjacentTilePos( const Vec2i& tilePos, CardinalDirection direction );
 		static CardinalDirection GetOppositeDirection( CardinalDirection direction );
 
+		// Events
+		EventFunc( ConfirmMoveEvent );
+		EventFunc( CancelMoveEvent );
+
 	protected:
 		struct TileInfo
 		{
@@ -89,6 +93,12 @@ namespace mage
 
 		void SelectReachableTilesForUnit( Unit* unit, const Vec2i& tilePos, int costToEnter, CardinalDirection previousTileDirection, int movementRange );
 
+		void ShowMoveDialog() const { mMoveDialog->Show(); }
+		// True if game input should be blocked
+		bool WidgetIsOpen() const;
+		// Hide all the game dialogs
+		void HideAllDialogs();
+
 		int mNextPlayerIndex;
 		Camera* mCamera;
 		Status mStatus;
@@ -97,6 +107,7 @@ namespace mage
 		TileMap mMap;
 		Unit* mSelectedUnit;
 		std::map< int, TileInfo > mReachableTiles;
+		Widget* mMoveDialog;
 	};
 
 

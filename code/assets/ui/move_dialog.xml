@@ -1,0 +1,5 @@
+<Widget name="move_dialog" sprite="background.anim" position="400,100" size="256,128" color="#FF0000FF">
+    <Label name="label" text="Move here?" font="default_s.fnt" margins="15,15,0,1" textColor="#FFFFFF00"/>
+    <Button name="button"  text="OK"     font="default_s.fnt" style="testButtonStyle" onClickEvent="ConfirmMoveEvent" layout_below="label" margins="15,0,5,0" color="#FF00FF00"/>
+    <Button name="button2" text="Cancel" font="default_s.fnt" style="testButtonStyle" onClickEvent="CancelMoveEvent" layout_below="label" layout_toRightOf="button" color="#FFFF0000"/>
+</Widget>

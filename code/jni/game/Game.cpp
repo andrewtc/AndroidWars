@@ -41,10 +41,23 @@ Game::Game()
 {
 	// Add map object creation callback.
 	mMap.SetNewMapObjectCB( &SpawnObjectFromXml );
+
+	// Create dialogs
+	mMoveDialog = Widget::LoadWidget( "ui/move_dialog.xml" );
+
+	// Hide them
+	HideAllDialogs();
+
+	// Register events
+	RegisterObjectEventFunc( Game, ConfirmMoveEvent );
+	RegisterObjectEventFunc( Game, CancelMoveEvent );
 }
 
 
-Game::~Game() { }
+Game::~Game()
+{
+	EventManager::UnregisterObjectForAllEvent( *this );
+}
 
 
 void Game::Start()
@@ -185,6 +198,10 @@ void Game::SelectUnit( Unit* unit )
 	}
 	else
 	{
+		if ( mSelectedUnit )
+		{
+			mSelectedUnit->DrawSelected = false;
+		}
 		// Deselect the previously selected Unit.
 		mSelectedUnit = nullptr;
 
@@ -248,19 +265,25 @@ void Game::SelectReachableTilesForUnit( Unit* unit, const Vec2i& tilePos, int to
 
 void Game::OnTouchEvent( float x, float y )
 {
-	static void( *fn )( Unit* ) = []( Unit* unit ) -> void { unit->DrawSelected = false; };
+	// A widget is blocking input
+	if ( WidgetIsOpen() )
+		return;
+
+	// Try to select a unit
+	//static void( *fn )( Unit* ) = []( Unit* unit ) -> void { unit->DrawSelected = false; };
 	MapObject* obj = mMap.GetFirstObjectAt( Vec2f( x, y ) + mCamera->GetPosition() );
-	mMap.ForeachObjectOfType( fn );
+	//mMap.ForeachObjectOfType( fn );
+
+	// Deselect the currently selected unit (if any).
+	SelectUnit( 0 );
+
 	if ( obj && obj->IsExactly( Unit::TYPE ) )
 	{
 		// If the user taps on a Unit, select it.
 		Unit* unit = (Unit*) obj;
 		SelectUnit( unit );
-	}
-	else
-	{
-		// Deselect the currently selected unit (if any).
-		SelectUnit( nullptr );
+		// TODO this should go someplace else...
+		ShowMoveDialog();
 	}
 }
 
@@ -272,4 +295,29 @@ TerrainType* Game::GetTerrainTypeOfTile( int x, int y )
 
 	// TODO: Make this actually use the properties of the Tile to determine TerrainType.
 	return gDatabase->TerrainTypes.FindByName( "City" );
+}
+
+bool Game::WidgetIsOpen() const
+{
+	// Put all the dialogs that block game input here...
+	return mMoveDialog->Visible;
+}
+
+void Game::HideAllDialogs()
+{
+	mMoveDialog->Hide();
+}
+
+// Events
+
+ObjectEventFunc( Game, ConfirmMoveEvent )
+{
+	mMoveDialog->Hide();
+	// TODO call the movement function here...
+}
+
+ObjectEventFunc( Game, CancelMoveEvent )
+{
+	mMoveDialog->Hide();
+	// TODO call the cancel movement function here...
 }

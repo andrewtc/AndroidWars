@@ -8,7 +8,9 @@
 #pragma once
 
 #define EventFunc( Name ) void Name( mage::Dictionary& params )
+#define ObjectEventFunc( Object, Name ) void Object::Name( mage::Dictionary& params )
 #define RegisterEventFunc( Name ) mage::EventManager::RegisterFunctionForEvent( #Name, &Name )
+#define RegisterObjectEventFunc( Object, Name ) mage::EventManager::RegisterObjectForEvent( #Name, *this, &Object::Name )
 
 namespace mage
 {
