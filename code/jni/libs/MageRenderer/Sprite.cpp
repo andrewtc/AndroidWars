@@ -76,6 +76,7 @@ Sprite::Sprite( SpriteAnimationSet& animation, const HashString& initialAnimName
 	: mAnimationSet( animation )
 	, DrawColor( Color::WHITE)
 	, RelativeToCamera( true )
+	, FixedSize( false )
 	, Scale( Vec2f::ONE )
 {
 	HashMap< SpriteAnimation >::const_iterator anim = animation.Animations.find( initialAnimName );
