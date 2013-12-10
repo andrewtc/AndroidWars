@@ -96,6 +96,15 @@ void Game::OnDraw()
 	{
 		// Draw the world.
 		mMap.OnDraw( *mCamera );
+
+		for( auto it = mReachableTiles.begin(); it != mReachableTiles.end(); ++it )
+		{
+			// Draw the currently selected tiles.
+			Vec2f topLeft = mMap.TileToWorld( it->second.tilePos );
+			topLeft -= mCamera->GetPosition();
+
+			DrawRect( topLeft.x, topLeft.y, mMap.GetTileWidth(), mMap.GetTileHeight(), Color( 0x8888AAFF ) );
+		}
 	}
 }
 
@@ -155,6 +164,88 @@ Unit* Game::SpawnUnit( UnitType* unitType, int x, int y )
 }
 
 
+void Game::SelectUnit( Unit* unit )
+{
+	if( unit )
+	{
+		// Select the unit.
+		unit->DrawSelected = true;
+		mSelectedUnit = unit;
+
+		// Select all reachable tiles from this Unit's position.
+		SelectReachableTilesForUnit( unit, unit->GetTilePos(), 0, INVALID_DIRECTION, unit->GetMovementRange() );
+
+		DebugPrintf( "Selected unit \"%s\"", unit->GetName().c_str() );
+
+		for( auto it = mReachableTiles.begin(); it != mReachableTiles.end(); ++it )
+		{
+			TileInfo& info = it->second;
+			DebugPrintf( "Tile (%d, %d) is reachable (best cost of %d)!", info.tilePos.x, info.tilePos.y, info.bestTotalCostToEnter );
+		}
+	}
+	else
+	{
+		// Deselect the previously selected Unit.
+		mSelectedUnit = nullptr;
+
+		// Clear all selected tiles.
+		mReachableTiles.clear();
+	}
+}
+
+
+void Game::SelectReachableTilesForUnit( Unit* unit, const Vec2i& tilePos, int totalCostToEnter, CardinalDirection previousTileDirection, int movementRange )
+{
+	// Select the current tile.
+	int tileIndex = ( tilePos.x + ( tilePos.y * mMap.GetTileWidth() ) );
+
+	TileInfo tileInfo;
+	tileInfo.tilePos = tilePos;
+	tileInfo.bestTotalCostToEnter = totalCostToEnter;
+	tileInfo.previousTileDirection = previousTileDirection;
+
+	mReachableTiles[ tileIndex ] = tileInfo;
+
+	for( int i = FIRST_VALID_DIRECTION; i <= LAST_VALID_DIRECTION; ++i )
+	{
+		CardinalDirection direction = (CardinalDirection) i;
+
+		// Don't search the previous tile again.
+		if( direction == previousTileDirection )
+			continue;
+
+		// Search all surrounding tiles to see if they are pathable.
+		Vec2i adjacentPos = GetAdjacentTilePos( tilePos, direction );
+		MapTile& adjacentTile = GetTile( adjacentPos );
+
+		if( adjacentTile != TileMap::INVALID_TILE )
+		{
+			// Calculate the cost to enter the adjacent tile.
+			// TODO: Actually make this use real cost.
+			TerrainType* adjacentType = GetTerrainTypeOfTile( adjacentPos );
+			int costToEnterAdjacentTile = 1;
+
+			if( costToEnterAdjacentTile <= movementRange )
+			{
+				int totalCostToEnterAdjacentTile = ( totalCostToEnter + costToEnterAdjacentTile );
+
+				// Search for an existing cost entry for this tile.
+				int adjacentIndex = ( adjacentPos.x + ( adjacentPos.y * mMap.GetTileWidth() ) );
+				auto existingTileInfo = mReachableTiles.find( adjacentIndex );
+
+				if( existingTileInfo == mReachableTiles.end() ||
+					totalCostToEnterAdjacentTile < existingTileInfo->second.bestTotalCostToEnter )
+				{
+					// If the unit is able to enter this tile, add it to the list
+					// of reachable tiles and keep searching.
+					SelectReachableTilesForUnit( unit, adjacentPos, totalCostToEnterAdjacentTile, GetOppositeDirection( direction ), movementRange - costToEnterAdjacentTile );
+				}
+			}
+		}
+	}
+}
+
+
 void Game::OnTouchEvent( float x, float y )
 {
 	static void( *fn )( Unit* ) = []( Unit* unit ) -> void { unit->DrawSelected = false; };
@@ -162,7 +253,23 @@ void Game::OnTouchEvent( float x, float y )
 	mMap.ForeachObjectOfType( fn );
 	if ( obj && obj->IsExactly( Unit::TYPE ) )
 	{
+		// If the user taps on a Unit, select it.
 		Unit* unit = (Unit*) obj;
-		unit->DrawSelected = true;
+		SelectUnit( unit );
 	}
+	else
+	{
+		// Deselect the currently selected unit (if any).
+		SelectUnit( nullptr );
+	}
+}
+
+
+TerrainType* Game::GetTerrainTypeOfTile( int x, int y )
+{
+	MapTile tile = mMap.GetTile( x, y, TERRAIN_LAYER_INDEX );
+	assertion( tile != TileMap::INVALID_TILE, "Cannot get TerrainType of invalid Tile (%d, %d)!", x, y );
+
+	// TODO: Make this actually use the properties of the Tile to determine TerrainType.
+	return gDatabase->TerrainTypes.FindByName( "City" );
 }

@@ -24,6 +24,8 @@ namespace mage
 		void SetTilePos( const Vec2i& tilePos );
 		Vec2i GetTilePos() const;
 
+		int GetMovementRange() const;
+
 		bool DrawSelected;
 
 	protected:
@@ -42,12 +44,6 @@ namespace mage
 	inline void Unit::SetTilePos( int x, int y )
 	{
 		SetTilePos( Vec2i( x, y ) );
-	}
-
-
-	inline void Unit::SetTilePos( const Vec2i& tilePos )
-	{
-		mTilePos = tilePos;
 	}
 
 

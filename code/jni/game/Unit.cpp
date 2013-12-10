@@ -84,3 +84,21 @@ void Unit::OnDraw( const Camera& camera ) const
 		MapObject::OnDraw( camera );
 	}
 }
+
+
+void Unit::SetTilePos( const Vec2i& tilePos )
+{
+	// Update the tile position.
+	mTilePos = tilePos;
+
+	// Update the position of the object in the world.
+	Position = gGame->GetMap()->TileToWorld( tilePos );
+}
+
+
+int Unit::GetMovementRange() const
+{
+	UnitType* type = GetUnitType();
+	// TODO: Make dynamic.
+	return 4;
+}

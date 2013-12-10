@@ -753,6 +753,7 @@ void TileMap::OnUpdate( float dt )
 //---------------------------------------
 MapTile& TileMap::GetTile( int x, int y, unsigned int layerIndex ) const
 {
+	//DebugPrintf( "TileMap: Getting tile (%d, %d) on layer %d...", x, y, layerIndex );
 	MapLayer* layer = mLayers[ layerIndex ];
 	if ( layer->Type == LT_TILE )
 	{
