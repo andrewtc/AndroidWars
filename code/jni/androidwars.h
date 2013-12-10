@@ -4,12 +4,20 @@ namespace mage
 {
 	class Game;
 	class Database;
+	class SoundManager;
 }
 
 extern mage::Game* gGame;
 extern mage::Database* gDatabase;
+extern mage::SoundManager* gSoundManager;
 
 #include <MageApp.h>
+
+#include "sound/SoundManager.h"
+
+#include "ui/Widget.h"
+#include "ui/Label.h"
+#include "ui/Button.h"
 
 #include "data/Table.h"
 #include "data/TerrainType.h"

@@ -24,6 +24,7 @@ namespace mage
 			HashString DefaultAnimName;
 			HashString PressedAnimName;
 			HashString SelectedAnimName;
+			HashString SelectedSFXName;
 			Color PressedColor;
 			bool WrapText;
 		};

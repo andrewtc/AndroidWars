@@ -1,4 +1,5 @@
 #include <MageApp.h>
+#include "androidwars.h"
 #include "Widget.h"
 #include "Label.h"
 #include "Button.h"
@@ -169,8 +170,20 @@ void Widget::LoadDefinitions( const char* file )
 			s.SelectedAnimName= itr.GetAttributeAsString( "selected", "s" );
 			s.WrapText        = itr.GetAttributeAsBool( "wrapText", true );
 			s.PressedColor    = itr.GetAttributeAsColor( "pressedColor", Color::WHITE );
+			s.SelectedSFXName = itr.GetAttributeAsString( "clickSFX", "" );
 
 			Button::sButtonStyles[ name ] = s;
+		}
+		// Sounds
+		else if ( itr.ElementNameEquals( "Sound" ) )
+		{
+			const char* file = itr.GetAttributeAsCString( "file" );
+			const char* name = itr.GetAttributeAsCString( "name" );
+			SoundClip* clip = gSoundManager->LoadSoundClip( file, name );
+			if ( !clip )
+			{
+				WarnFail( "Failed to load sound %s as %s\n", file, name );
+			}
 		}
 	}
 

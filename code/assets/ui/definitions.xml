@@ -7,6 +7,9 @@
     <Sprite file="ui/background.anim"/>
     <Sprite file="ui/button.anim"/>
     
+    <!-- Sounds used in UI -->
+    <Sound file="sfx/super_mario_jump.wav" name="click.sfx"/>
+    
     <!-- Button styles -->
-    <ButtonStyle name="testButtonStyle" sprite="button.anim" wrapText="true" default="d" pressed="p" selected="s" pressedColor="#FFFF7700"/>
+    <ButtonStyle name="testButtonStyle" sprite="button.anim" wrapText="true" default="d" pressed="p" selected="s" pressedColor="#FFFF7700" clickSFX="click.sfx"/>
 </UIDefinitions>

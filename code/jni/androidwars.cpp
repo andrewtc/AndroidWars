@@ -1,5 +1,4 @@
 #include <MageApp.h>
-#include "sound/SoundManager.h"
 #include "ui/Widget.h"
 
 #include "androidwars.h"
@@ -15,10 +14,10 @@ Vec2f gCameraVelocity;
 
 Camera* gCamera;
 BitmapFont* gFont;
-SoundManager* gSoundManager;
 
 Game* gGame;
 Database* gDatabase;
+SoundManager* gSoundManager;
 
 // Test
 Widget* gWidget;
@@ -41,8 +40,8 @@ EventFunc( TestWidgetButtonEvent )
 	// when we need to show it again
 	//Widget::DestroyWidget( gWidget );
 
-	// Play a sfx
-	gSoundManager->PlaySound( gDieSoundFx );
+	// Play a sfx - this is done through data now
+//	gSoundManager->PlaySound( gDieSoundFx );
 }
 
 // Show the test widget
@@ -56,8 +55,8 @@ EventFunc( ShowTestWidgetEvent )
 	// Show the widget
 	gWidget->Show();
 
-	// Play a sfx
-	gSoundManager->PlaySound( gJumpSoundFx );
+	// Play a sfx - this is done through data now
+//	gSoundManager->PlaySound( gJumpSoundFx );
 }
 
 void RegisterEventFuncs()
@@ -188,11 +187,11 @@ void main()
 
 	// Sounds can either be .wav or .pcm files, but they must be saved as mono with a sampling rate of 44,100 Hz.
 	gSoundManager = new SoundManager( app );
-	gJumpSoundFx = gSoundManager->LoadSoundClip( "sfx/super_mario_jump.wav", "jump.sfx" );
-	gDieSoundFx = gSoundManager->LoadSoundClip( "sfx/super_mario_die.wav", "die.sfx" );
+//	gJumpSoundFx = gSoundManager->LoadSoundClip( "sfx/super_mario_jump.wav", "jump.sfx" );
+//	gDieSoundFx = gSoundManager->LoadSoundClip( "sfx/super_mario_die.wav", "die.sfx" );
 	gSoundManager->Start();
 	// Starts background music.
-	gSoundManager->PlayMusic( "music/super_mario_overworld.mp3" );
+//	gSoundManager->PlayMusic( "music/super_mario_overworld.mp3" );
 
 	RegisterRenderFn( OnDraw );
 	RegisterUpdateFn( OnUpdate );

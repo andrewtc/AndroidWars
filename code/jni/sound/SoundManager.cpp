@@ -184,6 +184,12 @@ void SoundManager::PlaySound( SoundClip* clip )
 	SLresult lRes;
 	SLuint32 lPlayerState;
 
+	if ( !clip )
+	{
+		WarnCrit( "SoundManager::PlaySound() : Passed NULL clip!" );
+		return;
+	}
+
 	(*mPlayerObj)->GetState( mPlayerObj, &lPlayerState );
 
 	if( lPlayerState == SL_OBJECT_STATE_REALIZED )

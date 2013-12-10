@@ -38,11 +38,11 @@ namespace mage
         ResourceStatus Read( void* pBuffer, size_t count );
         ResourceDescriptor GetDescriptor() const;
         
-        inline const char* GetPath() const { return mPath; }
+        inline const char* GetPath() const { return mPath.c_str(); }
         off_t GetLength() const { return AAsset_getLength( mAsset ); }
         
     private:
-        const char* mPath;
+        const std::string mPath;
         AAssetManager* mAssetManager;
         AAsset* mAsset;
 	};

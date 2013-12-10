@@ -1,7 +1,5 @@
 #include <MageApp.h>
-#include "Widget.h"
-#include "Label.h"
-#include "Button.h"
+#include "androidwars.h"
 
 using namespace mage;
 
@@ -99,6 +97,11 @@ bool Button::OnPointerUp( float x, float y )
 				// Play selected anim
 				mSprite->PlayAnimation( style.SelectedAnimName );
 				mSprite->DrawColor = mDefaultColor;
+				// Play SFX
+				if ( style.SelectedSFXName.GetHash() != 0 )
+				{
+					gSoundManager->PlaySound( gSoundManager->GetSoundClip( style.SelectedSFXName ) );
+				}
 				// Fire pressed event
 				Dictionary params;
 				params.Set( "Widget", (Widget*) this );

@@ -16,7 +16,7 @@ Resource::~Resource()
 //---------------------------------------
 Resource::ResourceStatus Resource::Open()
 {
-    mAsset = AAssetManager_open( mAssetManager, mPath, AASSET_MODE_UNKNOWN );
+    mAsset = AAssetManager_open( mAssetManager, mPath.c_str(), AASSET_MODE_UNKNOWN );
     return mAsset ? RS_OK : RS_FAIL;
 }
 //---------------------------------------
@@ -39,7 +39,7 @@ ResourceDescriptor Resource::GetDescriptor() const
 {
 	 ResourceDescriptor descriptor = { -1, 0, 0 };
 
-	AAsset* asset = AAssetManager_open( mAssetManager, mPath, AASSET_MODE_UNKNOWN );
+	AAsset* asset = AAssetManager_open( mAssetManager, mPath.c_str(), AASSET_MODE_UNKNOWN );
 
 	if( asset != NULL )
 	{
