@@ -69,6 +69,8 @@ namespace mage
 		const MapTile& GetTile( const Vec2i& tilePos ) const;
 		TerrainType* GetTerrainTypeOfTile( int x, int y );
 		TerrainType* GetTerrainTypeOfTile( const Vec2i& tilePos );
+		bool TileIsReachable( const Vec2i& tilePos ) const;
+		int GetIndexOfTile( const Vec2i& tilePos ) const;
 		static Vec2i GetAdjacentTilePos( int x, int y, CardinalDirection direction );
 		static Vec2i GetAdjacentTilePos( const Vec2i& tilePos, CardinalDirection direction );
 		static CardinalDirection GetOppositeDirection( CardinalDirection direction );
@@ -91,7 +93,11 @@ namespace mage
 
 		static MapObject* SpawnObjectFromXml( const XmlReader::XmlReaderIterator& xmlIterator );
 
+		TileInfo* GetReachableTileInfo( const Vec2i& tilePos );
+		const TileInfo* GetReachableTileInfo( const Vec2i& tilePos ) const;
 		void SelectReachableTilesForUnit( Unit* unit, const Vec2i& tilePos, int costToEnter, CardinalDirection previousTileDirection, int movementRange );
+		void FindBestPathToTile( const Vec2i& tilePos, Path& result ) const;
+		void MoveUnitToTile( Unit* unit, const Vec2i& tilePos );
 
 		void ShowMoveDialog() const { mMoveDialog->Show(); }
 		// True if game input should be blocked
@@ -106,6 +112,7 @@ namespace mage
 		std::string mMapName;
 		TileMap mMap;
 		Unit* mSelectedUnit;
+		Path mSelectedPath;
 		std::map< int, TileInfo > mReachableTiles;
 		Widget* mMoveDialog;
 	};
@@ -212,6 +219,18 @@ namespace mage
 	}
 
 
+	inline bool Game::TileIsReachable( const Vec2i& tilePos ) const
+	{
+		return ( GetReachableTileInfo( tilePos ) != nullptr );
+	}
+
+
+	inline int Game::GetIndexOfTile( const Vec2i& tilePos ) const
+	{
+		return ( tilePos.x + ( tilePos.y * mMap.GetTileWidth() ) );
+	}
+
+
 	inline Vec2i Game::GetAdjacentTilePos( int x, int y, CardinalDirection direction )
 	{
 		Vec2i result( x, y );
@@ -269,5 +288,39 @@ namespace mage
 		}
 
 		return result;
+	}
+
+
+	inline Game::TileInfo* Game::GetReachableTileInfo( const Vec2i& tilePos )
+	{
+		TileInfo* tileInfo = nullptr;
+
+		// Find the existing tile info (if any).
+		auto it = mReachableTiles.find( GetIndexOfTile( tilePos ) );
+
+		if( it != mReachableTiles.end() )
+		{
+			// If an existing tile info was found, return it.
+			tileInfo = &( it->second );
+		}
+
+		return tileInfo;
+	}
+
+
+	inline const Game::TileInfo* Game::GetReachableTileInfo( const Vec2i& tilePos ) const
+	{
+		const TileInfo* tileInfo = nullptr;
+
+		// Find the existing tile info (if any).
+		auto it = mReachableTiles.find( GetIndexOfTile( tilePos ) );
+
+		if( it != mReachableTiles.end() )
+		{
+			// If an existing tile info was found, return it.
+			tileInfo = &( it->second );
+		}
+
+		return tileInfo;
 	}
 }

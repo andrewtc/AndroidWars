@@ -38,6 +38,7 @@ Game::Game()
 	: mNextPlayerIndex( 0 )
 	, mStatus( STATUS_NOT_STARTED )
 	, mCamera( nullptr )
+	, mSelectedUnit( nullptr )
 {
 	// Add map object creation callback.
 	mMap.SetNewMapObjectCB( &SpawnObjectFromXml );
@@ -113,10 +114,19 @@ void Game::OnDraw()
 		for( auto it = mReachableTiles.begin(); it != mReachableTiles.end(); ++it )
 		{
 			// Draw the currently selected tiles.
-			Vec2f topLeft = mMap.TileToWorld( it->second.tilePos );
-			topLeft -= mCamera->GetPosition();
-
+			Vec2f topLeft = ( mMap.TileToWorld( it->second.tilePos ) - mCamera->GetPosition() );
 			DrawRect( topLeft.x, topLeft.y, mMap.GetTileWidth(), mMap.GetTileHeight(), Color( 0x8888AAFF ) );
+		}
+
+		if( mSelectedPath.IsValid() )
+		{
+			for( size_t i = 0, numWaypoints = mSelectedPath.GetNumWaypoints(); i < numWaypoints; ++i )
+			{
+				// Draw all tiles in the currently selected path.
+				Vec2i tilePos = mSelectedPath.GetWaypoint( i );
+				Vec2f topLeft = ( mMap.TileToWorld( tilePos ) - mCamera->GetPosition() );
+				DrawRect( topLeft.x, topLeft.y, mMap.GetTileWidth(), mMap.GetTileHeight(), Color( 0x88FF0000 ) );
+			}
 		}
 	}
 }
@@ -207,6 +217,9 @@ void Game::SelectUnit( Unit* unit )
 
 		// Clear all selected tiles.
 		mReachableTiles.clear();
+
+		// Clear the currently selected path.
+		mSelectedPath.Clear();
 	}
 }
 
@@ -214,13 +227,14 @@ void Game::SelectUnit( Unit* unit )
 void Game::SelectReachableTilesForUnit( Unit* unit, const Vec2i& tilePos, int totalCostToEnter, CardinalDirection previousTileDirection, int movementRange )
 {
 	// Select the current tile.
-	int tileIndex = ( tilePos.x + ( tilePos.y * mMap.GetTileWidth() ) );
+	int tileIndex = GetIndexOfTile( tilePos );
 
 	TileInfo tileInfo;
 	tileInfo.tilePos = tilePos;
 	tileInfo.bestTotalCostToEnter = totalCostToEnter;
 	tileInfo.previousTileDirection = previousTileDirection;
 
+	// Replace any existing tile info with the updated info.
 	mReachableTiles[ tileIndex ] = tileInfo;
 
 	for( int i = FIRST_VALID_DIRECTION; i <= LAST_VALID_DIRECTION; ++i )
@@ -251,14 +265,12 @@ void Game::SelectReachableTilesForUnit( Unit* unit, const Vec2i& tilePos, int to
 					int totalCostToEnterAdjacentTile = ( totalCostToEnter + costToEnterAdjacentTile );
 
 					// Search for an existing cost entry for this tile.
-					int adjacentIndex = ( adjacentPos.x + ( adjacentPos.y * mMap.GetTileWidth() ) );
-					auto existingTileInfo = mReachableTiles.find( adjacentIndex );
+					TileInfo* existingTileInfo = GetReachableTileInfo( adjacentPos );
 
-					if( existingTileInfo == mReachableTiles.end() ||
-						totalCostToEnterAdjacentTile < existingTileInfo->second.bestTotalCostToEnter )
+					if( existingTileInfo == nullptr || totalCostToEnterAdjacentTile < existingTileInfo->bestTotalCostToEnter )
 					{
-						// If the unit is able to enter this tile, add it to the list
-						// of reachable tiles and keep searching.
+						// If the unit is able to enter this tile and this way is optimal,
+						// add it to the list of reachable tiles and keep searching.
 						SelectReachableTilesForUnit( unit, adjacentPos, totalCostToEnterAdjacentTile, GetOppositeDirection( direction ), movementRange - costToEnterAdjacentTile );
 					}
 				}
@@ -268,27 +280,73 @@ void Game::SelectReachableTilesForUnit( Unit* unit, const Vec2i& tilePos, int to
 }
 
 
+void Game::FindBestPathToTile( const Vec2i& tilePos, Path& result ) const
+{
+	// Make sure the destination tile is currently selected.
+	assertion( TileIsReachable( tilePos ), "Cannot get best path to unreachable tile (%d, %d)!", tilePos.x, tilePos.y );
+
+	// Clear the return variable.
+	result.Clear();
+
+	for( const TileInfo* tileInfo = GetReachableTileInfo( tilePos );
+		 tileInfo != nullptr && tileInfo->previousTileDirection != INVALID_DIRECTION;
+		 tileInfo = GetReachableTileInfo( GetAdjacentTilePos( tileInfo->tilePos, tileInfo->previousTileDirection ) ) )
+	{
+		// Construct a path through the selected tiles back to the starting tile.
+		result.AddWaypoint( tileInfo->tilePos );
+		DebugPrintf( "Tracing path through selected tiles: (%d, %d)", tileInfo->tilePos.x, tileInfo->tilePos.y );
+	}
+
+	// Make sure the path that was found is valid.
+	assertion( result.IsValid(), "Could not find valid Path to tile (%d, %d) through selected tiles!", tilePos.x, tilePos.y );
+}
+
+
+void Game::MoveUnitToTile( Unit* unit, const Vec2i& tilePos )
+{
+	// Move the unit to the destination tile.
+	// TODO: Apply fuel penalty.
+	// TODO: Play movement animation.
+	unit->SetTilePos( tilePos );
+	DebugPrintf( "Moving Unit \"%s\" to tile (%d, %d).", unit->GetName().c_str(), tilePos.x, tilePos.y );
+}
+
+
 void Game::OnTouchEvent( float x, float y )
 {
 	// A widget is blocking input
 	if ( WidgetIsOpen() )
 		return;
 
-	// Try to select a unit
-	//static void( *fn )( Unit* ) = []( Unit* unit ) -> void { unit->DrawSelected = false; };
-	MapObject* obj = mMap.GetFirstObjectAt( Vec2f( x, y ) + mCamera->GetPosition() );
-	//mMap.ForeachObjectOfType( fn );
+	// Get the position of the tile that was tapped.
+	Vec2f worldPos = ( Vec2f( x, y ) + mCamera->GetPosition() );
+	Vec2i tilePos = mMap.WorldToTile( worldPos );
+	MapTile tile = GetTile( tilePos );
 
-	// Deselect the currently selected unit (if any).
-	SelectUnit( 0 );
+	// See if a Unit was tapped.
+	MapObject* obj = mMap.GetFirstObjectAt( worldPos );
 
 	if ( obj && obj->IsExactly( Unit::TYPE ) )
 	{
-		// If the user taps on a Unit, select it.
+		// If the user taps on a Unit, deselect the currently selected unit (if any).
+		SelectUnit( nullptr );
+
+		// Select the unit that was tapped.
 		Unit* unit = (Unit*) obj;
 		SelectUnit( unit );
-		// TODO this should go someplace else...
+	}
+	else if( tile != TileMap::INVALID_TILE && TileIsReachable( tilePos ) )
+	{
+		// Find the best path to this tile.
+		FindBestPathToTile( tilePos, mSelectedPath );
+
+		// Show the confirm dialog.
 		ShowMoveDialog();
+	}
+	else
+	{
+		// Deselect the currently selected unit (if any).
+		SelectUnit( nullptr );
 	}
 }
 
@@ -318,12 +376,21 @@ void Game::HideAllDialogs()
 
 ObjectEventFunc( Game, ConfirmMoveEvent )
 {
+	// Move the unit to its intended destination.
+	MoveUnitToTile( mSelectedUnit, mSelectedPath.GetDestination() );
+
+	// Clear the currently selected unit.
+	SelectUnit( nullptr );
+
+	// Hide the movement dialog.
 	mMoveDialog->Hide();
-	// TODO call the movement function here...
 }
 
 ObjectEventFunc( Game, CancelMoveEvent )
 {
+	// Clear the currently selected path.
+	mSelectedPath.Clear();
+
+	// Hide the movement dialog.
 	mMoveDialog->Hide();
-	// TODO call the cancel movement function here...
 }

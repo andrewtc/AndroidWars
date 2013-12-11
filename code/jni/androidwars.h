@@ -30,4 +30,5 @@ extern mage::SoundManager* gSoundManager;
 
 #include "game/Player.h"
 #include "game/Unit.h"
+#include "game/Path.h"
 #include "game/Game.h"
