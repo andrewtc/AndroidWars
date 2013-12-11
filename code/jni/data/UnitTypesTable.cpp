@@ -20,4 +20,8 @@ void UnitTypesTable::LoadRecordFromXml( UnitType* unitType, XmlReader::XmlReader
 
 	// Read in the unit display name (if it exists).
 	unitType->mDisplayName = xmlIterator.GetAttributeAsString( "displayName", "" );
+
+	// Read in unit gameplay properties.
+	unitType->mMovementRange = xmlIterator.GetAttributeAsInt( "movementRange", 0 );
+	unitType->mMovementTypeName = xmlIterator.GetAttributeAsString( "movementType" );
 }

@@ -15,5 +15,6 @@ namespace mage
 
 		TerrainTypesTable TerrainTypes;
 		UnitTypesTable UnitTypes;
+		MovementTypesTable MovementTypes;
 	};
 }

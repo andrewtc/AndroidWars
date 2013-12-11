@@ -38,3 +38,9 @@ void UnitType::LoadAnimation()
 	// Load the animation.
 	SpriteManager::LoadSpriteAnimations( mAnimationSetPath.c_str() );
 }
+
+
+MovementType* UnitType::GetMovementType() const
+{
+	return gDatabase->MovementTypes.FindByName( mMovementTypeName );
+}

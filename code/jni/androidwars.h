@@ -22,6 +22,8 @@ extern mage::SoundManager* gSoundManager;
 #include "data/Table.h"
 #include "data/TerrainType.h"
 #include "data/TerrainTypesTable.h"
+#include "data/MovementType.h"
+#include "data/MovementTypesTable.h"
 #include "data/UnitType.h"
 #include "data/UnitTypesTable.h"
 #include "data/Database.h"

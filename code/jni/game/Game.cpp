@@ -237,25 +237,30 @@ void Game::SelectReachableTilesForUnit( Unit* unit, const Vec2i& tilePos, int to
 
 		if( adjacentTile != TileMap::INVALID_TILE )
 		{
-			// Calculate the cost to enter the adjacent tile.
-			// TODO: Actually make this use real cost.
+			// Get the TerrainType of the adjacent tile.
 			TerrainType* adjacentType = GetTerrainTypeOfTile( adjacentPos );
-			int costToEnterAdjacentTile = 1;
 
-			if( costToEnterAdjacentTile <= movementRange )
+			// Calculate the cost to enter the adjacent tile.
+			int costToEnterAdjacentTile = unit->GetMovementCostAcrossTerrain( adjacentType );
+			DebugPrintf( "Unit %s move into tile (%d, %d) with cost %d (TerrainType \"%s\").", ( unit->CanMoveAcrossTerrain( adjacentType ) ? "CAN" : "CANNOT" ), adjacentPos.x, adjacentPos.y, costToEnterAdjacentTile, adjacentType->GetName().GetString().c_str() );
+
+			if( unit->CanMoveAcrossTerrain( adjacentType ) )
 			{
-				int totalCostToEnterAdjacentTile = ( totalCostToEnter + costToEnterAdjacentTile );
-
-				// Search for an existing cost entry for this tile.
-				int adjacentIndex = ( adjacentPos.x + ( adjacentPos.y * mMap.GetTileWidth() ) );
-				auto existingTileInfo = mReachableTiles.find( adjacentIndex );
-
-				if( existingTileInfo == mReachableTiles.end() ||
-					totalCostToEnterAdjacentTile < existingTileInfo->second.bestTotalCostToEnter )
+				if( costToEnterAdjacentTile <= movementRange )
 				{
-					// If the unit is able to enter this tile, add it to the list
-					// of reachable tiles and keep searching.
-					SelectReachableTilesForUnit( unit, adjacentPos, totalCostToEnterAdjacentTile, GetOppositeDirection( direction ), movementRange - costToEnterAdjacentTile );
+					int totalCostToEnterAdjacentTile = ( totalCostToEnter + costToEnterAdjacentTile );
+
+					// Search for an existing cost entry for this tile.
+					int adjacentIndex = ( adjacentPos.x + ( adjacentPos.y * mMap.GetTileWidth() ) );
+					auto existingTileInfo = mReachableTiles.find( adjacentIndex );
+
+					if( existingTileInfo == mReachableTiles.end() ||
+						totalCostToEnterAdjacentTile < existingTileInfo->second.bestTotalCostToEnter )
+					{
+						// If the unit is able to enter this tile, add it to the list
+						// of reachable tiles and keep searching.
+						SelectReachableTilesForUnit( unit, adjacentPos, totalCostToEnterAdjacentTile, GetOppositeDirection( direction ), movementRange - costToEnterAdjacentTile );
+					}
 				}
 			}
 		}
@@ -294,7 +299,8 @@ TerrainType* Game::GetTerrainTypeOfTile( int x, int y )
 	assertion( tile != TileMap::INVALID_TILE, "Cannot get TerrainType of invalid Tile (%d, %d)!", x, y );
 
 	// TODO: Make this actually use the properties of the Tile to determine TerrainType.
-	return gDatabase->TerrainTypes.FindByName( "City" );
+	HashString terrainTypeName = tile.GetPropertyAsString( "TerrainType" );
+	return gDatabase->TerrainTypes.FindByName( terrainTypeName );
 }
 
 bool Game::WidgetIsOpen() const

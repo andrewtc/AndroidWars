@@ -25,6 +25,8 @@ namespace mage
 		Vec2i GetTilePos() const;
 
 		int GetMovementRange() const;
+		int GetMovementCostAcrossTerrain( TerrainType* terrainType ) const;
+		bool CanMoveAcrossTerrain( TerrainType* terrainType ) const;
 
 		bool DrawSelected;
 
@@ -50,5 +52,18 @@ namespace mage
 	inline Vec2i Unit::GetTilePos() const
 	{
 		return mTilePos;
+	}
+
+
+	inline int Unit::GetMovementCostAcrossTerrain( TerrainType* terrainType ) const
+	{
+		assertion( mUnitType, "No UnitType found for Unit \"%s\"!", GetName().c_str() );
+		return mUnitType->GetMovementCostAcrossTerrain( terrainType );
+	}
+
+
+	inline bool Unit::CanMoveAcrossTerrain( TerrainType* terrainType ) const
+	{
+		return ( GetMovementCostAcrossTerrain( terrainType ) > -1 );
 	}
 }

@@ -98,7 +98,11 @@ void Unit::SetTilePos( const Vec2i& tilePos )
 
 int Unit::GetMovementRange() const
 {
+	// Get the maximum movement range for this unit.
 	UnitType* type = GetUnitType();
-	// TODO: Make dynamic.
-	return 4;
+	int movementRange = type->GetMovementRange();
+
+	// TODO: Take supplies into account.
+
+	return movementRange;
 }

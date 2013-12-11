@@ -4,29 +4,29 @@
   <image source="../tilesets/Tileset-v2.png" width="256" height="288"/>
   <tile id="0">
    <properties>
-    <property name="TileTypeName" value="plain"/>
+    <property name="TerrainType" value="plain"/>
    </properties>
   </tile>
   <tile id="1">
    <properties>
-    <property name="TileTypeName" value="sea"/>
+    <property name="TerrainType" value="sea"/>
    </properties>
   </tile>
   <tile id="2">
    <properties>
-    <property name="TileTypeName" value="city"/>
+    <property name="TerrainType" value="city"/>
    </properties>
   </tile>
   <tile id="3">
    <properties>
     <property name="Owner" value="0"/>
-    <property name="TileTypeName" value="city"/>
+    <property name="TerrainType" value="city"/>
    </properties>
   </tile>
   <tile id="4">
    <properties>
     <property name="Owner" value="1"/>
-    <property name="TileTypeName" value="city"/>
+    <property name="TerrainType" value="city"/>
    </properties>
   </tile>
  </tileset>
