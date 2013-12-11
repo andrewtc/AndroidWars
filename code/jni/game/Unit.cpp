@@ -31,35 +31,29 @@ void Unit::OnLoadProperty( const std::string& name, const std::string& value )
 		mUnitType = gDatabase->UnitTypes.FindByName( value );
 		assertion( mUnitType, "UnitType \"%s\" not found!", value.c_str() );
 	}
-	else
-	{
-		assertion( false, "Unit '%s' missing UnitType property!", mName.GetString().c_str() );
-	}
 }
 
 
 void Unit::OnLoadFinished()
 {
+	// Determine the tile location of the unit.
+	Vec2i tilePos = gGame->GetMap()->WorldToTile( Position );
+
+	// Snap the unit to the tile grid.
+	SetTilePos( tilePos );
+
 	Init();
 }
 
 
 void Unit::Init()
 {
-	// Set the position of the Unit based on its tile position.
-	//Position = gGame->TileToWorldCoords( mTilePos );
+	assertion( mUnitType != nullptr, "Unit::Init() '%s' does not have a valid UnitType!", mName.GetString().c_str() );
 
 	// Create a sprite for this Unit.
-	if ( mUnitType )
-	{
-		mSprite = SpriteManager::CreateSprite( mUnitType->GetAnimationSetName(), Position, "Idle" );
-		BoundingRect = mSprite->GetClippingRectForCurrentAnimation();
-		DebugPrintf( "Unit \"%s\" initialized!", mName.GetString().c_str() );
-	}
-	else
-	{
-		assertion( false, "Unit::Init() '%s' has UnitType null!", mName.GetString().c_str() );
-	}
+	mSprite = SpriteManager::CreateSprite( mUnitType->GetAnimationSetName(), Position, "Idle" );
+	BoundingRect = mSprite->GetClippingRectForCurrentAnimation();
+	DebugPrintf( "Unit \"%s\" initialized!", mName.GetString().c_str() );
 }
 
 

@@ -196,7 +196,7 @@ void Game::SelectUnit( Unit* unit )
 		mSelectedUnit = unit;
 
 		// Select all reachable tiles from this Unit's position.
-		SelectReachableTilesForUnit( unit, unit->GetTilePos(), 0, INVALID_DIRECTION, unit->GetMovementRange() );
+		SelectReachableTilesForUnit( unit, unit->GetTilePos(), 0, CARDINAL_DIRECTION_NONE, unit->GetMovementRange() );
 
 		DebugPrintf( "Selected unit \"%s\"", unit->GetName().c_str() );
 
@@ -289,7 +289,7 @@ void Game::FindBestPathToTile( const Vec2i& tilePos, Path& result ) const
 	result.Clear();
 
 	for( const TileInfo* tileInfo = GetReachableTileInfo( tilePos );
-		 tileInfo != nullptr && tileInfo->previousTileDirection != INVALID_DIRECTION;
+		 tileInfo != nullptr && tileInfo->previousTileDirection != CARDINAL_DIRECTION_NONE;
 		 tileInfo = GetReachableTileInfo( GetAdjacentTilePos( tileInfo->tilePos, tileInfo->previousTileDirection ) ) )
 	{
 		// Construct a path through the selected tiles back to the starting tile.

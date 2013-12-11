@@ -9,9 +9,17 @@ namespace mage
 	/**
 	 * Represents a tile direction (i.e. north, south, east, or west).
 	 */
-	enum CardinalDirection { INVALID_DIRECTION, NORTH, SOUTH, EAST, WEST };
-	static const CardinalDirection FIRST_VALID_DIRECTION = NORTH;
-	static const CardinalDirection LAST_VALID_DIRECTION = WEST;
+	enum CardinalDirection
+	{
+		CARDINAL_DIRECTION_NONE,
+		CARDINAL_DIRECTION_EAST,
+		CARDINAL_DIRECTION_NORTH,
+		CARDINAL_DIRECTION_WEST,
+		CARDINAL_DIRECTION_SOUTH
+	};
+
+	static const CardinalDirection FIRST_VALID_DIRECTION = CARDINAL_DIRECTION_EAST;
+	static const CardinalDirection LAST_VALID_DIRECTION = CARDINAL_DIRECTION_SOUTH;
 	static const int NUM_DIRECTIONS = ( LAST_VALID_DIRECTION - FIRST_VALID_DIRECTION + 1 );
 
 	/**
@@ -237,19 +245,19 @@ namespace mage
 
 		switch( direction )
 		{
-		case EAST:
+		case CARDINAL_DIRECTION_EAST:
 			result.x += 1;
 			break;
 
-		case WEST:
+		case CARDINAL_DIRECTION_WEST:
 			result.x -= 1;
 			break;
 
-		case SOUTH:
+		case CARDINAL_DIRECTION_SOUTH:
 			result.y += 1;
 			break;
 
-		case NORTH:
+		case CARDINAL_DIRECTION_NORTH:
 			result.y -= 1;
 			break;
 		}
@@ -266,24 +274,24 @@ namespace mage
 
 	inline CardinalDirection Game::GetOppositeDirection( CardinalDirection direction )
 	{
-		CardinalDirection result = INVALID_DIRECTION;
+		CardinalDirection result = CARDINAL_DIRECTION_NONE;
 
 		switch( direction )
 		{
-		case EAST:
-			result = WEST;
+		case CARDINAL_DIRECTION_EAST:
+			result = CARDINAL_DIRECTION_WEST;
 			break;
 
-		case WEST:
-			result = EAST;
+		case CARDINAL_DIRECTION_WEST:
+			result = CARDINAL_DIRECTION_EAST;
 			break;
 
-		case SOUTH:
-			result = NORTH;
+		case CARDINAL_DIRECTION_SOUTH:
+			result = CARDINAL_DIRECTION_NORTH;
 			break;
 
-		case NORTH:
-			result = SOUTH;
+		case CARDINAL_DIRECTION_NORTH:
+			result = CARDINAL_DIRECTION_SOUTH;
 			break;
 		}
 

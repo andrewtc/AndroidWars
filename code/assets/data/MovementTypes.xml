@@ -3,16 +3,19 @@
     <MovementType name="Boots">
         <MovementCost terrainType="Plain" cost="1" />
         <MovementCost terrainType="City" cost="1" />
+        <MovementCost terrainType="Road" cost="1" />
     </MovementType>
     
     <MovementType name="Tires">
         <MovementCost terrainType="Plain" cost="2" />
         <MovementCost terrainType="City" cost="1" />
+        <MovementCost terrainType="Road" cost="1" />
     </MovementType>
     
     <MovementType name="Treads">
         <MovementCost terrainType="Plain" cost="1" />
         <MovementCost terrainType="City" cost="1" />
+        <MovementCost terrainType="Road" cost="1" />
     </MovementType>
     
 </MovementTypes>

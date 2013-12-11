@@ -16,5 +16,10 @@
 		coverBonus="3"
 		capturable="true"
 		/>
+		
+	<TerrainType
+		name="Road"
+		coverBonus="0"
+		/>
 
 </Terrain>
