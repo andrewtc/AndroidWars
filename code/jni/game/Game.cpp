@@ -39,6 +39,8 @@ Game::Game()
 	, mStatus( STATUS_NOT_STARTED )
 	, mCamera( nullptr )
 	, mSelectedUnit( nullptr )
+	, mCurrentTurnIndex( -1 )
+	, mCurrentPlayerIndex( -1 )
 {
 	// Add map object creation callback.
 	mMap.SetNewMapObjectCB( &SpawnObjectFromXml );
@@ -83,6 +85,10 @@ void Game::Start()
 	// Start the game.
 	mStatus = STATUS_IN_PROGRESS;
 
+	// Reset the game to the first turn and set the starting Player index.
+	mCurrentTurnIndex = -1;
+	mCurrentPlayerIndex = -1;
+
 	// Create a TileMap for this Game.
 	std::string pathToMapFile = FormatMapPath( mMapName );
 	mMap.Load( pathToMapFile.c_str() );
@@ -95,6 +101,20 @@ void Game::Start()
 	Unit* testUnit = SpawnUnit( unitType, firstPlayer, 5, 5 );
 	mMap.AddMapObject( testUnit );
 
+	// Start the first turn.
+	NextTurn();
+}
+
+
+void Game::OnStartTurn()
+{
+	DebugPrintf( "Starting turn %d. It is Player %d's turn.", mCurrentTurnIndex, mCurrentPlayerIndex );
+}
+
+
+void Game::OnEndTurn()
+{
+	DebugPrintf( "Ending turn %d.", mCurrentTurnIndex );
 }
 
 
@@ -352,6 +372,27 @@ void Game::OnTouchEvent( float x, float y )
 		// Deselect the currently selected unit (if any).
 		SelectUnit( nullptr );
 	}
+}
+
+
+void Game::NextTurn()
+{
+	assertion( mStatus == STATUS_IN_PROGRESS, "Cannot advance turn for Game that is not in progress!" );
+
+	if( mCurrentTurnIndex > -1 )
+	{
+		// If this isn't the first turn, end the previous turn.
+		OnEndTurn();
+	}
+
+	// Increment the turn counter.
+	++mCurrentTurnIndex;
+
+	// Choose the next Player to take a turn.
+	mCurrentPlayerIndex = ( ( mCurrentPlayerIndex + 1 ) % GetNumPlayers() );
+
+	// Start the next turn.
+	OnStartTurn();
 }
 
 

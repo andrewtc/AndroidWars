@@ -48,12 +48,15 @@ EventFunc( TestWidgetButtonEvent )
 EventFunc( ShowTestWidgetEvent )
 {
 	// Make widget if does not exist
-	if ( !gWidget )
-	{
-		gWidget = Widget::LoadWidget( "ui/test.xml" );
-	}
+	//if ( !gWidget )
+	//{
+	//	gWidget = Widget::LoadWidget( "ui/test.xml" );
+	//}
 	// Show the widget
-	gWidget->Show();
+	//gWidget->Show();
+
+	// TEST: End the current turn.
+	gGame->NextTurn();
 
 	// Play a sfx - this is done through data now
 //	gSoundManager->PlaySound( gJumpSoundFx );

@@ -63,12 +63,15 @@ namespace mage
 		void AddPlayer( Player* player );
 		bool HasPlayer( Player* player ) const;
 		Player* GetPlayer( int index ) const;
+		Player* GetCurrentPlayer() const;
 		int GetNumPlayers() const;
 
 		Unit* SpawnUnit( UnitType* unitType, Player* owner, int tileX, int tileY );
 		void SelectUnit( Unit* unit );
 
 		void OnTouchEvent( float x, float y );
+
+		void NextTurn();
 
 		TileMap* GetMap();
 		const TileMap* GetMap() const;
@@ -111,6 +114,9 @@ namespace mage
 		void FindBestPathToTile( const Vec2i& tilePos, Path& result ) const;
 		void MoveUnitToTile( Unit* unit, const Vec2i& tilePos );
 
+		void OnStartTurn();
+		void OnEndTurn();
+
 		void ShowMoveDialog() const { mMoveDialog->Show(); }
 		void ShowAttackDialog() const { mAttackDialog->Show(); }
 		// True if game input should be blocked
@@ -119,6 +125,8 @@ namespace mage
 		void HideAllDialogs();
 
 		int mNextPlayerIndex;
+		int mCurrentTurnIndex;
+		int mCurrentPlayerIndex;
 		Camera* mCamera;
 		Status mStatus;
 		Players mPlayers;
@@ -195,6 +203,12 @@ namespace mage
 		}
 
 		return result;
+	}
+
+
+	inline Player* Game::GetCurrentPlayer() const
+	{
+		return GetPlayer( mCurrentPlayerIndex );
 	}
 
 
