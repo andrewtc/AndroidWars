@@ -35,11 +35,10 @@ void Unit::OnLoadProperty( const std::string& name, const std::string& value )
 	}
 	else if ( name == "Owner" )
 	{
-		std::stringstream parser( value );
-
 		// Read the Player index from the property.
 		int index;
-		parser >> index;
+		bool success = StringUtil::StringToType( value, &index );
+		assertion( success, "Could not parse Owner value \"%s\". Must be a positive integer.", value.c_str() );
 
 		// Grab the owning player.
 		mOwner = gGame->GetPlayer( index );
