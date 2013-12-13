@@ -10,7 +10,7 @@ namespace mage
 		DECLARE_RTTI;
 	public:
 		Unit( const std::string& name );
-		Unit( UnitType* unitType );
+		Unit( UnitType* unitType, Player* owner );
 		virtual ~Unit();
 
 		void Init();
@@ -34,6 +34,7 @@ namespace mage
 		UnitType* mUnitType;
 		Vec2i mTilePos;
 		Sprite* mSprite;
+		Player* mOwner;
 	};
 
 

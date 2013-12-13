@@ -62,9 +62,10 @@ namespace mage
 
 		void AddPlayer( Player* player );
 		bool HasPlayer( Player* player ) const;
+		Player* GetPlayer( int index ) const;
 		int GetNumPlayers() const;
 
-		Unit* SpawnUnit( UnitType* unitType, int tileX, int tileY );
+		Unit* SpawnUnit( UnitType* unitType, Player* owner, int tileX, int tileY );
 		void SelectUnit( Unit* unit );
 
 		void OnTouchEvent( float x, float y );
@@ -173,6 +174,19 @@ namespace mage
 				result = true;
 				break;
 			}
+		}
+
+		return result;
+	}
+
+
+	inline Player* Game::GetPlayer( int index ) const
+	{
+		Player* result = nullptr;
+
+		if( index >= 0 && index < mPlayers.size() )
+		{
+			result = mPlayers[ index ];
 		}
 
 		return result;

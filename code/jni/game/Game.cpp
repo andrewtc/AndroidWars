@@ -88,7 +88,8 @@ void Game::Start()
 
 	// Spawn a test Unit. TODO remove this
 	UnitType* unitType = gDatabase->UnitTypes.FindByName( "Infantry" );
-	Unit* testUnit = SpawnUnit( unitType, 5, 5 );
+	Player* firstPlayer = GetPlayer( 0 );
+	Unit* testUnit = SpawnUnit( unitType, firstPlayer, 5, 5 );
 	mMap.AddMapObject( testUnit );
 
 }
@@ -174,10 +175,10 @@ MapObject* Game::SpawnObjectFromXml( const XmlReader::XmlReaderIterator& xmlIter
 }
 
 
-Unit* Game::SpawnUnit( UnitType* unitType, int x, int y )
+Unit* Game::SpawnUnit( UnitType* unitType, Player* owner, int x, int y )
 {
 	// Create a new Unit of the specified type at the specified location on the map.
-	Unit* unit = new Unit( unitType );
+	Unit* unit = new Unit( unitType, owner );
 	unit->SetTilePos( x, y );
 
 	// Initialize the Unit.

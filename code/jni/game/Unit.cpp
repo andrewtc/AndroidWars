@@ -9,14 +9,16 @@ Unit::Unit( const std::string& name )
 	, mUnitType( nullptr )
 	, mSprite( nullptr )
 	, DrawSelected( false )
+	, mOwner( nullptr )
 {}
 
 
-Unit::Unit( UnitType* unitType )
+Unit::Unit( UnitType* unitType, Player* owner )
 	: MapObject( "Unit" )
 	, mUnitType( unitType )
 	, mSprite( nullptr )
 	, DrawSelected( false )
+	, mOwner( owner )
 { }
 
 
@@ -30,6 +32,18 @@ void Unit::OnLoadProperty( const std::string& name, const std::string& value )
 	{
 		mUnitType = gDatabase->UnitTypes.FindByName( value );
 		assertion( mUnitType, "UnitType \"%s\" not found!", value.c_str() );
+	}
+	else if ( name == "Owner" )
+	{
+		std::stringstream parser( value );
+
+		// Read the Player index from the property.
+		int index;
+		parser >> index;
+
+		// Grab the owning player.
+		mOwner = gGame->GetPlayer( index );
+		assertion( mOwner, "Invalid Player index %d specified for Unit \"%s\"!", mName.GetString().c_str() );
 	}
 }
 
@@ -49,6 +63,7 @@ void Unit::OnLoadFinished()
 void Unit::Init()
 {
 	assertion( mUnitType != nullptr, "Unit::Init() '%s' does not have a valid UnitType!", mName.GetString().c_str() );
+	assertion( mOwner != nullptr, "Unit::Init() '%s' does not have an owner Player!", mName.GetString().c_str() );
 
 	// Create a sprite for this Unit.
 	mSprite = SpriteManager::CreateSprite( mUnitType->GetAnimationSetName(), Position, "Idle" );
