@@ -45,7 +45,7 @@ EventFunc( TestWidgetButtonEvent )
 }
 
 // Show the test widget
-EventFunc( ShowTestWidgetEvent )
+EventFunc( NextTurnEvent )
 {
 	// Make widget if does not exist
 	//if ( !gWidget )
@@ -65,7 +65,7 @@ EventFunc( ShowTestWidgetEvent )
 void RegisterEventFuncs()
 {
 	RegisterEventFunc( TestWidgetButtonEvent );
-	RegisterEventFunc( ShowTestWidgetEvent );
+	RegisterEventFunc( NextTurnEvent );
 }
 
 void OnDraw()
@@ -116,7 +116,7 @@ void OnWindowShown()
 	// Load Widget definitions
 	Widget::LoadDefinitions( "ui/definitions.xml" );
 
-	gTestWidget = Widget::LoadWidget( "ui/show_test.xml" );
+	gTestWidget = Widget::LoadWidget( "ui/next_turn.xml" );
 
 	// Create a camera
 	gCamera = new Camera( gWindowWidth, gWindowHeight );
