@@ -8,7 +8,6 @@ Unit::Unit( const std::string& name )
 : MapObject( name )
 	, mUnitType( nullptr )
 	, mSprite( nullptr )
-	, DrawSelected( false )
 	, mOwner( nullptr )
 {}
 
@@ -17,7 +16,6 @@ Unit::Unit( UnitType* unitType, Player* owner )
 	: MapObject( "Unit" )
 	, mUnitType( unitType )
 	, mSprite( nullptr )
-	, DrawSelected( false )
 	, mOwner( owner )
 { }
 
@@ -68,6 +66,12 @@ void Unit::Init()
 	mSprite = SpriteManager::CreateSprite( mUnitType->GetAnimationSetName(), Position, "Idle" );
 	BoundingRect = mSprite->GetClippingRectForCurrentAnimation();
 	mSprite->DrawColor = mOwner->GetPlayerColor();
+	mSelectionColor = mSprite->DrawColor;
+	mDefaultColor = mSelectionColor;
+	mDefaultColor.r /= 2;
+	mDefaultColor.g /= 2;
+	mDefaultColor.b /= 2;
+	Deselect();
 	DebugPrintf( "Unit \"%s\" initialized!", mName.GetString().c_str() );
 }
 
@@ -79,13 +83,6 @@ void Unit::OnDraw( const Camera& camera ) const
 		// Draw the sprite at the location of the Unit.
 		mSprite->Position = Position;
 		mSprite->OnDraw( camera );
-
-		if ( DrawSelected )
-		{
-			const RectI& bounds = mSprite->GetClippingRectForCurrentAnimation();
-			const Vec2f pos = Position - camera.GetPosition();
-			DrawRectOutline( pos.x, pos.y, bounds.Width(), bounds.Height(), Color::CYAN, 2.0f );
-		}
 	}
 	// Fallback to debugdraw on missing graphics
 	else
@@ -114,4 +111,34 @@ int Unit::GetMovementRange() const
 	// TODO: Take supplies into account.
 
 	return movementRange;
+}
+
+
+bool Unit::IsInRange( const Unit& target ) const
+{
+	UnitType* type = GetUnitType();
+	const IntRange& range = type->GetAttackRange();
+	DebugPrintf( "Unit pos (%d, %d) : trg pos (%d %d) d=%d r=[%d,%d]",
+			mTilePos.x, mTilePos.y,
+			target.mTilePos.x, target.mTilePos.y,
+			GetDistanceToUnit( target ),
+			range.Min, range.Max );
+	return range.IsValueInRange( GetDistanceToUnit( target ) );
+}
+\
+
+int Unit::GetDistanceToUnit( const Unit& target ) const
+{
+	return mTilePos.GetManhattanDistanceTo( target.mTilePos );
+}
+
+
+void Unit::Select()
+{
+	mSprite->DrawColor = mSelectionColor;
+}
+
+void Unit::Deselect()
+{
+	mSprite->DrawColor = mDefaultColor;
 }

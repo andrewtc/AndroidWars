@@ -133,6 +133,7 @@ namespace mage
 		std::string mMapName;
 		TileMap mMap;
 		Unit* mSelectedUnit;
+		Unit* mTargetUnit;
 		Path mSelectedPath;
 		std::map< int, TileInfo > mReachableTiles;
 		Widget* mMoveDialog;

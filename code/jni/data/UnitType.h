@@ -18,6 +18,7 @@ namespace mage
 		virtual ~UnitType();
 
 		int GetMovementRange() const;
+		const IntRange& GetAttackRange() const { return mAttackRange; }
 		int GetMovementCostAcrossTerrain( TerrainType* terrainType ) const;
 		bool CanMoveAcrossTerrain( TerrainType* terrainType ) const;
 		HashString GetAnimationSetName() const;
@@ -27,6 +28,7 @@ namespace mage
 		void LoadAnimation();
 
 		int mMovementRange;
+		IntRange mAttackRange;
 		HashString mMovementTypeName;
 		HashString mAnimationSetName;		// Name of the animation set, Tank.anim
 		std::string mAnimationSetPath;		// Path to the animation set, sprites/Tank.anim

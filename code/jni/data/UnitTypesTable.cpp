@@ -24,4 +24,5 @@ void UnitTypesTable::LoadRecordFromXml( UnitType* unitType, XmlReader::XmlReader
 	// Read in unit gameplay properties.
 	unitType->mMovementRange = xmlIterator.GetAttributeAsInt( "movementRange", 0 );
 	unitType->mMovementTypeName = xmlIterator.GetAttributeAsString( "movementType" );
+	unitType->mAttackRange = xmlIterator.GetAttributeAsIntRange( "attackRange" );
 }

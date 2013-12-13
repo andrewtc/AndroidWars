@@ -27,14 +27,19 @@ namespace mage
 		int GetMovementRange() const;
 		int GetMovementCostAcrossTerrain( TerrainType* terrainType ) const;
 		bool CanMoveAcrossTerrain( TerrainType* terrainType ) const;
-
-		bool DrawSelected;
+		bool IsInRange( const Unit& target ) const;
+		int GetDistanceToUnit( const Unit& target ) const;
+		bool IsOwnedBy( Player* player ) const { return mOwner == player; }
+		void Select();
+		void Deselect();
 
 	protected:
 		UnitType* mUnitType;
 		Vec2i mTilePos;
 		Sprite* mSprite;
 		Player* mOwner;
+		Color mSelectionColor;
+		Color mDefaultColor;
 	};
 
 

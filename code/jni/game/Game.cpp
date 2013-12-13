@@ -39,6 +39,7 @@ Game::Game()
 	, mStatus( STATUS_NOT_STARTED )
 	, mCamera( nullptr )
 	, mSelectedUnit( nullptr )
+	, mTargetUnit( nullptr )
 	, mCurrentTurnIndex( -1 )
 	, mCurrentPlayerIndex( -1 )
 {
@@ -215,29 +216,56 @@ void Game::SelectUnit( Unit* unit )
 {
 	if( unit )
 	{
-		// Select the unit.
-		unit->DrawSelected = true;
-		mSelectedUnit = unit;
+		// TODO
+		// check if belongs to current player
+		//  do normal selection...
+		// else target the unit
+		//  check if in attack range
+		//   confirm attack dialog
 
-		// Select all reachable tiles from this Unit's position.
-		SelectReachableTilesForUnit( unit, unit->GetTilePos(), 0, CARDINAL_DIRECTION_NONE, unit->GetMovementRange() );
+		Player* currentPlayer = GetCurrentPlayer();
 
-		DebugPrintf( "Selected unit \"%s\"", unit->GetName().c_str() );
-
-		for( auto it = mReachableTiles.begin(); it != mReachableTiles.end(); ++it )
+		if ( unit->IsOwnedBy( currentPlayer ) )
 		{
-			TileInfo& info = it->second;
-			DebugPrintf( "Tile (%d, %d) is reachable (best cost of %d)!", info.tilePos.x, info.tilePos.y, info.bestTotalCostToEnter );
+			// Select the unit.
+			unit->Select();
+			mSelectedUnit = unit;
+
+			// Select all reachable tiles from this Unit's position.
+			SelectReachableTilesForUnit( unit, unit->GetTilePos(), 0, CARDINAL_DIRECTION_NONE, unit->GetMovementRange() );
+
+			DebugPrintf( "Selected unit \"%s\"", unit->GetName().c_str() );
+
+			for( auto it = mReachableTiles.begin(); it != mReachableTiles.end(); ++it )
+			{
+				TileInfo& info = it->second;
+				DebugPrintf( "Tile (%d, %d) is reachable (best cost of %d)!", info.tilePos.x, info.tilePos.y, info.bestTotalCostToEnter );
+			}
+		}
+		else
+		{
+			if ( mSelectedUnit )
+			{
+				DebugPrintf( "Checking attack range..." );
+				if ( mSelectedUnit->IsInRange( *unit ) )
+				{
+					mTargetUnit = unit;
+					ShowAttackDialog();
+				}
+			}
+			else
+				DebugPrintf( "No selected unit!" );
 		}
 	}
 	else
 	{
 		if ( mSelectedUnit )
 		{
-			mSelectedUnit->DrawSelected = false;
+			mSelectedUnit->Deselect();
 		}
 		// Deselect the previously selected Unit.
 		mSelectedUnit = nullptr;
+		mTargetUnit = nullptr;
 
 		// Clear all selected tiles.
 		mReachableTiles.clear();
@@ -353,10 +381,12 @@ void Game::OnTouchEvent( float x, float y )
 	if ( obj && obj->IsExactly( Unit::TYPE ) )
 	{
 		// If the user taps on a Unit, deselect the currently selected unit (if any).
-		SelectUnit( nullptr );
+//		SelectUnit( nullptr );
 
 		// Select the unit that was tapped.
 		Unit* unit = (Unit*) obj;
+		if ( unit->IsOwnedBy( GetCurrentPlayer() ) )
+			SelectUnit( 0 );
 		SelectUnit( unit );
 	}
 	else if( tile != TileMap::INVALID_TILE && TileIsReachable( tilePos ) )
@@ -409,7 +439,7 @@ TerrainType* Game::GetTerrainTypeOfTile( int x, int y )
 bool Game::WidgetIsOpen() const
 {
 	// Put all the dialogs that block game input here...
-	return mMoveDialog->Visible && mAttackDialog->Visible;
+	return mMoveDialog->Visible || mAttackDialog->Visible;
 }
 
 void Game::HideAllDialogs()
@@ -444,9 +474,13 @@ ObjectEventFunc( Game, CancelMoveEvent )
 ObjectEventFunc( Game, ConfirmAttackEvent )
 {
 	// TODO confirm the attack
+	SelectUnit( 0 );
+	mAttackDialog->Hide();
 }
 
 ObjectEventFunc( Game, CancelAttackEvent )
 {
 	// TODO cancel the attack
+	SelectUnit( 0 );
+	mAttackDialog->Hide();
 }
