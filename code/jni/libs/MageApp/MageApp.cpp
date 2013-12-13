@@ -13,6 +13,7 @@ namespace mage
 	{
 		android_app* app;
 		int32 width, height;
+		float volume;
 
 		EGLDisplay display;
 		EGLSurface surface;
@@ -43,6 +44,7 @@ namespace mage
 	static OnPointerMotionFn gOnPointerMotionFn = 0;
 	static OnFocusLostFn gOnFocusLostFn = 0;
 	static OnFocusGainedFn gOnFocusGainedFn = 0;
+	static OnVolumeChangedFn gOnVolumeChangedFn = 0;
 
 	static void handleAppCmd( struct android_app* app, int32_t cmd );
 	static int32_t handleInputEvent( struct android_app* app, AInputEvent* event );
@@ -68,6 +70,7 @@ namespace mage
 		app->userData = &gEngine;
 		app->onAppCmd = handleAppCmd;
 		app->onInputEvent = handleInputEvent;
+		gEngine.volume = 0.1f;
 
 		DebugPrintf( "Registering asset manager\n" );
 
@@ -216,6 +219,11 @@ namespace mage
 		gOnFocusGainedFn = fn;
 	}
 	//---------------------------------------
+	void RegisterOnVolumeChangedFn( OnVolumeChangedFn fn )
+	{
+		gOnVolumeChangedFn = fn;
+	}
+	//---------------------------------------
 	// Input handling
 	//---------------------------------------
 	void handleAppCmd( struct android_app* app, int32_t cmd )
@@ -243,7 +251,8 @@ namespace mage
 					initGL();
 					// OnWindowShownFn requires GL is init first
 					gOnWindowShownFn();
-					//OnDraw();
+					if ( gOnVolumeChangedFn )
+						gOnVolumeChangedFn( gEngine.volume );
 				}
 			}
 			break;
@@ -316,89 +325,138 @@ namespace mage
 	//    LOGI("AMotionEvent_getTouchMinor=%f", AMotionEvent_getTouchMinor(pEvent, 0));
 
 		Engine* engine = (Engine*) app->userData;
-		const int action = AMotionEvent_getAction( pEvent );
-
-	//	DebugPrintf("AMotionEvent_getAction=%d", AMotionEvent_getAction(pEvent));
-		switch ( action & AMOTION_EVENT_ACTION_MASK )
+		int sourceId = AInputEvent_getSource( pEvent );
+		if ( sourceId == AINPUT_SOURCE_TOUCHPAD )
 		{
-			case AMOTION_EVENT_ACTION_DOWN:
+			// Gamepad or something
+			return 1;
+		}
+		else if ( sourceId == AINPUT_SOURCE_TOUCHSCREEN )
+		{
+			// Touch event
+			if( AInputEvent_getType( pEvent ) == AINPUT_EVENT_TYPE_MOTION )
 			{
-				// A single finger has touched the screen
-				//DebugPrintf( "Touch Down!" );
-				const size_t pointerIndex = 0;
-				const float x = AMotionEvent_getX( pEvent, pointerIndex );
-				const float y = AMotionEvent_getY( pEvent, pointerIndex );
+				const int action = AMotionEvent_getAction( pEvent );
 
-				if ( gOnPointerDown )
-					gOnPointerDown( x, y, pointerIndex );
-
-				gLastTouchX = x;
-				gLastTouchY = y;
-				gActivePointerId = pointerIndex;
-				break;
-			}
-			case AMOTION_EVENT_ACTION_UP:
-			{
-				// The last finger has left the screen
-				//DebugPrintf( "Touch Up!" );
-				if ( gOnPointerUp )
-					gOnPointerUp( gLastTouchX, gLastTouchY, gActivePointerId );
-				gActivePointerId = INVALID_POINTER_ID;
-				break;
-			}
-			case AMOTION_EVENT_ACTION_POINTER_DOWN:
-			{
-	//			DebugPrintf( "Touch Pointer Down!" );
-				break;
-			}
-			case AMOTION_EVENT_ACTION_POINTER_UP:
-			{
-	//			DebugPrintf( "Touch Pointer Up!" );
-				break;
-			}
-			case AMOTION_EVENT_ACTION_MOVE:
-			{
-				// A finger or fingers have moved on the screen
-				const size_t pointerIndex = 0;
-				const float x = AMotionEvent_getX( pEvent, pointerIndex );
-				const float y = AMotionEvent_getY( pEvent, pointerIndex );
-
-				if ( gOnPointerMotionFn )
+			//	DebugPrintf("AMotionEvent_getAction=%d", AMotionEvent_getAction(pEvent));
+				switch ( action & AMOTION_EVENT_ACTION_MASK )
 				{
-					gOnPointerMotionFn( x, y, gLastTouchX - x, gLastTouchY - y, pointerIndex );
+					case AMOTION_EVENT_ACTION_DOWN:
+					{
+						// A single finger has touched the screen
+						//DebugPrintf( "Touch Down!" );
+						const size_t pointerIndex = 0;
+						const float x = AMotionEvent_getX( pEvent, pointerIndex );
+						const float y = AMotionEvent_getY( pEvent, pointerIndex );
+
+						if ( gOnPointerDown )
+							gOnPointerDown( x, y, pointerIndex );
+
+						gLastTouchX = x;
+						gLastTouchY = y;
+						gActivePointerId = pointerIndex;
+
+						return 1;
+					}
+					case AMOTION_EVENT_ACTION_UP:
+					{
+						// The last finger has left the screen
+						//DebugPrintf( "Touch Up!" );
+						if ( gOnPointerUp )
+							gOnPointerUp( gLastTouchX, gLastTouchY, gActivePointerId );
+						gActivePointerId = INVALID_POINTER_ID;
+						return 1;
+					}
+					case AMOTION_EVENT_ACTION_POINTER_DOWN:
+					{
+			//			DebugPrintf( "Touch Pointer Down!" );
+						return 1;
+					}
+					case AMOTION_EVENT_ACTION_POINTER_UP:
+					{
+			//			DebugPrintf( "Touch Pointer Up!" );
+						return 1;
+					}
+					case AMOTION_EVENT_ACTION_MOVE:
+					{
+						// A finger or fingers have moved on the screen
+						const size_t pointerIndex = 0;
+						const float x = AMotionEvent_getX( pEvent, pointerIndex );
+						const float y = AMotionEvent_getY( pEvent, pointerIndex );
+
+						if ( gOnPointerMotionFn )
+						{
+							gOnPointerMotionFn( x, y, gLastTouchX - x, gLastTouchY - y, pointerIndex );
+						}
+
+						gLastTouchX = x;
+						gLastTouchY = y;
+						return 1;
+					}
+
+					case AMOTION_EVENT_ACTION_CANCEL:
+					{
+			//			DebugPrintf( "Touch Cancel" );
+						return 1;
+					}
+
+					default:
+						return 0;
+				}
+			}
+
+
+			/*if( AInputEvent_getType( pEvent ) == AINPUT_EVENT_TYPE_MOTION )
+			{
+				size_t pointerCount = AMotionEvent_getPointerCount( pEvent );
+
+				for( size_t i = 0; i < pointerCount; ++i )
+				{
+					//DebugPrintf( "Received motion event from pointer %zu: (%.1f, %.1f)",
+					//      i, AMotionEvent_getX( pEvent, i ), AMotionEvent_getY( pEvent, i ) );
+				}
+				return 1;
+			}
+			else if( AInputEvent_getType( pEvent ) == AINPUT_EVENT_TYPE_KEY )
+			{
+				DebugPrintf( "Received key event: %d", AKeyEvent_getKeyCode( pEvent ) );
+
+				return 1;
+			}*/
+		}
+		else
+		{
+			// Keypress
+			if( AInputEvent_getType( pEvent ) == AINPUT_EVENT_TYPE_KEY )
+			{
+				int32_t code = AKeyEvent_getKeyCode( pEvent );
+				DebugPrintf( "Received key event: %d", code );
+
+				bool volumeChanged = false;
+
+				if ( code == 25 )
+				{
+					engine->volume -= 0.05f;
+					Mathf::ClampToRange( gEngine.volume, 0.0f, 1.0f );
+					volumeChanged = true;
+				}
+				if ( code == 24 )
+				{
+					engine->volume += 0.05f;
+					Mathf::ClampToRange( gEngine.volume, 0.0f, 1.0f );
+					volumeChanged = true;
 				}
 
-				gLastTouchX = x;
-				gLastTouchY = y;
-				break;
-			}
-
-			case AMOTION_EVENT_ACTION_CANCEL:
-			{
-	//			DebugPrintf( "Touch Cancel" );
-				break;
+				if ( volumeChanged )
+				{
+					DebugPrintf( "Volume changed: %.3f\n", engine->volume );
+					if ( gOnVolumeChangedFn )
+						gOnVolumeChangedFn( gEngine.volume );
+				}
+				return 0;
 			}
 		}
-
-
-		if( AInputEvent_getType( pEvent ) == AINPUT_EVENT_TYPE_MOTION )
-		{
-			size_t pointerCount = AMotionEvent_getPointerCount( pEvent );
-
-			for( size_t i = 0; i < pointerCount; ++i )
-			{
-				//DebugPrintf( "Received motion event from pointer %zu: (%.1f, %.1f)",
-				//      i, AMotionEvent_getX( pEvent, i ), AMotionEvent_getY( pEvent, i ) );
-			}
-			return 1;
-		}
-		else if( AInputEvent_getType( pEvent ) == AINPUT_EVENT_TYPE_KEY )
-		{
-			DebugPrintf( "Received key event: %d", AKeyEvent_getKeyCode( pEvent ) );
-
-			return 1;
-		}
-
+		// System event
 		return 0;
 	}
 	//---------------------------------------

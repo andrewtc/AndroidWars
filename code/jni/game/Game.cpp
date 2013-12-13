@@ -45,6 +45,7 @@ Game::Game()
 
 	// Create dialogs
 	mMoveDialog = Widget::LoadWidget( "ui/move_dialog.xml" );
+	mAttackDialog = Widget::LoadWidget( "ui/attack_dialog.xml" );
 
 	// Hide them
 	HideAllDialogs();
@@ -52,6 +53,8 @@ Game::Game()
 	// Register events
 	RegisterObjectEventFunc( Game, ConfirmMoveEvent );
 	RegisterObjectEventFunc( Game, CancelMoveEvent );
+	RegisterObjectEventFunc( Game, ConfirmAttackEvent );
+	RegisterObjectEventFunc( Game, CancelAttackEvent );
 }
 
 
@@ -365,12 +368,13 @@ TerrainType* Game::GetTerrainTypeOfTile( int x, int y )
 bool Game::WidgetIsOpen() const
 {
 	// Put all the dialogs that block game input here...
-	return mMoveDialog->Visible;
+	return mMoveDialog->Visible && mAttackDialog->Visible;
 }
 
 void Game::HideAllDialogs()
 {
 	mMoveDialog->Hide();
+	mAttackDialog->Hide();
 }
 
 // Events
@@ -394,4 +398,14 @@ ObjectEventFunc( Game, CancelMoveEvent )
 
 	// Hide the movement dialog.
 	mMoveDialog->Hide();
+}
+
+ObjectEventFunc( Game, ConfirmAttackEvent )
+{
+	// TODO confirm the attack
+}
+
+ObjectEventFunc( Game, CancelAttackEvent )
+{
+	// TODO cancel the attack
 }

@@ -48,6 +48,8 @@ namespace mage
 		bool PlayMusic( const char* path );
 		void StopMusic();
 
+		void SetVolume( float volume );
+
 	private:
 		bool StartSoundPlayer();
 
@@ -58,6 +60,7 @@ namespace mage
 		SLEngineItf mEngine;
 		// Output
 		SLObjectItf mOutputMixObj;
+		SLVolumeItf mOutputMixVolume;
 		// Music player
 		SLObjectItf mAudioTrackPlayerObj;
 		SLPlayItf mAudioTrackPlayer;
@@ -65,6 +68,7 @@ namespace mage
 		// Sound player
 		SLObjectItf mPlayerObj;
 		SLPlayItf mPlayer;
+		SLVolumeItf mPlayerVolume;
 		SLBufferQueueItf mPlayerQueue;
 		// SoundClips
 		HashMap< SoundClip* > mSoundClips;

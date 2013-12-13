@@ -16,11 +16,13 @@ namespace mage
 		bool HasGame() const;
 		int GetIndex() const;
 		int GetFunds() const;
+		const Color& GetPlayerColor() const { return Color::WHITE; } //return sPlayerColors[ mIndex ]; }
 
 	protected:
 		int mIndex;
 		int mFunds;
 		Game* mGame;
+		static Color sPlayerColors[];
 
 		friend class Game;
 	};

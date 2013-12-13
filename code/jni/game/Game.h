@@ -88,6 +88,9 @@ namespace mage
 		EventFunc( ConfirmMoveEvent );
 		EventFunc( CancelMoveEvent );
 
+		EventFunc( ConfirmAttackEvent );
+		EventFunc( CancelAttackEvent );
+
 	protected:
 		struct TileInfo
 		{
@@ -109,6 +112,7 @@ namespace mage
 		void MoveUnitToTile( Unit* unit, const Vec2i& tilePos );
 
 		void ShowMoveDialog() const { mMoveDialog->Show(); }
+		void ShowAttackDialog() const { mAttackDialog->Show(); }
 		// True if game input should be blocked
 		bool WidgetIsOpen() const;
 		// Hide all the game dialogs
@@ -124,6 +128,7 @@ namespace mage
 		Path mSelectedPath;
 		std::map< int, TileInfo > mReachableTiles;
 		Widget* mMoveDialog;
+		Widget* mAttackDialog;
 	};
 
 

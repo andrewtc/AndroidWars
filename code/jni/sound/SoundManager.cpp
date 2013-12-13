@@ -77,9 +77,9 @@ bool SoundManager::Start()
 	const SLuint32 lEngineMixIIDCount = 1;
 	const SLInterfaceID lEngineMixIIDs[] = { SL_IID_ENGINE };
 	const SLboolean lEngineMixReqs[] = { SL_BOOLEAN_TRUE };
-	const SLuint32 lOutputMixIIDCount = 0;
-	const SLInterfaceID lOutputMixIIDs[] = { };
-	const SLboolean lOutputMixReqs[] = { };
+	const SLuint32 lOutputMixIIDCount = 1;
+	const SLInterfaceID lOutputMixIIDs[] = { SL_IID_VOLUME };
+	const SLboolean lOutputMixReqs[] = { SL_BOOLEAN_FALSE };
 
 	// Creates OpenSL ES engine and dumps its capabilities.
 	lRes = slCreateEngine( &mEngineObj, 0, NULL, lEngineMixIIDCount, lEngineMixIIDs, lEngineMixReqs );
@@ -100,6 +100,11 @@ bool SoundManager::Start()
 	// Creates audio output.
 	lRes = (*mEngine)->CreateOutputMix( mEngine, &mOutputMixObj, lOutputMixIIDCount, lOutputMixIIDs, lOutputMixReqs );
 	lRes = (*mOutputMixObj)->Realize( mOutputMixObj, SL_BOOLEAN_FALSE );
+	lRes = (*mOutputMixObj)->GetInterface( mOutputMixObj, SL_IID_VOLUME, &mOutputMixVolume );
+	if( lRes != SL_RESULT_SUCCESS )
+	{
+		mOutputMixVolume = 0;
+	}
 
 	// Set-up sound player.
 	if( !StartSoundPlayer() )
@@ -330,9 +335,9 @@ bool SoundManager::StartSoundPlayer()
 	lDataSink.pFormat = NULL;
 
 	// Create the sounds player and retrieves its interfaces.
-	const SLuint32 lSoundPlayerIIDCount = 2;
-	const SLInterfaceID lSoundPlayerIIDs[] = { SL_IID_PLAY, SL_IID_BUFFERQUEUE };
-	const SLboolean lSoundPlayerReqs[] = { SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE };
+	const SLuint32 lSoundPlayerIIDCount = 3;
+	const SLInterfaceID lSoundPlayerIIDs[] = { SL_IID_PLAY, SL_IID_BUFFERQUEUE, SL_IID_VOLUME };
+	const SLboolean lSoundPlayerReqs[] = { SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE };
 
 	lRes = (*mEngine)->CreateAudioPlayer( mEngine, &mPlayerObj, &lDataSource, &lDataSink,
 										   lSoundPlayerIIDCount, lSoundPlayerIIDs, lSoundPlayerReqs );
@@ -354,6 +359,14 @@ bool SoundManager::StartSoundPlayer()
 
 	if( lRes != SL_RESULT_SUCCESS )
 		goto ERROR;
+
+	lRes = (*mPlayerObj)->GetInterface( mPlayerObj, SL_IID_VOLUME, &mPlayerVolume );
+
+	if( lRes != SL_RESULT_SUCCESS )
+	{
+		FatalError( "SoundManager : Failed to get volume interface" );
+		goto ERROR;
+	}
 
 	// Start the sound player. Nothing can be heard while the sound queue remains empty.
 	lRes = (*mPlayer)->SetPlayState( mPlayer, SL_PLAYSTATE_PLAYING );
@@ -384,6 +397,18 @@ void SoundManager::StopMusic()
 			mAudioTrackPlayer = NULL;
 			mAudioTrackPlayerSeek = NULL;
 		}
+	}
+}
+//---------------------------------------
+float gain_to_attenuation( float gain )
+{
+    return gain < 0.01F ? -96.0F : 20 * log10( gain );
+}
+void SoundManager::SetVolume( float volume )
+{
+	if ( !mOutputMixVolume )
+	{
+		(*mPlayerVolume)->SetVolumeLevel( mPlayerVolume, (SLmillibel)(gain_to_attenuation( volume * volume ) * 100 ) );
 	}
 }
 //---------------------------------------

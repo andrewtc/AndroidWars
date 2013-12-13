@@ -67,6 +67,7 @@ void Unit::Init()
 	// Create a sprite for this Unit.
 	mSprite = SpriteManager::CreateSprite( mUnitType->GetAnimationSetName(), Position, "Idle" );
 	BoundingRect = mSprite->GetClippingRectForCurrentAnimation();
+	mSprite->DrawColor = mOwner->GetPlayerColor();
 	DebugPrintf( "Unit \"%s\" initialized!", mName.GetString().c_str() );
 }
 

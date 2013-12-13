@@ -179,6 +179,12 @@ void OnFocusGained()
 		gSoundManager->Start();
 }
 
+void OnVolumeChanged( float volume )
+{
+	if ( gSoundManager )
+		gSoundManager->SetVolume( volume );
+}
+
 void main()
 {
 	// Initialize the application
@@ -204,6 +210,7 @@ void main()
 	RegisterOnPointerMotionFn( OnPointerMotion );
 	RegisterOnFocusLostFn( OnFocusLost );
 	RegisterOnFocusGainedFn( OnFocusGained );
+	RegisterOnVolumeChangedFn( OnVolumeChanged );
 
 	RegisterEventFuncs();
 
