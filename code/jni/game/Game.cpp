@@ -42,6 +42,7 @@ Game::Game()
 	, mTargetUnit( nullptr )
 	, mCurrentTurnIndex( -1 )
 	, mCurrentPlayerIndex( -1 )
+	, mUnitMotionInProgress( false )
 {
 	// Add map object creation callback.
 	mMap.SetNewMapObjectCB( &SpawnObjectFromXml );
@@ -58,6 +59,8 @@ Game::Game()
 	RegisterObjectEventFunc( Game, CancelMoveEvent );
 	RegisterObjectEventFunc( Game, ConfirmAttackEvent );
 	RegisterObjectEventFunc( Game, CancelAttackEvent );
+
+	mDefaultFont = new BitmapFont( "fonts/small.fnt" );
 }
 
 
@@ -216,13 +219,6 @@ void Game::SelectUnit( Unit* unit )
 {
 	if( unit )
 	{
-		// TODO
-		// check if belongs to current player
-		//  do normal selection...
-		// else target the unit
-		//  check if in attack range
-		//   confirm attack dialog
-
 		Player* currentPlayer = GetCurrentPlayer();
 
 		if ( unit->IsOwnedBy( currentPlayer ) )
@@ -250,6 +246,7 @@ void Game::SelectUnit( Unit* unit )
 				if ( mSelectedUnit->IsInRange( *unit ) )
 				{
 					mTargetUnit = unit;
+					mTargetUnit->Select();
 					ShowAttackDialog();
 				}
 			}
@@ -359,8 +356,25 @@ void Game::MoveUnitToTile( Unit* unit, const Vec2i& tilePos )
 	// Move the unit to the destination tile.
 	// TODO: Apply fuel penalty.
 	// TODO: Play movement animation.
-	unit->SetTilePos( tilePos );
+	mUnitMotionInProgress = true;
+	mNextPathIndex = 0;
+	OnUnitReachedDestination( unit );
+//	unit->SetTilePos( tilePos );
 	DebugPrintf( "Moving Unit \"%s\" to tile (%d, %d).", unit->GetName().c_str(), tilePos.x, tilePos.y );
+}
+
+void Game::OnUnitReachedDestination( Unit* unit )
+{
+	if ( mNextPathIndex >= mSelectedPath.GetNumWaypoints() )
+	{
+		mUnitMotionInProgress = false;
+		SelectUnit( 0 );
+	}
+	else
+	{
+		unit->SetDestination( mSelectedPath.GetWaypoint( mNextPathIndex ) );
+		++mNextPathIndex;
+	}
 }
 
 
@@ -368,6 +382,10 @@ void Game::OnTouchEvent( float x, float y )
 {
 	// A widget is blocking input
 	if ( WidgetIsOpen() )
+		return;
+
+	// Unit is animating motion
+	if ( mUnitMotionInProgress )
 		return;
 
 	// Get the position of the tile that was tapped.
@@ -456,7 +474,7 @@ ObjectEventFunc( Game, ConfirmMoveEvent )
 	MoveUnitToTile( mSelectedUnit, mSelectedPath.GetDestination() );
 
 	// Clear the currently selected unit.
-	SelectUnit( nullptr );
+//	SelectUnit( nullptr );
 
 	// Hide the movement dialog.
 	mMoveDialog->Hide();
@@ -473,14 +491,15 @@ ObjectEventFunc( Game, CancelMoveEvent )
 
 ObjectEventFunc( Game, ConfirmAttackEvent )
 {
-	// TODO confirm the attack
+	mSelectedUnit->Attack( *mTargetUnit );
+	mTargetUnit->Deselect();
 	SelectUnit( 0 );
 	mAttackDialog->Hide();
 }
 
 ObjectEventFunc( Game, CancelAttackEvent )
 {
-	// TODO cancel the attack
+	mTargetUnit->Deselect();
 	SelectUnit( 0 );
 	mAttackDialog->Hide();
 }

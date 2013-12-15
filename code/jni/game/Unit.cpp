@@ -9,6 +9,7 @@ Unit::Unit( const std::string& name )
 	, mUnitType( nullptr )
 	, mSprite( nullptr )
 	, mOwner( nullptr )
+	, mHP( 0 )
 {}
 
 
@@ -17,6 +18,7 @@ Unit::Unit( UnitType* unitType, Player* owner )
 	, mUnitType( unitType )
 	, mSprite( nullptr )
 	, mOwner( owner )
+	, mHP( 0 )
 { }
 
 
@@ -72,6 +74,11 @@ void Unit::Init()
 	mDefaultColor.g /= 2;
 	mDefaultColor.b /= 2;
 	Deselect();
+	// Set hit points
+	mHP = mUnitType->GetMaxHP();
+
+	mDestination = Position;
+
 	DebugPrintf( "Unit \"%s\" initialized!", mName.GetString().c_str() );
 }
 
@@ -89,6 +96,30 @@ void Unit::OnDraw( const Camera& camera ) const
 	{
 		MapObject::OnDraw( camera );
 	}
+
+	// Draw HP
+	Game* game = mOwner->GetGame();
+	BitmapFont* fnt = game->GetDefaultFont();
+	Vec2f textPos = Position - camera.GetPosition();
+	float h = mSprite ? mSprite->GetClippingRectForCurrentAnimation().Height() / 2 : 0;
+	DrawTextFormat( textPos.x, textPos.y + h - fnt->GetLineHeight(), fnt, "%d", mHP );
+}
+
+
+void Unit::OnUpdate( float dt )
+{
+	float delta = ( Position - mDestination ).LengthSqr();
+	if ( delta > 1 )
+	{
+		Vec2f vel = mDestination - Position;
+		vel.Normalize();
+		vel *= 100;
+		Position += vel * dt;
+
+		delta = ( Position - mDestination ).LengthSqr();
+		if ( delta < 1 )
+			gGame->OnUnitReachedDestination( this );
+	}
 }
 
 
@@ -99,6 +130,13 @@ void Unit::SetTilePos( const Vec2i& tilePos )
 
 	// Update the position of the object in the world.
 	Position = gGame->GetMap()->TileToWorld( tilePos );
+}
+
+
+void Unit::SetDestination( const Vec2i& tilePos )
+{
+	mDestination = gGame->GetMap()->TileToWorld( tilePos );
+	mTilePos = gGame->GetMap()->WorldToTile( mDestination );
 }
 
 
@@ -135,10 +173,18 @@ int Unit::GetDistanceToUnit( const Unit& target ) const
 
 void Unit::Select()
 {
-	mSprite->DrawColor = mSelectionColor;
+	//mSprite->DrawColor = mSelectionColor;
+	mSprite->Scale.Set( 1.15f, 1.15f );
 }
 
 void Unit::Deselect()
 {
-	mSprite->DrawColor = mDefaultColor;
+	//mSprite->DrawColor = mDefaultColor;
+	mSprite->Scale.Set( 1.0f, 1.0f );
+}
+
+void Unit::Attack( Unit& target ) const
+{
+	// TODO look up the correct value based on this type and target type
+	target.mHP -= 1;
 }

@@ -18,6 +18,7 @@ namespace mage
 		virtual void OnLoadProperty( const std::string& name, const std::string& value );
 		virtual void OnLoadFinished();
 		virtual void OnDraw( const Camera& camera ) const;
+		virtual void OnUpdate( float dt );
 
 		UnitType* GetUnitType() const;
 		void SetTilePos( int x, int y );
@@ -32,6 +33,9 @@ namespace mage
 		bool IsOwnedBy( Player* player ) const { return mOwner == player; }
 		void Select();
 		void Deselect();
+		bool IsAlive() const { return mHP != 0; }
+		void SetDestination( const Vec2i& tilePos );
+		void Attack( Unit& target ) const;
 
 	protected:
 		UnitType* mUnitType;
@@ -40,6 +44,8 @@ namespace mage
 		Player* mOwner;
 		Color mSelectionColor;
 		Color mDefaultColor;
+		int mHP;
+		Vec2f mDestination;
 	};
 
 

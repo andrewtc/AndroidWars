@@ -22,7 +22,8 @@ void UnitTypesTable::LoadRecordFromXml( UnitType* unitType, XmlReader::XmlReader
 	unitType->mDisplayName = xmlIterator.GetAttributeAsString( "displayName", "" );
 
 	// Read in unit gameplay properties.
-	unitType->mMovementRange = xmlIterator.GetAttributeAsInt( "movementRange", 0 );
+	unitType->mMovementRange    = xmlIterator.GetAttributeAsInt( "movementRange", 0 );
 	unitType->mMovementTypeName = xmlIterator.GetAttributeAsString( "movementType" );
-	unitType->mAttackRange = xmlIterator.GetAttributeAsIntRange( "attackRange" );
+	unitType->mAttackRange      = xmlIterator.GetAttributeAsIntRange( "attackRange" );
+	unitType->mMaxHP            = xmlIterator.GetAttributeAsInt( "hp", 1 );
 }

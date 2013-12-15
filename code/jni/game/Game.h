@@ -87,6 +87,9 @@ namespace mage
 		static Vec2i GetAdjacentTilePos( const Vec2i& tilePos, CardinalDirection direction );
 		static CardinalDirection GetOppositeDirection( CardinalDirection direction );
 
+		BitmapFont* GetDefaultFont() const { return mDefaultFont; }
+		void OnUnitReachedDestination( Unit* unit );
+
 		// Events
 		EventFunc( ConfirmMoveEvent );
 		EventFunc( CancelMoveEvent );
@@ -138,6 +141,9 @@ namespace mage
 		std::map< int, TileInfo > mReachableTiles;
 		Widget* mMoveDialog;
 		Widget* mAttackDialog;
+		BitmapFont* mDefaultFont;
+		bool mUnitMotionInProgress;
+		int mNextPathIndex;
 	};
 
 

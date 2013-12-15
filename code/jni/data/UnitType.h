@@ -18,6 +18,7 @@ namespace mage
 		virtual ~UnitType();
 
 		int GetMovementRange() const;
+		int GetMaxHP() const { return mMaxHP; }
 		const IntRange& GetAttackRange() const { return mAttackRange; }
 		int GetMovementCostAcrossTerrain( TerrainType* terrainType ) const;
 		bool CanMoveAcrossTerrain( TerrainType* terrainType ) const;
@@ -28,6 +29,7 @@ namespace mage
 		void LoadAnimation();
 
 		int mMovementRange;
+		int mMaxHP;
 		IntRange mAttackRange;
 		HashString mMovementTypeName;
 		HashString mAnimationSetName;		// Name of the animation set, Tank.anim

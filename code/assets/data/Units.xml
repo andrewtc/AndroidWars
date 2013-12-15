@@ -6,6 +6,7 @@
 		movementType="Boots"
 		movementRange="3"
         attackRange="1~2"
+        hp="10"
 		/>
 
 	<UnitType
@@ -15,6 +16,7 @@
 		movementType="Boots"
 		movementRange="2"
         attackRange="1~2"
+        hp="10"
 		/>
 
 	<UnitType
@@ -23,6 +25,7 @@
 		movementType="Tires"
 		movementRange="6"
         attackRange="1~2"
+        hp="10"
 		/>
 
 	<UnitType
@@ -31,6 +34,7 @@
 		movementType="Tracks"
 		movementRange="6"
         attackRange="1~2"
+        hp="10"
 		/>
 
 	<UnitType
@@ -39,6 +43,7 @@
 		movementType="Tracks"
 		movementRange="6"
         attackRange="1~2"
+        hp="10"
 		/>
 
 	<UnitType
@@ -48,6 +53,7 @@
 		movementType="Tracks"
 		movementRange="6"
         attackRange="1~2"
+        hp="10"
 		/>
 
 	<UnitType
@@ -57,6 +63,7 @@
 		movementType="Tracks"
 		movementRange="6"
         attackRange="1~2"
+        hp="10"
 		/>
 		
 	<UnitType
@@ -66,6 +73,7 @@
 		movementType="Tires"
 		movementRange="4"
         attackRange="1~2"
+        hp="10"
 		/>
 		
 	<UnitType
@@ -75,6 +83,7 @@
 		movementType="Tires"
 		movementRange="4"
         attackRange="1~2"
+        hp="10"
 		/>
 		
 	<UnitType
@@ -84,6 +93,7 @@
 		movementType="Tracks"
 		movementRange="6"
         attackRange="1~2"
+        hp="10"
 		/>
 	
 </Units>
