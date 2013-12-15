@@ -10,6 +10,7 @@ Unit::Unit( const std::string& name )
 	, mSprite( nullptr )
 	, mOwner( nullptr )
 	, mHP( 0 )
+	, mAP( 0 )
 {}
 
 
@@ -19,6 +20,7 @@ Unit::Unit( UnitType* unitType, Player* owner )
 	, mSprite( nullptr )
 	, mOwner( owner )
 	, mHP( 0 )
+	, mAP( 0 )
 { }
 
 
@@ -78,6 +80,8 @@ void Unit::Init()
 	mHP = mUnitType->GetMaxHP();
 
 	mDestination = Position;
+
+	mAP = 2;
 
 	DebugPrintf( "Unit \"%s\" initialized!", mName.GetString().c_str() );
 }
@@ -183,8 +187,25 @@ void Unit::Deselect()
 	mSprite->Scale.Set( 1.0f, 1.0f );
 }
 
-void Unit::Attack( Unit& target ) const
+void Unit::Attack( Unit& target )
 {
 	// TODO look up the correct value based on this type and target type
 	target.mHP -= 1;
+	ConsumeAP( 1 );
+}
+
+void Unit::ResetAP()
+{
+	mAP = 2;
+	mSprite->DrawColor = mSelectionColor;
+}
+
+void Unit::ConsumeAP( int ap )
+{
+	--mAP;
+	if ( mAP <= 0 )
+	{
+		mAP = 0;
+		mSprite->DrawColor = mDefaultColor;
+	}
 }

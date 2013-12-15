@@ -41,6 +41,11 @@ namespace mage
 		static const int MIN_PLAYERS = 2;
 		static const int MAX_PLAYERS = 4;
 
+		// TODO Haxy tile identifiers
+		const static uint32 CITY_N_ID = 2;
+		const static uint32 CITY_R_ID = 3;
+		const static uint32 CITY_B_ID = 4;
+
 		static Game* Create( int numPlayers, const std::string& mapName );
 		static std::string FormatMapPath( const std::string& mapName );
 

@@ -35,7 +35,12 @@ namespace mage
 		void Deselect();
 		bool IsAlive() const { return mHP != 0; }
 		void SetDestination( const Vec2i& tilePos );
-		void Attack( Unit& target ) const;
+		void Attack( Unit& target );
+
+		void ConsumeAP( int ap );
+		void ResetAP();
+		int GetRemainingAP() const { return mAP; }
+		int GetTotalAP() const { return 2; }
 
 	protected:
 		UnitType* mUnitType;
@@ -46,6 +51,7 @@ namespace mage
 		Color mDefaultColor;
 		int mHP;
 		Vec2f mDestination;
+		int mAP;
 	};
 
 

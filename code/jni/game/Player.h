@@ -17,6 +17,9 @@ namespace mage
 		int GetIndex() const;
 		int GetFunds() const;
 		Color GetPlayerColor() const;
+		void GenerateFunds();
+
+		int CitiesOwned;
 
 	protected:
 		int mIndex;

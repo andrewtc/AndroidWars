@@ -6,6 +6,8 @@ using namespace mage;
 Player::Player()
 	: mIndex( -1 )
 	, mGame( nullptr )
+	, CitiesOwned( 0 )
+	, mFunds( 0 )
 { }
 
 
@@ -23,3 +25,8 @@ Color Player::GetPlayerColor() const
 		return Color::WHITE;
 	}
 }
+
+void Player::GenerateFunds()
+{
+	mFunds += CitiesOwned * 10;
+};

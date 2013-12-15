@@ -99,11 +99,19 @@ void Game::Start()
 
 	mCamera->SetWorldBounds( mMap.GetMapBounds() );
 
-	// Spawn a test Unit. TODO remove this
-	UnitType* unitType = gDatabase->UnitTypes.FindByName( "Infantry" );
+	// TODO this should be more flexible with data in a perfect world
+	ArrayList< TileMap::MapTile* > tn, tr, tb;
+	int n = mMap.GetTilesById( tn, CITY_N_ID, TERRAIN_LAYER_INDEX );
+	int r = mMap.GetTilesById( tr, CITY_R_ID, TERRAIN_LAYER_INDEX );
+	int b = mMap.GetTilesById( tb, CITY_B_ID, TERRAIN_LAYER_INDEX );
+	DebugPrintf( "Cities : n=%d r=%d b=%d\n", n, r, b );
+	mPlayers[0]->CitiesOwned = r;
+	mPlayers[1]->CitiesOwned = b;
+
+	/*UnitType* unitType = gDatabase->UnitTypes.FindByName( "Infantry" );
 	Player* firstPlayer = GetPlayer( 0 );
 	Unit* testUnit = SpawnUnit( unitType, firstPlayer, 5, 5 );
-	mMap.AddMapObject( testUnit );
+	mMap.AddMapObject( testUnit );*/
 
 	// Start the first turn.
 	NextTurn();
@@ -119,6 +127,12 @@ void Game::OnStartTurn()
 void Game::OnEndTurn()
 {
 	DebugPrintf( "Ending turn %d.", mCurrentTurnIndex );
+	Player* player = GetCurrentPlayer();
+
+	player->GenerateFunds();
+
+	void (*Fn)( Unit* unit ) = []( Unit* unit ) { unit->ResetAP(); };
+	mMap.ForeachObjectOfType( Fn );
 }
 
 
@@ -143,7 +157,7 @@ void Game::OnDraw()
 		{
 			// Draw the currently selected tiles.
 			Vec2f topLeft = ( mMap.TileToWorld( it->second.tilePos ) - mCamera->GetPosition() );
-			DrawRect( topLeft.x, topLeft.y, mMap.GetTileWidth(), mMap.GetTileHeight(), Color( 0x8888AAFF ) );
+			DrawRectOutlined( topLeft.x, topLeft.y, mMap.GetTileWidth(), mMap.GetTileHeight(), Color( 0x8888AAFF ), 1.0f, Color( 0xF888AAFF ) );
 		}
 
 		if( mSelectedPath.IsValid() )
@@ -155,6 +169,20 @@ void Game::OnDraw()
 				Vec2f topLeft = ( mMap.TileToWorld( tilePos ) - mCamera->GetPosition() );
 				DrawRect( topLeft.x, topLeft.y, mMap.GetTileWidth(), mMap.GetTileHeight(), Color( 0x88FF0000 ) );
 			}
+		}
+
+		// UI
+		BitmapFont* fnt = GetDefaultFont();
+		for ( int i =0; i < GetNumPlayers(); ++i )
+		{
+			Player* player = mPlayers[i];
+
+			int f = player->GetFunds();
+			DrawTextFormat( 0, 128 + i * fnt->GetLineHeight(), fnt, player->GetPlayerColor(), "%cFunds: $%d\n", mCurrentPlayerIndex == i ? '*' : ' ', f );
+		}
+		if ( mSelectedUnit )
+		{
+			DrawTextFormat( 0, 196, fnt, GetCurrentPlayer()->GetPlayerColor(), "Unit: %s\n AP: %d/%d", mSelectedUnit->GetName().c_str(), mSelectedUnit->GetRemainingAP(), mSelectedUnit->GetTotalAP() );
 		}
 	}
 }
@@ -223,6 +251,10 @@ void Game::SelectUnit( Unit* unit )
 
 		if ( unit->IsOwnedBy( currentPlayer ) )
 		{
+			// Check AP
+			if ( unit->GetRemainingAP() == 0 )
+				return;
+
 			// Select the unit.
 			unit->Select();
 			mSelectedUnit = unit;
@@ -356,6 +388,7 @@ void Game::MoveUnitToTile( Unit* unit, const Vec2i& tilePos )
 	// Move the unit to the destination tile.
 	// TODO: Apply fuel penalty.
 	// TODO: Play movement animation.
+	unit->ConsumeAP( 1 );
 	mUnitMotionInProgress = true;
 	mNextPathIndex = 0;
 	OnUnitReachedDestination( unit );

@@ -12,6 +12,8 @@ int32 gWindowHeight;
 Vec2f gCameraTarget;
 Vec2f gCameraVelocity;
 
+bool gInit = false;
+
 Camera* gCamera;
 BitmapFont* gFont;
 
@@ -113,27 +115,32 @@ void OnWindowShown()
 	// The window is shown
 	// Now is ok to load graphics
 
+	if ( !gInit )
+	{
 	// Load Widget definitions
-	Widget::LoadDefinitions( "ui/definitions.xml" );
+		Widget::LoadDefinitions( "ui/definitions.xml" );
 
-	gTestWidget = Widget::LoadWidget( "ui/next_turn.xml" );
+		gTestWidget = Widget::LoadWidget( "ui/next_turn.xml" );
 
-	// Create a camera
-	gCamera = new Camera( gWindowWidth, gWindowHeight );
-//	gFont = new BitmapFont( "fonts/font.fnt" );
+		// Create a camera
+		gCamera = new Camera( gWindowWidth, gWindowHeight );
+	//	gFont = new BitmapFont( "fonts/font.fnt" );
 
-	// Create the global Database.
-	DebugPrintf( "Creating database..." );
-	gDatabase = new Database();
+		// Create the global Database.
+		DebugPrintf( "Creating database..." );
+		gDatabase = new Database();
 
-	// Load all data into the Database.
-	DebugPrintf( "Loading game data..." );
-	gDatabase->LoadGameData();
+		// Load all data into the Database.
+		DebugPrintf( "Loading game data..." );
+		gDatabase->LoadGameData();
 
-	// Create a new Game and start it.
-	gGame = Game::Create( 2, "Cobra Cove" );
-	gGame->SetCamera( gCamera );
-	gGame->Start();
+		// Create a new Game and start it.
+		gGame = Game::Create( 2, "Cobra Cove" );
+		gGame->SetCamera( gCamera );
+		gGame->Start();
+	}
+
+	gInit = true;
 }
 
 size_t OnSaveState( void* state )
@@ -178,14 +185,14 @@ void OnFocusLost()
 
 void OnFocusGained()
 {
-	if ( gSoundManager )
-		gSoundManager->Start();
+	/*if ( gSoundManager )
+		gSoundManager->Start();*/
 }
 
 void OnVolumeChanged( float volume )
 {
-	if ( gSoundManager )
-		gSoundManager->SetVolume( volume );
+	/*if ( gSoundManager )
+		gSoundManager->SetVolume( volume );*/
 }
 
 void main()
