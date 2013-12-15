@@ -25,6 +25,7 @@ namespace mage
 		void SetTilePos( const Vec2i& tilePos );
 		Vec2i GetTilePos() const;
 
+		Player* GetOwner() const;
 		int GetMovementRange() const;
 		int GetMovementCostAcrossTerrain( TerrainType* terrainType ) const;
 		bool CanMoveAcrossTerrain( TerrainType* terrainType ) const;

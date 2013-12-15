@@ -431,9 +431,6 @@ void Game::OnTouchEvent( float x, float y )
 
 	if ( obj && obj->IsExactly( Unit::TYPE ) )
 	{
-		// If the user taps on a Unit, deselect the currently selected unit (if any).
-//		SelectUnit( nullptr );
-
 		// Select the unit that was tapped.
 		Unit* unit = (Unit*) obj;
 		if ( unit->IsOwnedBy( GetCurrentPlayer() ) )

@@ -144,6 +144,12 @@ void Unit::SetDestination( const Vec2i& tilePos )
 }
 
 
+Player* Unit::GetOwner() const
+{
+	return mOwner;
+}
+
+
 int Unit::GetMovementRange() const
 {
 	// Get the maximum movement range for this unit.
@@ -167,7 +173,7 @@ bool Unit::IsInRange( const Unit& target ) const
 			range.Min, range.Max );
 	return range.IsValueInRange( GetDistanceToUnit( target ) );
 }
-\
+
 
 int Unit::GetDistanceToUnit( const Unit& target ) const
 {

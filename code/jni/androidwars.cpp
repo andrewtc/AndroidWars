@@ -121,11 +121,17 @@ void OnWindowShown()
 		Widget::LoadDefinitions( "ui/definitions.xml" );
 
 		gTestWidget = Widget::LoadWidget( "ui/next_turn.xml" );
+	}
 
+	if( !gCamera )
+	{
 		// Create a camera
 		gCamera = new Camera( gWindowWidth, gWindowHeight );
 	//	gFont = new BitmapFont( "fonts/font.fnt" );
+	}
 
+	if( !gDatabase )
+	{
 		// Create the global Database.
 		DebugPrintf( "Creating database..." );
 		gDatabase = new Database();
@@ -133,7 +139,10 @@ void OnWindowShown()
 		// Load all data into the Database.
 		DebugPrintf( "Loading game data..." );
 		gDatabase->LoadGameData();
+	}
 
+	if( !gGame )
+	{
 		// Create a new Game and start it.
 		gGame = Game::Create( 2, "Cobra Cove" );
 		gGame->SetCamera( gCamera );
