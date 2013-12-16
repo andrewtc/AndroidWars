@@ -7,6 +7,8 @@ namespace mage
 	 */
 	class TerrainType : public Record
 	{
+		DECLARE_RTTI
+
 	public:
 		TerrainType( const HashString& name );
 		virtual ~TerrainType();

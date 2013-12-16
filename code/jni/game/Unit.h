@@ -34,7 +34,6 @@ namespace mage
 		bool IsOwnedBy( Player* player ) const { return mOwner == player; }
 		void Select();
 		void Deselect();
-		bool IsAlive() const { return mHP != 0; }
 		void SetDestination( const Vec2i& tilePos );
 
 		bool CanAttack( const Unit& target ) const;
@@ -51,6 +50,7 @@ namespace mage
 		void SetHP( int hp );
 		int GetHP() const;
 		void TakeDamage( int damageAmount, Unit* instigator = nullptr );
+		bool IsAlive() const;
 		bool IsDead() const;
 		float GetHealthScale() const;
 		void OnDestroyed();
@@ -66,7 +66,10 @@ namespace mage
 		int GetRemainingAP() const { return mAP; }
 		int GetTotalAP() const { return 2; }
 
+		const char* ToString() const;
+
 	protected:
+		std::string mDebugName;
 		UnitType* mUnitType;
 		Vec2i mTilePos;
 		Sprite* mSprite;
@@ -100,7 +103,7 @@ namespace mage
 
 	inline int Unit::GetMovementCostAcrossTerrain( TerrainType* terrainType ) const
 	{
-		assertion( mUnitType, "No UnitType found for Unit \"%s\"!", GetName().c_str() );
+		assertion( mUnitType, "No UnitType found for %s!", ToString() );
 		return mUnitType->GetMovementCostAcrossTerrain( terrainType );
 	}
 
@@ -123,9 +126,15 @@ namespace mage
 	}
 
 
+	inline bool Unit::IsAlive() const
+	{
+		return ( mHP > 0 );
+	}
+
+
 	inline bool Unit::IsDead() const
 	{
-		return ( mHP <= 0 );
+		return !IsAlive();
 	}
 
 
@@ -162,5 +171,11 @@ namespace mage
 	inline bool Unit::HasAmmo() const
 	{
 		return ( mAmmo > 0 );
+	}
+
+
+	inline const char* Unit::ToString() const
+	{
+		return mDebugName.c_str();
 	}
 }

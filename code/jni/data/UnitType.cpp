@@ -3,6 +3,9 @@
 using namespace mage;
 
 
+MAGE_IMPLEMENT_RTTI( Record, UnitType );
+
+
 const char* const UnitType::SPRITE_DIRECTORY = "sprites";
 const char* const UnitType::ANIMATION_FILE_EXTENSION = "anim";
 const int UnitType::DEFAULT_MAX_SUPPLIES;

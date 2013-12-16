@@ -37,8 +37,11 @@ Unit::~Unit() { }
 /** Load the Xml properties from the MapObject */
 void Unit::OnLoadProperty( const std::string& name, const std::string& value )
 {
+	bool parseWasSuccessful = false;
+
 	if ( name == "UnitType" )
 	{
+		parseWasSuccessful = true;
 		mUnitType = gDatabase->UnitTypes.FindByName( value );
 		assertion( mUnitType, "UnitType \"%s\" not found!", value.c_str() );
 	}
@@ -46,21 +49,21 @@ void Unit::OnLoadProperty( const std::string& name, const std::string& value )
 	{
 		// Read the Player index from the property.
 		int index;
-		bool success = StringUtil::StringToType( value, &index );
-		assertion( success, "Could not parse Owner value \"%s\". Must be a positive integer.", value.c_str() );
+		parseWasSuccessful = StringUtil::StringToType( value, &index );
 
 		// Grab the owning player.
 		mOwner = gGame->GetPlayer( index );
-		assertion( mOwner, "Invalid Player index %d specified for Unit \"%s\"!", mName.GetString().c_str() );
+		assertion( mOwner, "Invalid Player index %d specified for %s!", ToString() );
 	}
 	else if ( name == "Ammo" )
 	{
 		// Read in ammo amount.
 		int ammo;
-		bool success = StringUtil::StringToType( value, &ammo );
-		assertion( success, "Could not parse Ammo value! Must be a positive integer." );
+		parseWasSuccessful = StringUtil::StringToType( value, &ammo );
 		mAmmo = ammo;
 	}
+
+	assertion( parseWasSuccessful, "Could not parse %s value for %s! (\"%s\" specified.)", name.c_str(), ToString(), value.c_str() );
 }
 
 
@@ -78,8 +81,18 @@ void Unit::OnLoadFinished()
 
 void Unit::Init()
 {
-	assertion( mUnitType != nullptr, "Unit::Init() '%s' does not have a valid UnitType!", mName.GetString().c_str() );
-	assertion( mOwner != nullptr, "Unit::Init() '%s' does not have an owner Player!", mName.GetString().c_str() );
+	// Make sure the Unit has a valid UnitType.
+	assertion( mUnitType != nullptr, "Unit::Init(): \"%s\" does not have a valid UnitType!", mName.GetString().c_str() );
+
+	// Format debug name string.
+	static const size_t BUFFER_SIZE = 256;
+	char buffer[ BUFFER_SIZE ];
+
+	snprintf( buffer, BUFFER_SIZE, "%s \"%s\"", mUnitType->GetName().GetString().c_str(), mName.GetString().c_str() );
+	mDebugName = buffer;
+
+	// Make sure the Unit has a valid Player.
+	assertion( mOwner != nullptr, "Unit::Init(): %s does not have an owner Player!", ToString() );
 
 	// Create a sprite for this Unit.
 	mSprite = SpriteManager::CreateSprite( mUnitType->GetAnimationSetName(), Position, "Idle" );
@@ -110,7 +123,7 @@ void Unit::Init()
 
 	mAP = 2;
 
-	DebugPrintf( "Unit \"%s\" initialized!", mName.GetString().c_str() );
+	DebugPrintf( "%s initialized!", ToString() );
 }
 
 
@@ -204,22 +217,22 @@ void Unit::Deselect()
 
 bool Unit::CanAttack( const Unit& target ) const
 {
-	const char* attackerName = mName.GetString().c_str();
-	const char* targetName = target.GetName().c_str();
+	DebugPrintf( "Checking whether %s can attack %s...", ToString(), target.ToString() );
 
-	DebugPrintf( "Checking whether Unit \"%s\" can attack Unit \"%s\"...", attackerName, targetName );
+	// Make sure this Unit is still alive.
+	bool isAlive = IsAlive();
+	DebugPrintf( "%s is %s.", ToString(), ( isAlive ? "ALIVE" : "DEAD" ) );
 
 	// Check whether the target is in range.
 	bool isInRange = IsInRange( target );
-	DebugPrintf( "Unit \"%s\" %s in range.", targetName, ( isInRange ? "IS" : "IS NOT" ) );
+	DebugPrintf( "%s %s in range.", target.ToString(), ( isInRange ? "IS" : "IS NOT" ) );
 
 	// Check whether this Unit can target the other Unit.
 	bool canTarget = CanTarget( target );
-	DebugPrintf( "Unit \"%s\" %s hit the target Unit's UnitType (%s).", attackerName, ( isInRange ? "CAN" : "CANNOT" ),
-			     target.GetUnitType()->GetName().GetString().c_str() );
+	DebugPrintf( "%s %s target %s.", ToString(), ( isInRange ? "CAN" : "CANNOT" ), target.ToString() );
 
-	bool result = ( isInRange && canTarget );
-	DebugPrintf( "RESULT: Unit \"%s\" %s attack Unit \"%s\".", attackerName, ( result ? "CAN" : "CANNOT" ), targetName );
+	bool result = ( isAlive && isInRange && canTarget );
+	DebugPrintf( "RESULT: %s %s attack %s.", ToString(), ( result ? "CAN" : "CANNOT" ), target.ToString() );
 
 	return result;
 }
@@ -227,14 +240,14 @@ bool Unit::CanAttack( const Unit& target ) const
 
 void Unit::Attack( Unit& target )
 {
-	DebugPrintf( "Unit \"%s\" attacks Unit \"%s\"!", mName.GetString().c_str(), target.GetName().c_str() );
+	DebugPrintf( "%s attacks %s.", ToString(), target.ToString() );
 
 	// Get the best weapon to use against the target.
 	int bestWeaponIndex = GetBestAvailableWeaponAgainst( target );
 	assertion( bestWeaponIndex > -1, "Cannot calculate damage: No weapon can currently target that Unit!" );
 
 	const Weapon bestWeapon = mUnitType->GetWeaponByIndex( bestWeaponIndex );
-	DebugPrintf( "Best weapon: %d (\"%s\")", bestWeaponIndex, bestWeapon.GetName().GetString().c_str() );
+	DebugPrintf( "Best weapon: %d (%s)", bestWeaponIndex, bestWeapon.ToString() );
 
 	// Calculate damage percentage (before randomness).
 	int damagePercentage = CalculateDamagePercentage( target, bestWeaponIndex );
@@ -286,9 +299,8 @@ int Unit::CalculateDamagePercentage( const Unit& target, int weaponIndex ) const
 	// Get the best weapon to use against the target.
 	const Weapon& weapon = mUnitType->GetWeaponByIndex( weaponIndex );
 
-	DebugPrintf( "Calculating damage of Unit \"%s\" (%s) against Unit \"%s\" (%s) with weapon %d (\"%s\")...",
-				 mName.GetString().c_str(), mUnitType->GetName().GetString().c_str(), target.GetName().c_str(),
-				 target.GetUnitType()->GetName().GetString().c_str(), weaponIndex, weapon.GetName().GetString().c_str() );
+	DebugPrintf( "Calculating damage of %s against %s with weapon %d (%s)...", ToString(), target.ToString(),
+				 weaponIndex, weapon.ToString() );
 
 	// Get the base amount of damage to apply.
 	int baseDamagePercentage = weapon.GetDamagePercentageAgainstUnitType( target.GetUnitType() );
@@ -317,7 +329,7 @@ float Unit::GetDefenseBonus() const
 {
 	float result;
 
-	DebugPrintf( "Calculating defense bonus for Unit \"%s\"...", mName.GetString().c_str() );
+	DebugPrintf( "Calculating defense bonus for %s...", ToString() );
 
 	// Get the defensive bonus supplied by the current tile.
 	TerrainType* terrainType = gGame->GetTerrainTypeOfTile( GetTilePos() );
@@ -377,8 +389,7 @@ int Unit::GetBestAvailableWeaponAgainst( const UnitType* unitType ) const
 	int bestDamagePercentage = 0;
 	int bestWeaponIndex = -1;
 
-	DebugPrintf( "Choosing best weapon for Unit \"%s\" (%s) against UnitType \"%s\"...",
-			     mName.GetString().c_str(), mUnitType->GetName().GetString().c_str(), unitType->GetName().GetString().c_str() );
+	DebugPrintf( "Choosing best weapon for %s against %s...", ToString(), unitType->ToString() );
 
 	for( int i = 0; i < mUnitType->GetNumWeapons(); ++i )
 	{
@@ -398,13 +409,13 @@ int Unit::GetBestAvailableWeaponAgainst( const UnitType* unitType ) const
 			bestWeaponIndex = i;
 		}
 
-		DebugPrintf( "Weapon %d (\"%s\") %s fire at the target's UnitType (%d%% damage) %s %s currently fire", i, weapon.GetName().GetString().c_str(),
-				     ( canTarget ? "CAN" : "CANNOT" ), damagePercentage, ( canTarget == canFire ? "and" : "but" ), ( canFire ? "CAN" : "CANNOT" ) );
+		DebugPrintf( "Weapon %d (%s) %s fire at a %s (%d%% damage) %s %s currently fire", i, weapon.ToString(), ( canTarget ? "CAN" : "CANNOT" ),
+					 unitType->ToString(), damagePercentage, ( canTarget == canFire ? "and" : "but" ), ( canFire ? "CAN" : "CANNOT" ) );
 	}
 
 	if( bestWeaponIndex > -1 )
 	{
-		DebugPrintf( "BEST CHOICE: Weapon %d (\"%s\")", bestWeaponIndex, mUnitType->GetWeaponByIndex( bestWeaponIndex ).GetName().GetString().c_str() );
+		DebugPrintf( "BEST CHOICE: Weapon %d (%s)", bestWeaponIndex, mUnitType->GetWeaponByIndex( bestWeaponIndex ).ToString() );
 	}
 	else
 	{
@@ -433,15 +444,13 @@ void Unit::SetHP( int hp )
 
 inline void Unit::TakeDamage( int damageAmount, Unit* instigator )
 {
-	const char* name = mName.GetString().c_str();
-
 	if( instigator != nullptr )
 	{
-		DebugPrintf( "Unit \"%s\" took %d damage from Unit \"%s\".", name, damageAmount, instigator->GetName().c_str() );
+		DebugPrintf( "%s took %d damage from %s.", ToString(), damageAmount, instigator->ToString() );
 	}
 	else
 	{
-		DebugPrintf( "Unit \"%s\" took %d damage.", name, damageAmount );
+		DebugPrintf( "%s took %d damage.", ToString(), damageAmount );
 	}
 
 	// Reduce the HP of this Unit.
@@ -451,7 +460,7 @@ inline void Unit::TakeDamage( int damageAmount, Unit* instigator )
 
 void Unit::OnDestroyed()
 {
-	DebugPrintf( "Unit \"%s\" has been destroyed!", mName.GetString().c_str() );
+	DebugPrintf( "%s has been destroyed!", ToString() );
 }
 
 

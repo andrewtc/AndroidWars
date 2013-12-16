@@ -146,8 +146,11 @@ void Game::OnUpdate( float dt )
 		for( auto it = mUnitsToRemove.begin(); it != mUnitsToRemove.end(); ++it )
 		{
 			// Remove all destroyed Units.
-			MapObject* unit = ( *it );
-			mMap.RemoveObject( unit, true );
+			Unit* unit = ( *it );
+			DebugPrintf( "Removing %s from the game.", unit->ToString() );
+
+			MapObject* unitAsMapObject = (MapObject*) unit;
+			mMap.RemoveObject( unitAsMapObject, true );
 		}
 
 		mUnitsToRemove.clear();
@@ -271,7 +274,7 @@ void Game::SelectUnit( Unit* unit )
 			// Select all reachable tiles from this Unit's position.
 			SelectReachableTilesForUnit( unit, unit->GetTilePos(), 0, CARDINAL_DIRECTION_NONE, unit->GetMovementRange() );
 
-			DebugPrintf( "Selected unit \"%s\"", unit->GetName().c_str() );
+			DebugPrintf( "Selected unit %s", unit->ToString() );
 
 			for( auto it = mReachableTiles.begin(); it != mReachableTiles.end(); ++it )
 			{
@@ -401,7 +404,7 @@ void Game::MoveUnitToTile( Unit* unit, const Vec2i& tilePos )
 	mNextPathIndex = 0;
 	OnUnitReachedDestination( unit );
 //	unit->SetTilePos( tilePos );
-	DebugPrintf( "Moving Unit \"%s\" to tile (%d, %d).", unit->GetName().c_str(), tilePos.x, tilePos.y );
+	DebugPrintf( "Moving %s to tile (%d, %d).", unit->ToString(), tilePos.x, tilePos.y );
 }
 
 void Game::OnUnitReachedDestination( Unit* unit )
@@ -537,7 +540,25 @@ ObjectEventFunc( Game, CancelMoveEvent )
 
 ObjectEventFunc( Game, ConfirmAttackEvent )
 {
+	assertion( mSelectedUnit, "Cannot initiate attack because no Unit is selected!" );
+	assertion( mTargetUnit, "Cannot initiate attack because no target Unit was selected!" );
+
+	// Allow the selected unit to attack the target.
+	DebugPrintf( "INITIAL ATTACK:" );
 	mSelectedUnit->Attack( *mTargetUnit );
+
+	// Determine whether the target can counter-attack.
+	bool targetCanCounterAttack = mTargetUnit->CanAttack( *mSelectedUnit );
+	DebugPrintf( "%s %s counter-attack.", mTargetUnit->ToString(), ( targetCanCounterAttack ? "CAN" : "CANNOT" ) );
+
+	if( targetCanCounterAttack )
+	{
+		// Allow the target unit to counter-attack, if possible.
+		DebugPrintf( "COUNTER-ATTACK:" );
+		mTargetUnit->Attack( *mSelectedUnit );
+	}
+
+	// Reset game state.
 	mTargetUnit->Deselect();
 	SelectUnit( 0 );
 	mAttackDialog->Hide();

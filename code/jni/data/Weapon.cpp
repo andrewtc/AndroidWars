@@ -3,7 +3,12 @@
 using namespace mage;
 
 
-Weapon::Weapon() { }
+MAGE_IMPLEMENT_RTTI( Record, Weapon );
+
+
+Weapon::Weapon( const HashString& name ) :
+	Record( name )
+{ }
 
 
 Weapon::~Weapon() { }

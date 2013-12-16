@@ -5,10 +5,12 @@ namespace mage
 	/**
 	 * Stores damage information
 	 */
-	class Weapon
+	class Weapon : public Record
 	{
+		DECLARE_RTTI
+
 	public:
-		Weapon();
+		Weapon( const HashString& name );
 		~Weapon();
 		
 		void SetDamagePercentageAgainstUnitType( const HashString& unitTypeName, int damagePercentage );
@@ -21,12 +23,10 @@ namespace mage
 		int GetAmmoPerShot() const;
 		bool ConsumesAmmo() const;
 
-		HashString GetName() const;
 		std::string GetDisplayName() const;
 
 	protected:
 		int mAmmoPerShot;
-		HashString mName;
 		std::string mDisplayName;
 		HashMap< int > mDamagePercentagesByUnitTypeName;
 
@@ -67,11 +67,5 @@ namespace mage
 	inline bool Weapon::ConsumesAmmo() const
 	{
 		return ( mAmmoPerShot > 0 );
-	}
-
-
-	inline HashString Weapon::GetName() const
-	{
-		return mName;
 	}
 }

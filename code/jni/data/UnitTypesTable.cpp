@@ -37,8 +37,12 @@ void UnitTypesTable::LoadRecordFromXml( UnitType* unitType, XmlReader::XmlReader
 		for( auto weaponIterator = weaponsElement.NextChild( "Weapon" );
 			 weaponIterator.IsValid(); weaponIterator = weaponIterator.NextSibling( "Weapon" ) )
 		{
+			// Grab the name from the XML element.
+			HashString weaponName = weaponIterator.GetAttributeAsString( "name" );
+			assertion( !weaponName.GetString().empty(), "Cannot create Weapon for %s without a valid name!", unitType->ToString() );
+
 			// Load all weapon data.
-			Weapon weapon;
+			Weapon weapon( weaponName );
 			LoadWeaponFromXml( weapon, weaponIterator );
 			unitType->AddWeapon( weapon );
 		}
@@ -49,11 +53,10 @@ void UnitTypesTable::LoadRecordFromXml( UnitType* unitType, XmlReader::XmlReader
 void UnitTypesTable::LoadWeaponFromXml( Weapon& weapon, XmlReader::XmlReaderIterator xmlIterator )
 {
 	// Load properties.
-	weapon.mName        = xmlIterator.GetAttributeAsString( "name" );
 	weapon.mDisplayName = xmlIterator.GetAttributeAsString( "displayName", "" );
 	weapon.mAmmoPerShot = xmlIterator.GetAttributeAsInt( "ammoPerShot", 0 );
 
-	DebugPrintf( "Loaded Weapon \"%s\" (%s ammo)", weapon.mName.GetString().c_str(), ( weapon.ConsumesAmmo() ? "uses" : "does not use" ) );
+	DebugPrintf( "Loaded %s (%s ammo)", weapon.ToString(), ( weapon.ConsumesAmmo() ? "uses" : "does not use" ) );
 
 	for( auto damageIterator = xmlIterator.NextChild( "Damage" );
 		 damageIterator.IsValid(); damageIterator = damageIterator.NextSibling( "Damage" ) )

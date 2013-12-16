@@ -7,6 +7,8 @@ namespace mage
 	 */
 	class MovementType : public Record
 	{
+		DECLARE_RTTI
+
 	public:
 		MovementType( const HashString& name );
 		virtual ~MovementType();

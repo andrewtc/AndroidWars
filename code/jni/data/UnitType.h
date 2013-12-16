@@ -9,6 +9,8 @@ namespace mage
 	 */
 	class UnitType : public Record
 	{
+		DECLARE_RTTI
+
 	public:
 		static const char* const SPRITE_DIRECTORY;
 		static const char* const ANIMATION_FILE_EXTENSION;
@@ -68,6 +70,7 @@ namespace mage
 
 	inline Weapon& UnitType::GetWeaponByIndex( int index )
 	{
+		assertion( index >= 0 && index < mWeapons.size(), "Weapon index %d is out of range!", index );
 		return mWeapons[ index ];
 	}
 
@@ -100,7 +103,7 @@ namespace mage
 	inline int UnitType::GetMovementCostAcrossTerrain( TerrainType* terrainType ) const
 	{
 		MovementType* movementType = GetMovementType();
-		assertion( movementType, "No MovementType \"%s\" found for UnitType \"%s\"!", mMovementTypeName.GetString().c_str(), GetName().GetString().c_str() );
+		assertion( movementType, "No MovementType \"%s\" found for %s!", mMovementTypeName.GetString().c_str(), ToString() );
 		return movementType->GetMovementCostAcrossTerrain( terrainType );
 	}
 

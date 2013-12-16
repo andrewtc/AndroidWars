@@ -10,6 +10,8 @@ namespace mage
 	 */
 	class Record
 	{
+		DECLARE_RTTI
+
 	protected:
 		Record( const HashString& name );
 
@@ -17,15 +19,32 @@ namespace mage
 		virtual ~Record();
 
 		HashString GetName() const;
+		virtual const char* ToString() const;
+
+	protected:
+		mutable std::string mDebugName;
+		const HashString mName;
 
 	private:
-		HashString mName;
+		void GenerateDebugName() const;
 	};
 
 
 	inline HashString Record::GetName() const
 	{
 		return mName;
+	}
+
+
+	inline const char* Record::ToString() const
+	{
+		if( mDebugName.empty() )
+		{
+			// If a debug name for this object hasn't already been generated, do so.
+			GenerateDebugName();
+		}
+
+		return mDebugName.c_str();
 	}
 
 
