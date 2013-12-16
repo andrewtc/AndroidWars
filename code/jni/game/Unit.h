@@ -38,7 +38,7 @@ namespace mage
 		void SetDestination( const Vec2i& tilePos );
 
 		void Attack( Unit& target );
-		int CalculateDamageAgainst( const Unit& target, bool calculateWithRandomness ) const;
+		int CalculateDamageAgainst( const Unit& target, int weaponIndex, bool calculateWithRandomness ) const;
 		float GetDefenseBonus() const;
 		bool CanTarget( const Unit& target ) const;
 		bool IsInRange( const Unit& target ) const;
@@ -53,9 +53,10 @@ namespace mage
 		bool IsDead() const;
 		float GetHealthScale() const;
 
+		void SetAmmo( int ammo );
 		void ConsumeAmmo( int ammo );
 		void ResetAmmo();
-		int GetRemainingAmmo() const;
+		int GetAmmo() const;
 		bool HasAmmo() const;
 
 		void ConsumeAP( int ap );
@@ -144,7 +145,25 @@ namespace mage
 	}
 
 
-	inline int Unit::GetRemainingAmmo() const
+	inline void Unit::SetAmmo( int ammo )
+	{
+		mAmmo = Mathi::Clamp( ammo, 0, mUnitType->GetMaxAmmo() );
+	}
+
+
+	inline void Unit::ConsumeAmmo( int ammo )
+	{
+		SetAmmo( mAmmo - ammo );
+	}
+
+
+	inline void Unit::ResetAmmo()
+	{
+		mAmmo = mUnitType->GetMaxAmmo();
+	}
+
+
+	inline int Unit::GetAmmo() const
 	{
 		return mAmmo;
 	}

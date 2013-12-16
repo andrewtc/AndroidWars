@@ -16,6 +16,7 @@ Unit::Unit( const std::string& name )
 	, mOwner( nullptr )
 	, mHP( 0 )
 	, mAP( 0 )
+	, mAmmo( 0 )
 {}
 
 
@@ -26,6 +27,7 @@ Unit::Unit( UnitType* unitType, Player* owner )
 	, mOwner( owner )
 	, mHP( 0 )
 	, mAP( 0 )
+	, mAmmo( 0 )
 { }
 
 
@@ -50,6 +52,14 @@ void Unit::OnLoadProperty( const std::string& name, const std::string& value )
 		// Grab the owning player.
 		mOwner = gGame->GetPlayer( index );
 		assertion( mOwner, "Invalid Player index %d specified for Unit \"%s\"!", mName.GetString().c_str() );
+	}
+	else if ( name == "Ammo" )
+	{
+		// Read in ammo amount.
+		int ammo;
+		bool success = StringUtil::StringToType( value, &ammo );
+		assertion( success, "Count not parse Ammo value! Must be a positive integer." );
+		SetAmmo( ammo );
 	}
 }
 
@@ -81,8 +91,10 @@ void Unit::Init()
 	mDefaultColor.g /= 2;
 	mDefaultColor.b /= 2;
 	Deselect();
-	// Set hit points
+
+	// Set initial resources.
 	mHP = mUnitType->GetMaxHP();
+	mAmmo = mUnitType->GetMaxAmmo();
 
 	mDestination = Position;
 
@@ -181,30 +193,47 @@ void Unit::Deselect()
 
 void Unit::Attack( Unit& target )
 {
+	DebugPrintf( "Unit \"%s\" attacks Unit \"%s\"!", mName.GetString().c_str(), target.GetName().c_str() );
+
+	// Get the best weapon to use against the target.
+	int bestWeaponIndex = GetBestAvailableWeaponAgainst( target );
+	assertion( bestWeaponIndex > -1, "Cannot calculate damage: No weapon can currently target that Unit!" );
+
+	const Weapon bestWeapon = mUnitType->GetWeaponByIndex( bestWeaponIndex );
+	DebugPrintf( "Best weapon: %d (\"%s\")", bestWeaponIndex, bestWeapon.GetName().GetString().c_str() );
+
 	// Calculate damage (with randomness) and apply it to the enemy Unit.
-	int damageAmount = CalculateDamageAgainst( target, true );
+	int damageAmount = CalculateDamageAgainst( target, bestWeaponIndex, true );
 	target.TakeDamage( damageAmount );
 
+	if( bestWeapon.ConsumesAmmo() )
+	{
+		// Consume ammo equal to the amount that the weapon uses per shot.
+		int ammoConsumed = bestWeapon.GetAmmoPerShot();
+		ConsumeAmmo( ammoConsumed );
+		DebugPrintf( "Weapon consumed %d ammo. (%d ammo remaining)", ammoConsumed, mAmmo );
+	}
+
+	// TODO: Replace AP system with single move + action system.
 	ConsumeAP( 1 );
 }
 
 
-int Unit::CalculateDamageAgainst( const Unit& target, bool calculateWithRandomness ) const
+int Unit::CalculateDamageAgainst( const Unit& target, int weaponIndex, bool calculateWithRandomness ) const
 {
 	int result = 0;
 
-	DebugPrintf( "Calculating damage of Unit \"%s\" (%s) against Unit \"%s\" (%s)...",
-				 mName.GetString().c_str(), mUnitType->GetName().GetString().c_str(), target.GetName().c_str(), target.GetUnitType()->GetName().GetString().c_str() );
-
-	// Make sure this Unit can target the other.
-	assertion( CanTarget( target ), "Cannot calculate damage: No weapon can currently target that Unit!" );
-
 	// Get the best weapon to use against the target.
-	int bestWeaponIndex = GetBestAvailableWeaponAgainst( target );
-	const Weapon& bestWeapon = mUnitType->GetWeaponByIndex( bestWeaponIndex );
+	const Weapon& weapon = mUnitType->GetWeaponByIndex( weaponIndex );
+
+	DebugPrintf( "Calculating damage of Unit \"%s\" (%s) against Unit \"%s\" (%s) with weapon %d (\"%s\")...",
+				 mName.GetString().c_str(), mUnitType->GetName().GetString().c_str(), target.GetName().c_str(),
+				 target.GetUnitType()->GetName().GetString().c_str(), weaponIndex, weapon.GetName().GetString().c_str() );
 
 	// Get the base amount of damage to apply.
-	int baseDamagePercentage = bestWeapon.GetDamagePercentageAgainstUnitType( target.GetUnitType() );
+	int baseDamagePercentage = weapon.GetDamagePercentageAgainstUnitType( target.GetUnitType() );
+	assertion( baseDamagePercentage > 0, "Cannot calculate damage: weapon cannot target Unit!" );
+
 	float baseDamageScale = ( baseDamagePercentage * 0.01f );
 	DebugPrintf( "Base damage: %d%% (%f)", baseDamagePercentage, baseDamageScale );
 
@@ -232,9 +261,9 @@ int Unit::CalculateDamageAgainst( const Unit& target, bool calculateWithRandomne
 		DebugPrintf( "Extra damage chance: %d in 10", extraDamageChance );
 
 		// Roll a 10-sided die to see if the check passed.
-		int extraDamageRoll = RNG::RandomInRange( 0, 10 );
+		int extraDamageRoll = RNG::RandomInRange( 1, 10 );
 		bool success = ( extraDamageChance >= extraDamageRoll );
-		DebugPrintf( "Extra damage roll %s!", ( success ? "SUCCEEDED" : "FAILED" ) );
+		DebugPrintf( "Extra damage roll %s! (Rolled a %d)", ( success ? "SUCCEEDED" : "FAILED" ), extraDamageRoll );
 
 		if( success )
 		{
@@ -315,10 +344,10 @@ int Unit::GetBestAvailableWeaponAgainst( const UnitType* unitType ) const
 	DebugPrintf( "Choosing best weapon for Unit \"%s\" (%s) against UnitType \"%s\"...",
 			     mName.GetString().c_str(), mUnitType->GetName().GetString().c_str(), unitType->GetName().GetString().c_str() );
 
-	for( int i = 0; i < unitType->GetNumWeapons(); ++i )
+	for( int i = 0; i < mUnitType->GetNumWeapons(); ++i )
 	{
 		// Check each weapon to see which one is the best.
-		const Weapon& weapon = unitType->GetWeaponByIndex( i );
+		const Weapon& weapon = mUnitType->GetWeaponByIndex( i );
 		int damagePercentage = weapon.GetDamagePercentageAgainstUnitType( unitType );
 
 		bool isBestChoice = ( damagePercentage > bestDamagePercentage );
@@ -334,7 +363,14 @@ int Unit::GetBestAvailableWeaponAgainst( const UnitType* unitType ) const
 				     ( canFire ? "CAN" : "CANNOT" ), damagePercentage );
 	}
 
-	DebugPrintf( "BEST CHOICE: Weapon %d (\"%s\")", result, unitType->GetWeaponByIndex( result ).GetName().GetString().c_str() );
+	if( result > -1 )
+	{
+		DebugPrintf( "BEST CHOICE: Weapon %d (\"%s\")", result, mUnitType->GetWeaponByIndex( result ).GetName().GetString().c_str() );
+	}
+	else
+	{
+		DebugPrintf( "NO WEAPON AVAILABLE!" );
+	}
 
 	return result;
 }

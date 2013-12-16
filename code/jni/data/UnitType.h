@@ -74,6 +74,7 @@ namespace mage
 
 	inline const Weapon& UnitType::GetWeaponByIndex( int index ) const
 	{
+		assertion( index >= 0 && index < mWeapons.size(), "Weapon index %d is out of range!", index );
 		return mWeapons[ index ];
 	}
 

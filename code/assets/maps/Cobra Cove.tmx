@@ -96,5 +96,17 @@
     <property name="UnitType" value="Infantry"/>
    </properties>
   </object>
+  <object name="TestUnit" type="Unit" x="640" y="512" width="64" height="64">
+   <properties>
+    <property name="Owner" value="1"/>
+    <property name="UnitType" value="MediumTank"/>
+   </properties>
+  </object>
+  <object name="TestUnit" type="Unit" x="704" y="512" width="64" height="64">
+   <properties>
+    <property name="Owner" value="0"/>
+    <property name="UnitType" value="AntiTank"/>
+   </properties>
+  </object>
  </objectgroup>
 </map>
