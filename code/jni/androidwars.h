@@ -26,6 +26,7 @@ extern mage::SoundManager* gSoundManager;
 #include "data/MovementTypesTable.h"
 #include "data/UnitType.h"
 #include "data/UnitTypesTable.h"
+#include "data/Weapon.h"
 #include "data/Database.h"
 
 #include "game/Player.h"

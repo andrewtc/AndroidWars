@@ -14,6 +14,7 @@ namespace mage
 	protected:
 		virtual const char* GetXmlElementName() const;
 		virtual void LoadRecordFromXml( UnitType* unitType, XmlReader::XmlReaderIterator xmlIterator );
+		void LoadWeaponFromXml( Weapon& weapon, XmlReader::XmlReaderIterator xmlIterator );
 	};
 
 

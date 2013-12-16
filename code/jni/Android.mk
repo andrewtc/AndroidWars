@@ -143,6 +143,7 @@ $(aw_data_path)/TerrainType.cpp \
 $(aw_data_path)/TerrainTypesTable.cpp \
 $(aw_data_path)/UnitType.cpp \
 $(aw_data_path)/UnitTypesTable.cpp \
+$(aw_data_path)/Weapon.cpp \
 $(aw_data_path)/MovementType.cpp \
 $(aw_data_path)/MovementTypesTable.cpp \
 $(aw_data_path)/Database.cpp \

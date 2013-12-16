@@ -7,7 +7,26 @@
 		movementRange="3"
         attackRange="1~2"
         hp="10"
-		/>
+		>
+		<Weapons>
+			<Weapon
+				name="MachineGun"
+				displayName="Machine Gun"
+				ammoPerShot="0"
+				>
+				<Damage unitType="Infantry"         percentage="55" />
+				<Damage unitType="AntiTank"         percentage="45" />
+				<Damage unitType="Recon"            percentage="12" />
+				<Damage unitType="APC"              percentage="14" />
+				<Damage unitType="Artillery"        percentage="15" />
+				<Damage unitType="Tank"             percentage="5" />
+				<Damage unitType="AntiAir"          percentage="5" />
+				<Damage unitType="MissileArtillery" percentage="26" />
+				<Damage unitType="RocketArtillery"  percentage="25" />
+				<Damage unitType="MediumTank"       percentage="1" />
+			</Weapon>
+		</Weapons>
+	</UnitType>
 
 	<UnitType
 		name="AntiTank"
@@ -17,7 +36,40 @@
 		movementRange="2"
         attackRange="1~2"
         hp="10"
-		/>
+		ammo="3"
+		>
+		<Weapons>
+			<Weapon
+				name="Bazooka"
+				ammoPerShot="1"
+				>
+				<Damage unitType="Recon"            percentage="85" />
+				<Damage unitType="APC"              percentage="75" />
+				<Damage unitType="Artillery"        percentage="70" />
+				<Damage unitType="Tank"             percentage="55" />
+				<Damage unitType="AntiAir"          percentage="65" />
+				<Damage unitType="MissileArtillery" percentage="85" />
+				<Damage unitType="RocketArtillery"  percentage="85" />
+				<Damage unitType="MediumTank"       percentage="15" />
+			</Weapon>
+			<Weapon
+				name="MachineGun"
+				displayName="Machine Gun"
+				ammoPerShot="0"
+				>
+				<Damage unitType="Infantry"         percentage="65" />
+				<Damage unitType="AntiTank"         percentage="55" />
+				<Damage unitType="Recon"            percentage="18" />
+				<Damage unitType="APC"              percentage="20" />
+				<Damage unitType="Artillery"        percentage="32" />
+				<Damage unitType="Tank"             percentage="6" />
+				<Damage unitType="AntiAir"          percentage="6" />
+				<Damage unitType="MissileArtillery" percentage="35" />
+				<Damage unitType="RocketArtillery"  percentage="35" />
+				<Damage unitType="MediumTank"       percentage="1" />
+			</Weapon>
+		</Weapons>
+	</UnitType>
 
 	<UnitType
 		name="Recon"
@@ -47,7 +99,7 @@
 		/>
 
 	<UnitType
-		name="LightTank"
+		name="Tank"
 		animationSet="Tank"
 		displayName="Light Tank"
 		movementType="Tracks"

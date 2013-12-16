@@ -2,6 +2,8 @@
 
 namespace mage
 {
+	class Weapon;
+
 	/**
 	 * Stores common information between all Units of a particular type.
 	 */
@@ -16,6 +18,11 @@ namespace mage
 
 		UnitType( const HashString& name );
 		virtual ~UnitType();
+
+		void AddWeapon( const Weapon& weapon );
+		int GetNumWeapons() const;
+		Weapon& GetWeaponByIndex( int index );
+		const Weapon& GetWeaponByIndex( int index ) const;
 
 		int GetMovementRange() const;
 		int GetMaxHP() const { return mMaxHP; }
@@ -35,9 +42,34 @@ namespace mage
 		HashString mAnimationSetName;		// Name of the animation set, Tank.anim
 		std::string mAnimationSetPath;		// Path to the animation set, sprites/Tank.anim
 		std::string mDisplayName;
+		std::vector< Weapon > mWeapons;
 
 		friend class UnitTypesTable;
 	};
+
+
+	inline void UnitType::AddWeapon( const Weapon& weapon )
+	{
+		mWeapons.push_back( weapon );
+	}
+
+
+	inline int UnitType::GetNumWeapons() const
+	{
+		return (int) mWeapons.size();
+	}
+
+
+	inline Weapon& UnitType::GetWeaponByIndex( int index )
+	{
+		return mWeapons[ index ];
+	}
+
+
+	inline const Weapon& UnitType::GetWeaponByIndex( int index ) const
+	{
+		return mWeapons[ index ];
+	}
 
 
 	inline int UnitType::GetMovementRange() const

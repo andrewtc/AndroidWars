@@ -94,8 +94,8 @@ namespace mage
 				if( record )
 				{
 					// Load the record properties.
+					DebugPrintf( "Loading %s \"%s\".", GetXmlElementName(), name.GetString().c_str() );
 					LoadRecordFromXml( record, iterator );
-					DebugPrintf( "Loaded %s \"%s\".", GetXmlElementName(), name.GetString().c_str() );
 				}
 
 				// Go to the next XML element in the file.
