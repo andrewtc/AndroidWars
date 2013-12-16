@@ -49,6 +49,8 @@ namespace mage
 		void Hide() { Visible = false; }
 
 		const HashString& GetName() const { return mName; }
+		Widget* GetChildByName( const HashString& name );
+
 
 		bool Visible;
 		bool DebugLayout;
@@ -57,7 +59,6 @@ namespace mage
 		static Widget* LoadComponent( Widget* parent, const XmlReader::XmlReaderIterator& itr );
 		static BitmapFont* GetFontByName( const HashString& name );
 
-		Widget* GetChildByName( const HashString& name );
 		void LoadLayoutParam( Widget*& target, const XmlReader::XmlReaderIterator& itr, const char* paramName );
 		Vec2f GetPosition() const;
 		void SetSprite( const HashString& spriteName );

@@ -272,6 +272,10 @@ void Widget::OnUpdate( float dt )
 //---------------------------------------
 void Widget::OnDraw( const Camera& camera ) const
 {
+	// If not visible, do not draw this Widget or its children
+	if ( !Visible )
+		return;
+
 	// Sprite background
 	if ( mSprite )
 		mSprite->OnDraw( camera );
@@ -292,6 +296,10 @@ void Widget::OnDraw( const Camera& camera ) const
 //---------------------------------------
 bool Widget::OnPointerDown( float x, float y )
 {
+	// If not visible, do not process this Widget or its children
+	if ( !Visible )
+		return false;
+
 	// Check children from top to bottom
 	for ( auto itr = mChildren.rbegin(); itr != mChildren.rend(); ++itr )
 	{
@@ -303,6 +311,10 @@ bool Widget::OnPointerDown( float x, float y )
 //---------------------------------------
 bool Widget::OnPointerUp( float x, float y )
 {
+	// If not visible, do not process this Widget or its children
+	if ( !Visible )
+		return false;
+
 	// Check children from top to bottom
 	for ( auto itr = mChildren.rbegin(); itr != mChildren.rend(); ++itr )
 	{
@@ -311,11 +323,13 @@ bool Widget::OnPointerUp( float x, float y )
 	}
 	return false;
 }
+//---------------------------------------
 Widget* Widget::GetChildByName( const HashString& name )
 {
 	Widget* child = 0;
-	auto i = mParent->mChildren.find( name );
-	if ( i != mParent->mChildren.end() )
+	Widget* p = mParent ? mParent : this;
+	auto i = p->mChildren.find( name );
+	if ( i != p->mChildren.end() )
 	{
 		child = i->second;
 	}

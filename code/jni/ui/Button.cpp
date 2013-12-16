@@ -50,6 +50,10 @@ void Button::SetText( const char* text )
 //---------------------------------------
 bool Button::OnPointerDown( float x, float y )
 {
+	// If not visible, do not process this Widget or its children
+	if ( !Visible )
+		return false;
+
 	ButtonStyle& style = sButtonStyles[ mStyleName ];
 	if ( !Widget::OnPointerDown( x, y ) )
 	{
@@ -79,6 +83,10 @@ bool Button::OnPointerDown( float x, float y )
 //---------------------------------------
 bool Button::OnPointerUp( float x, float y )
 {
+	// If not visible, do not process this Widget or its children
+	if ( !Visible )
+		return false;
+
 	ButtonStyle& style = sButtonStyles[ mStyleName ];
 	if ( !Widget::OnPointerDown( x, y ) )
 	{

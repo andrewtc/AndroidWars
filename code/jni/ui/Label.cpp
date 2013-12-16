@@ -37,6 +37,10 @@ Label::~Label()
 //---------------------------------------
 void Label::OnDraw( const Camera& camera ) const
 {
+	// If not visible, do not process this Widget or its children
+	if ( !Visible )
+		return;
+
 	Widget::OnDraw( camera );
 	if ( mFont )
 	{
