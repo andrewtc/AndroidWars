@@ -50,9 +50,10 @@ namespace mage
 
 		void SetHP( int hp );
 		int GetHP() const;
-		void TakeDamage( int damageAmount );
+		void TakeDamage( int damageAmount, Unit* instigator = nullptr );
 		bool IsDead() const;
 		float GetHealthScale() const;
+		void OnDestroyed();
 
 		void SetAmmo( int ammo );
 		void ConsumeAmmo( int ammo );
@@ -116,21 +117,9 @@ namespace mage
 	}
 
 
-	inline void Unit::SetHP( int hp )
-	{
-		mHP = Mathi::Clamp( hp, 0, MAX_HP );
-	}
-
-
 	inline int Unit::GetHP() const
 	{
 		return mHP;
-	}
-
-
-	inline void Unit::TakeDamage( int damageAmount )
-	{
-		SetHP( mHP - damageAmount );
 	}
 
 

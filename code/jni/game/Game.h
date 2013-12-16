@@ -132,6 +132,8 @@ namespace mage
 		// Hide all the game dialogs
 		void HideAllDialogs();
 
+		void RemoveUnit( Unit* unit );
+
 		int mNextPlayerIndex;
 		int mCurrentTurnIndex;
 		int mCurrentPlayerIndex;
@@ -144,11 +146,14 @@ namespace mage
 		Unit* mTargetUnit;
 		Path mSelectedPath;
 		std::map< int, TileInfo > mReachableTiles;
+		std::vector< Unit* > mUnitsToRemove;
 		Widget* mMoveDialog;
 		Widget* mAttackDialog;
 		BitmapFont* mDefaultFont;
 		bool mUnitMotionInProgress;
 		int mNextPathIndex;
+
+		friend class Unit;
 	};
 
 

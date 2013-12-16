@@ -142,6 +142,15 @@ void Game::OnUpdate( float dt )
 	{
 		// Update the world.
 		mMap.OnUpdate( dt );
+
+		for( auto it = mUnitsToRemove.begin(); it != mUnitsToRemove.end(); ++it )
+		{
+			// Remove all destroyed Units.
+			MapObject* unit = ( *it );
+			mMap.RemoveObject( unit, true );
+		}
+
+		mUnitsToRemove.clear();
 	}
 }
 
@@ -494,6 +503,14 @@ void Game::HideAllDialogs()
 	mMoveDialog->Hide();
 	mAttackDialog->Hide();
 }
+
+
+void Game::RemoveUnit( Unit* unit )
+{
+	// Add the Unit to the list of Units to remove.
+	mUnitsToRemove.push_back( unit );
+}
+
 
 // Events
 

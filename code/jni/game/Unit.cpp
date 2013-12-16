@@ -238,7 +238,7 @@ void Unit::Attack( Unit& target )
 
 	// Calculate damage (with randomness) and apply it to the enemy Unit.
 	int damageAmount = CalculateDamageAgainst( target, bestWeaponIndex, true );
-	target.TakeDamage( damageAmount );
+	target.TakeDamage( damageAmount, this );
 
 	if( bestWeapon.ConsumesAmmo() )
 	{
@@ -407,6 +407,46 @@ int Unit::GetBestAvailableWeaponAgainst( const UnitType* unitType ) const
 	}
 
 	return result;
+}
+
+
+void Unit::SetHP( int hp )
+{
+	// Set the current HP of the Unit.
+	mHP = Mathi::Clamp( hp, 0, MAX_HP );
+
+	if( IsDead() )
+	{
+		// Run the destroyed event.
+		OnDestroyed();
+
+		// If the Unit is now dead, schedule it for removal from the Game.
+		gGame->RemoveUnit( this );
+	}
+}
+
+
+inline void Unit::TakeDamage( int damageAmount, Unit* instigator )
+{
+	const char* name = mName.GetString().c_str();
+
+	if( instigator != nullptr )
+	{
+		DebugPrintf( "Unit \"%s\" took %d damage from Unit \"%s\".", name, damageAmount, instigator->GetName().c_str() );
+	}
+	else
+	{
+		DebugPrintf( "Unit \"%s\" took %d damage.", name, damageAmount );
+	}
+
+	// Reduce the HP of this Unit.
+	SetHP( mHP - damageAmount );
+}
+
+
+void Unit::OnDestroyed()
+{
+	DebugPrintf( "Unit \"%s\" has been destroyed!", mName.GetString().c_str() );
 }
 
 

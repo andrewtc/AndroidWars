@@ -146,6 +146,39 @@
 		movementRange="6"
         attackRange="1~2"
         hp="10"
-		/>
+		ammo="5"
+		>
+		<Weapons>
+			<Weapon
+				name="Cannon"
+				ammoPerShot="1"
+				>
+				<Damage unitType="Recon"            percentage="105" />
+				<Damage unitType="APC"              percentage="105" />
+				<Damage unitType="Artillery"        percentage="105" />
+				<Damage unitType="Tank"             percentage="85" />
+				<Damage unitType="AntiAir"          percentage="105" />
+				<Damage unitType="MissileArtillery" percentage="105" />
+				<Damage unitType="RocketArtillery"  percentage="105" />
+				<Damage unitType="MediumTank"       percentage="55" />
+			</Weapon>
+			<Weapon
+				name="MachineGun"
+				displayName="Machine Gun"
+				ammoPerShot="0"
+				>
+				<Damage unitType="Infantry"         percentage="105" />
+				<Damage unitType="AntiTank"         percentage="95" />
+				<Damage unitType="Recon"            percentage="45" />
+				<Damage unitType="APC"              percentage="45" />
+				<Damage unitType="Artillery"        percentage="32" />
+				<Damage unitType="Tank"             percentage="8" />
+				<Damage unitType="AntiAir"          percentage="7" />
+				<Damage unitType="MissileArtillery" percentage="35" />
+				<Damage unitType="RocketArtillery"  percentage="45" />
+				<Damage unitType="MediumTank"       percentage="1" />
+			</Weapon>
+		</Weapons>
+	</UnitType>
 	
 </Units>
