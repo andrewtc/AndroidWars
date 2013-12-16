@@ -236,9 +236,35 @@ void Unit::Attack( Unit& target )
 	const Weapon bestWeapon = mUnitType->GetWeaponByIndex( bestWeaponIndex );
 	DebugPrintf( "Best weapon: %d (\"%s\")", bestWeaponIndex, bestWeapon.GetName().GetString().c_str() );
 
-	// Calculate damage (with randomness) and apply it to the enemy Unit.
-	int damageAmount = CalculateDamageAgainst( target, bestWeaponIndex, true );
-	target.TakeDamage( damageAmount, this );
+	// Calculate damage percentage (before randomness).
+	int damagePercentage = CalculateDamagePercentage( target, bestWeaponIndex );
+
+	// Separate the percentage into the guaranteed damage amount and the amount that
+	// will contribute to the the extra damage roll.
+	int guaranteedDamage = ( damagePercentage / 10 );
+	int extraDamageChance = ( damagePercentage % 10 );
+
+	DebugPrintf( "Guaranteed damage: %d", guaranteedDamage );
+	DebugPrintf( "Extra damage chance: %d in 10", extraDamageChance );
+
+	// Apply the guaranteed damage amount.
+	int totalDamage = guaranteedDamage;
+
+	// Roll a 10-sided die to see if extra damage should be applied.
+	int extraDamageRoll = RNG::RandomInRange( 1, 10 );
+	bool success = ( extraDamageChance >= extraDamageRoll );
+	DebugPrintf( "Extra damage roll %s! (Rolled a %d, needed %d or lower to pass.)", ( success ? "SUCCEEDED" : "FAILED" ), extraDamageRoll, extraDamageChance );
+
+	if( success )
+	{
+		// Add one point of extra damage if the extra damage roll succeeded.
+		++totalDamage;
+	}
+
+	DebugPrintf( "TOTAL DAMAGE: %d", totalDamage );
+
+	// Apply the damage to the target Unit.
+	target.TakeDamage( totalDamage, this );
 
 	if( bestWeapon.ConsumesAmmo() )
 	{
@@ -253,7 +279,7 @@ void Unit::Attack( Unit& target )
 }
 
 
-int Unit::CalculateDamageAgainst( const Unit& target, int weaponIndex, bool calculateWithRandomness ) const
+int Unit::CalculateDamagePercentage( const Unit& target, int weaponIndex ) const
 {
 	int result = 0;
 
@@ -268,8 +294,7 @@ int Unit::CalculateDamageAgainst( const Unit& target, int weaponIndex, bool calc
 	int baseDamagePercentage = weapon.GetDamagePercentageAgainstUnitType( target.GetUnitType() );
 	assertion( baseDamagePercentage > 0, "Cannot calculate damage: weapon cannot target Unit!" );
 
-	float baseDamageScale = ( baseDamagePercentage * 0.01f );
-	DebugPrintf( "Base damage: %d%% (%f)", baseDamagePercentage, baseDamageScale );
+	DebugPrintf( "Base damage percentage: %d%%", baseDamagePercentage );
 
 	// Scale the damage amount based on the current health of this Unit.
 	float healthScale = GetHealthScale();
@@ -281,32 +306,9 @@ int Unit::CalculateDamageAgainst( const Unit& target, int weaponIndex, bool calc
 	DebugPrintf( "Target defense bonus: %f (%f x damage)", targetDefenseBonus, targetDefenseScale );
 
 	// Calculate idealized damage amount.
-	float idealizedDamageAmount = ( MAX_HP * baseDamageScale * healthScale * targetDefenseScale );
-	DebugPrintf( "Idealized damage amount: %f (%d x %f x %f x %f)", idealizedDamageAmount,
-			     MAX_HP, baseDamageScale, healthScale, targetDefenseScale );
+	result = (int) ( baseDamagePercentage * healthScale * targetDefenseScale );
+	DebugPrintf( "TOTAL DAMAGE: %d (%d x %f x %f)", result, baseDamagePercentage, healthScale, targetDefenseScale );
 
-	// Floor the idealized damage amount to get the damage to apply.
-	result = (int) idealizedDamageAmount;
-
-	if( calculateWithRandomness )
-	{
-		// Determine the chance that an extra point of damage will be applied.
-		int extraDamageChance = ( (int) ( idealizedDamageAmount * 10.0f ) % 10 );
-		DebugPrintf( "Extra damage chance: %d in 10", extraDamageChance );
-
-		// Roll a 10-sided die to see if the check passed.
-		int extraDamageRoll = RNG::RandomInRange( 1, 10 );
-		bool success = ( extraDamageChance >= extraDamageRoll );
-		DebugPrintf( "Extra damage roll %s! (Rolled a %d)", ( success ? "SUCCEEDED" : "FAILED" ), extraDamageRoll );
-
-		if( success )
-		{
-			// Add one point of extra damage if the extra damage roll succeeded.
-			++result;
-		}
-	}
-
-	DebugPrintf( "TOTAL DAMAGE: %d", result );
 	return result;
 }
 

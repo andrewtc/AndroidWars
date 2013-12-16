@@ -39,7 +39,7 @@ namespace mage
 
 		bool CanAttack( const Unit& target ) const;
 		void Attack( Unit& target );
-		int CalculateDamageAgainst( const Unit& target, int weaponIndex, bool calculateWithRandomness ) const;
+		int CalculateDamagePercentage( const Unit& target, int weaponIndex ) const;
 		float GetDefenseBonus() const;
 		bool CanTarget( const Unit& target ) const;
 		bool IsInRange( const Unit& target ) const;
