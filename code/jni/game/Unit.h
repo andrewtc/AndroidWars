@@ -51,6 +51,7 @@ namespace mage
 		int GetHP() const;
 		void TakeDamage( int damageAmount );
 		bool IsDead() const;
+		float GetHealthScale() const;
 
 		void ConsumeAmmo( int ammo );
 		void ResetAmmo();
@@ -134,6 +135,12 @@ namespace mage
 	inline bool Unit::IsDead() const
 	{
 		return ( mHP <= 0 );
+	}
+
+
+	inline float Unit::GetHealthScale() const
+	{
+		return ( (float) mHP / MAX_HP );
 	}
 
 

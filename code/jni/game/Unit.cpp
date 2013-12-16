@@ -209,7 +209,7 @@ int Unit::CalculateDamageAgainst( const Unit& target, bool calculateWithRandomne
 	DebugPrintf( "Base damage: %d%% (%f)", baseDamagePercentage, baseDamageScale );
 
 	// Scale the damage amount based on the current health of this Unit.
-	float healthScale = ( mHP * 0.1f );
+	float healthScale = GetHealthScale();
 	DebugPrintf( "Health scaling factor: %f", healthScale );
 
 	// Scale the damage amount based on the target's defense bonus.
@@ -250,8 +250,24 @@ int Unit::CalculateDamageAgainst( const Unit& target, bool calculateWithRandomne
 
 float Unit::GetDefenseBonus() const
 {
-	// TODO
-	return 0.0f;
+	float result;
+
+	DebugPrintf( "Calculating defense bonus for Unit \"%s\"...", mName.GetString().c_str() );
+
+	// Get the defensive bonus supplied by the current tile.
+	TerrainType* terrainType = gGame->GetTerrainTypeOfTile( GetTilePos() );
+	int coverBonus = terrainType->GetCoverBonus();
+	float coverBonusScale = ( coverBonus * 0.1f );
+	DebugPrintf( "Cover bonus: %d (%f)", coverBonus, coverBonusScale );
+
+	// Scale the cover bonus by the Unit's current health.
+	float healthScale = GetHealthScale();
+	DebugPrintf( "Health scale: %f x cover bonus", healthScale );
+
+	result = Mathf::Clamp( coverBonusScale * healthScale, 0.0f, 1.0f );
+	DebugPrintf( "TOTAL DEFENSE BONUS: %f (%f x %f)", result, healthScale, coverBonusScale );
+
+	return result;
 }
 
 
