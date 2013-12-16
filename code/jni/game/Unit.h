@@ -37,6 +37,7 @@ namespace mage
 		bool IsAlive() const { return mHP != 0; }
 		void SetDestination( const Vec2i& tilePos );
 
+		bool CanAttack( const Unit& target ) const;
 		void Attack( Unit& target );
 		int CalculateDamageAgainst( const Unit& target, int weaponIndex, bool calculateWithRandomness ) const;
 		float GetDefenseBonus() const;

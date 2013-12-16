@@ -274,8 +274,7 @@ void Game::SelectUnit( Unit* unit )
 		{
 			if ( mSelectedUnit )
 			{
-				DebugPrintf( "Checking attack range..." );
-				if ( mSelectedUnit->IsInRange( *unit ) )
+				if ( mSelectedUnit->CanAttack( *unit ) )
 				{
 					mTargetUnit = unit;
 					mTargetUnit->Select();

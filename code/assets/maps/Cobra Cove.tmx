@@ -104,6 +104,7 @@
   </object>
   <object name="TestUnit" type="Unit" x="704" y="512" width="64" height="64">
    <properties>
+    <property name="Ammo" value="1"/>
     <property name="Owner" value="0"/>
     <property name="UnitType" value="AntiTank"/>
    </properties>

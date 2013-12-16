@@ -16,7 +16,7 @@ Unit::Unit( const std::string& name )
 	, mOwner( nullptr )
 	, mHP( 0 )
 	, mAP( 0 )
-	, mAmmo( 0 )
+	, mAmmo( -1 )
 {}
 
 
@@ -27,7 +27,7 @@ Unit::Unit( UnitType* unitType, Player* owner )
 	, mOwner( owner )
 	, mHP( 0 )
 	, mAP( 0 )
-	, mAmmo( 0 )
+	, mAmmo( -1 )
 { }
 
 
@@ -58,8 +58,8 @@ void Unit::OnLoadProperty( const std::string& name, const std::string& value )
 		// Read in ammo amount.
 		int ammo;
 		bool success = StringUtil::StringToType( value, &ammo );
-		assertion( success, "Count not parse Ammo value! Must be a positive integer." );
-		SetAmmo( ammo );
+		assertion( success, "Could not parse Ammo value! Must be a positive integer." );
+		mAmmo = ammo;
 	}
 }
 
@@ -94,7 +94,17 @@ void Unit::Init()
 
 	// Set initial resources.
 	mHP = mUnitType->GetMaxHP();
-	mAmmo = mUnitType->GetMaxAmmo();
+
+	if( mAmmo >= 0 )
+	{
+		// Make sure ammo value is valid.
+		SetAmmo( mAmmo );
+	}
+	else
+	{
+		// If the ammo value is uninitialized, set it to the maximum amount.
+		mAmmo = mUnitType->GetMaxAmmo();
+	}
 
 	mDestination = Position;
 
@@ -190,6 +200,30 @@ void Unit::Deselect()
 	//mSprite->DrawColor = mDefaultColor;
 	mSprite->Scale.Set( 1.0f, 1.0f );
 }
+
+
+bool Unit::CanAttack( const Unit& target ) const
+{
+	const char* attackerName = mName.GetString().c_str();
+	const char* targetName = target.GetName().c_str();
+
+	DebugPrintf( "Checking whether Unit \"%s\" can attack Unit \"%s\"...", attackerName, targetName );
+
+	// Check whether the target is in range.
+	bool isInRange = IsInRange( target );
+	DebugPrintf( "Unit \"%s\" %s in range.", targetName, ( isInRange ? "IS" : "IS NOT" ) );
+
+	// Check whether this Unit can target the other Unit.
+	bool canTarget = CanTarget( target );
+	DebugPrintf( "Unit \"%s\" %s hit the target Unit's UnitType (%s).", attackerName, ( isInRange ? "CAN" : "CANNOT" ),
+			     target.GetUnitType()->GetName().GetString().c_str() );
+
+	bool result = ( isInRange && canTarget );
+	DebugPrintf( "RESULT: Unit \"%s\" %s attack Unit \"%s\".", attackerName, ( result ? "CAN" : "CANNOT" ), targetName );
+
+	return result;
+}
+
 
 void Unit::Attack( Unit& target )
 {
