@@ -26,6 +26,8 @@ void UnitTypesTable::LoadRecordFromXml( UnitType* unitType, XmlReader::XmlReader
 	unitType->mMovementTypeName = xmlIterator.GetAttributeAsString( "movementType" );
 	unitType->mAttackRange      = xmlIterator.GetAttributeAsIntRange( "attackRange" );
 	unitType->mMaxHP            = xmlIterator.GetAttributeAsInt( "hp", 1 );
+	unitType->mMaxAmmo          = xmlIterator.GetAttributeAsInt( "ammo", 0 );
+	unitType->mMaxSupplies      = xmlIterator.GetAttributeAsInt( "supplies", UnitType::DEFAULT_MAX_SUPPLIES );
 
 	// Read in all weapon data.
 	XmlReader::XmlReaderIterator weaponsElement = xmlIterator.NextChild( "Weapons" );
@@ -49,8 +51,9 @@ void UnitTypesTable::LoadWeaponFromXml( Weapon& weapon, XmlReader::XmlReaderIter
 	// Load properties.
 	weapon.mName        = xmlIterator.GetAttributeAsString( "name" );
 	weapon.mDisplayName = xmlIterator.GetAttributeAsString( "displayName", "" );
+	weapon.mAmmoPerShot = xmlIterator.GetAttributeAsInt( "ammoPerShot", 0 );
 
-	DebugPrintf( "Loaded Weapon \"%s\"", weapon.mName.GetString().c_str() );
+	DebugPrintf( "Loaded Weapon \"%s\" (%s ammo)", weapon.mName.GetString().c_str(), ( weapon.ConsumesAmmo() ? "uses" : "does not use" ) );
 
 	for( auto damageIterator = xmlIterator.NextChild( "Damage" );
 		 damageIterator.IsValid(); damageIterator = damageIterator.NextSibling( "Damage" ) )

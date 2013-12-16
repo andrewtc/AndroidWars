@@ -18,10 +18,14 @@ namespace mage
 		bool CanTargetUnitType( const HashString& unitTypeName ) const;
 		bool CanTargetUnitType( const UnitType* unitType ) const;
 
-		HashString getName() const;
-		std::string getDisplayName() const;
+		int GetAmmoPerShot() const;
+		bool ConsumesAmmo() const;
+
+		HashString GetName() const;
+		std::string GetDisplayName() const;
 
 	protected:
+		int mAmmoPerShot;
 		HashString mName;
 		std::string mDisplayName;
 		HashMap< int > mDamagePercentagesByUnitTypeName;
@@ -51,5 +55,23 @@ namespace mage
 	inline bool Weapon::CanTargetUnitType( const UnitType* unitType ) const
 	{
 		return CanTargetUnitType( unitType->GetName() );
+	}
+
+
+	inline int Weapon::GetAmmoPerShot() const
+	{
+		return mAmmoPerShot;
+	}
+
+
+	inline bool Weapon::ConsumesAmmo() const
+	{
+		return ( mAmmoPerShot > 0 );
+	}
+
+
+	inline HashString Weapon::GetName() const
+	{
+		return mName;
 	}
 }

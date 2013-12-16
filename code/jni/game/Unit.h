@@ -9,6 +9,8 @@ namespace mage
 	{
 		DECLARE_RTTI;
 	public:
+		static const int MAX_HP = 10;
+
 		Unit( const std::string& name );
 		Unit( UnitType* unitType, Player* owner );
 		virtual ~Unit();
@@ -29,14 +31,31 @@ namespace mage
 		int GetMovementRange() const;
 		int GetMovementCostAcrossTerrain( TerrainType* terrainType ) const;
 		bool CanMoveAcrossTerrain( TerrainType* terrainType ) const;
-		bool IsInRange( const Unit& target ) const;
-		int GetDistanceToUnit( const Unit& target ) const;
 		bool IsOwnedBy( Player* player ) const { return mOwner == player; }
 		void Select();
 		void Deselect();
 		bool IsAlive() const { return mHP != 0; }
 		void SetDestination( const Vec2i& tilePos );
+
 		void Attack( Unit& target );
+		int CalculateDamageAgainst( const Unit& target, bool calculateWithRandomness ) const;
+		float GetDefenseBonus() const;
+		bool CanTarget( const Unit& target ) const;
+		bool IsInRange( const Unit& target ) const;
+		int GetDistanceToUnit( const Unit& target ) const;
+		bool CanFireWeapon( int weaponIndex ) const;
+		int GetBestAvailableWeaponAgainst( const UnitType* unitType ) const;
+		int GetBestAvailableWeaponAgainst( const Unit& target ) const;
+
+		void SetHP( int hp );
+		int GetHP() const;
+		void TakeDamage( int damageAmount );
+		bool IsDead() const;
+
+		void ConsumeAmmo( int ammo );
+		void ResetAmmo();
+		int GetRemainingAmmo() const;
+		bool HasAmmo() const;
 
 		void ConsumeAP( int ap );
 		void ResetAP();
@@ -53,6 +72,7 @@ namespace mage
 		int mHP;
 		Vec2f mDestination;
 		int mAP;
+		int mAmmo;
 	};
 
 
@@ -84,5 +104,47 @@ namespace mage
 	inline bool Unit::CanMoveAcrossTerrain( TerrainType* terrainType ) const
 	{
 		return ( GetMovementCostAcrossTerrain( terrainType ) > -1 );
+	}
+
+
+	inline int Unit::GetBestAvailableWeaponAgainst( const Unit& target ) const
+	{
+		return GetBestAvailableWeaponAgainst( target.GetUnitType() );
+	}
+
+
+	inline void Unit::SetHP( int hp )
+	{
+		mHP = Mathi::Clamp( hp, 0, MAX_HP );
+	}
+
+
+	inline int Unit::GetHP() const
+	{
+		return mHP;
+	}
+
+
+	inline void Unit::TakeDamage( int damageAmount )
+	{
+		SetHP( mHP - damageAmount );
+	}
+
+
+	inline bool Unit::IsDead() const
+	{
+		return ( mHP <= 0 );
+	}
+
+
+	inline int Unit::GetRemainingAmmo() const
+	{
+		return mAmmo;
+	}
+
+
+	inline bool Unit::HasAmmo() const
+	{
+		return ( mAmmo > 0 );
 	}
 }

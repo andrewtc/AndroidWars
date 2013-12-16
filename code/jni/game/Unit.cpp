@@ -2,7 +2,12 @@
 
 using namespace mage;
 
+
+const int Unit::MAX_HP;
+
+
 MAGE_IMPLEMENT_RTTI( MapObject, Unit );
+
 
 Unit::Unit( const std::string& name )
 : MapObject( name )
@@ -162,6 +167,102 @@ int Unit::GetMovementRange() const
 }
 
 
+void Unit::Select()
+{
+	//mSprite->DrawColor = mSelectionColor;
+	mSprite->Scale.Set( 1.15f, 1.15f );
+}
+
+void Unit::Deselect()
+{
+	//mSprite->DrawColor = mDefaultColor;
+	mSprite->Scale.Set( 1.0f, 1.0f );
+}
+
+void Unit::Attack( Unit& target )
+{
+	// Calculate damage (with randomness) and apply it to the enemy Unit.
+	int damageAmount = CalculateDamageAgainst( target, true );
+	target.TakeDamage( damageAmount );
+
+	ConsumeAP( 1 );
+}
+
+
+int Unit::CalculateDamageAgainst( const Unit& target, bool calculateWithRandomness ) const
+{
+	int result = 0;
+
+	DebugPrintf( "Calculating damage of Unit \"%s\" (%s) against Unit \"%s\" (%s)...",
+				 mName.GetString().c_str(), mUnitType->GetName().GetString().c_str(), target.GetName().c_str(), target.GetUnitType()->GetName().GetString().c_str() );
+
+	// Make sure this Unit can target the other.
+	assertion( CanTarget( target ), "Cannot calculate damage: No weapon can currently target that Unit!" );
+
+	// Get the best weapon to use against the target.
+	int bestWeaponIndex = GetBestAvailableWeaponAgainst( target );
+	const Weapon& bestWeapon = mUnitType->GetWeaponByIndex( bestWeaponIndex );
+
+	// Get the base amount of damage to apply.
+	int baseDamagePercentage = bestWeapon.GetDamagePercentageAgainstUnitType( target.GetUnitType() );
+	float baseDamageScale = ( baseDamagePercentage * 0.01f );
+	DebugPrintf( "Base damage: %d%% (%f)", baseDamagePercentage, baseDamageScale );
+
+	// Scale the damage amount based on the current health of this Unit.
+	float healthScale = ( mHP * 0.1f );
+	DebugPrintf( "Health scaling factor: %f", healthScale );
+
+	// Scale the damage amount based on the target's defense bonus.
+	float targetDefenseBonus = target.GetDefenseBonus();
+	float targetDefenseScale = Mathf::Clamp( 1.0f - targetDefenseBonus, 0.0f, 1.0f );
+	DebugPrintf( "Target defense bonus: %f (%f x damage)", targetDefenseBonus, targetDefenseScale );
+
+	// Calculate idealized damage amount.
+	float idealizedDamageAmount = ( MAX_HP * baseDamageScale * healthScale * targetDefenseScale );
+	DebugPrintf( "Idealized damage amount: %f (%d x %f x %f x %f)", idealizedDamageAmount,
+			     MAX_HP, baseDamageScale, healthScale, targetDefenseScale );
+
+	// Floor the idealized damage amount to get the damage to apply.
+	result = (int) idealizedDamageAmount;
+
+	if( calculateWithRandomness )
+	{
+		// Determine the chance that an extra point of damage will be applied.
+		int extraDamageChance = ( (int) ( idealizedDamageAmount * 10.0f ) % 10 );
+		DebugPrintf( "Extra damage chance: %d in 10", extraDamageChance );
+
+		// Roll a 10-sided die to see if the check passed.
+		int extraDamageRoll = RNG::RandomInRange( 0, 10 );
+		bool success = ( extraDamageChance >= extraDamageRoll );
+		DebugPrintf( "Extra damage roll %s!", ( success ? "SUCCEEDED" : "FAILED" ) );
+
+		if( success )
+		{
+			// Add one point of extra damage if the extra damage roll succeeded.
+			++result;
+		}
+	}
+
+	DebugPrintf( "TOTAL DAMAGE: %d", result );
+	return result;
+}
+
+
+float Unit::GetDefenseBonus() const
+{
+	// TODO
+	return 0.0f;
+}
+
+
+bool Unit::CanTarget( const Unit& target ) const
+{
+	// Return whether this Unit has a weapon that can attack the target.
+	int bestWeaponIndex = GetBestAvailableWeaponAgainst( target.GetUnitType() );
+	return ( bestWeaponIndex >= 0 );
+}
+
+
 bool Unit::IsInRange( const Unit& target ) const
 {
 	UnitType* type = GetUnitType();
@@ -181,24 +282,47 @@ int Unit::GetDistanceToUnit( const Unit& target ) const
 }
 
 
-void Unit::Select()
+bool Unit::CanFireWeapon( int weaponIndex ) const
 {
-	//mSprite->DrawColor = mSelectionColor;
-	mSprite->Scale.Set( 1.15f, 1.15f );
+	Weapon& weapon = mUnitType->GetWeaponByIndex( weaponIndex );
+	return ( !weapon.ConsumesAmmo() || ( weapon.GetAmmoPerShot() <= mAmmo ) );
 }
 
-void Unit::Deselect()
+
+int Unit::GetBestAvailableWeaponAgainst( const UnitType* unitType ) const
 {
-	//mSprite->DrawColor = mDefaultColor;
-	mSprite->Scale.Set( 1.0f, 1.0f );
+	assertion( unitType, "Cannot get best available weapon against NULL UnitType!" );
+
+	int bestDamagePercentage = 0;
+	int result = -1;
+
+	DebugPrintf( "Choosing best weapon for Unit \"%s\" (%s) against UnitType \"%s\"...",
+			     mName.GetString().c_str(), mUnitType->GetName().GetString().c_str(), unitType->GetName().GetString().c_str() );
+
+	for( int i = 0; i < unitType->GetNumWeapons(); ++i )
+	{
+		// Check each weapon to see which one is the best.
+		const Weapon& weapon = unitType->GetWeaponByIndex( i );
+		int damagePercentage = weapon.GetDamagePercentageAgainstUnitType( unitType );
+
+		bool isBestChoice = ( damagePercentage > bestDamagePercentage );
+		bool canFire = CanFireWeapon( i );
+
+		if( isBestChoice && canFire )
+		{
+			bestDamagePercentage = damagePercentage;
+			result = i;
+		}
+
+		DebugPrintf( "Weapon %d (\"%s\") %s fire (%d%% damage)", i, weapon.GetName().GetString().c_str(),
+				     ( canFire ? "CAN" : "CANNOT" ), damagePercentage );
+	}
+
+	DebugPrintf( "BEST CHOICE: Weapon %d (\"%s\")", result, unitType->GetWeaponByIndex( result ).GetName().GetString().c_str() );
+
+	return result;
 }
 
-void Unit::Attack( Unit& target )
-{
-	// TODO look up the correct value based on this type and target type
-	target.mHP -= 1;
-	ConsumeAP( 1 );
-}
 
 void Unit::ResetAP()
 {

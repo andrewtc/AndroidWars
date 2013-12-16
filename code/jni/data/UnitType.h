@@ -12,6 +12,7 @@ namespace mage
 	public:
 		static const char* const SPRITE_DIRECTORY;
 		static const char* const ANIMATION_FILE_EXTENSION;
+		static const int DEFAULT_MAX_SUPPLIES = 99;
 
 		static std::string FormatAnimationPath( const std::string& animationName );
 		static std::string FormatAnimationName( const std::string& animationName );
@@ -23,6 +24,9 @@ namespace mage
 		int GetNumWeapons() const;
 		Weapon& GetWeaponByIndex( int index );
 		const Weapon& GetWeaponByIndex( int index ) const;
+
+		int GetMaxAmmo() const;
+		int GetMaxSupplies() const;
 
 		int GetMovementRange() const;
 		int GetMaxHP() const { return mMaxHP; }
@@ -37,6 +41,8 @@ namespace mage
 
 		int mMovementRange;
 		int mMaxHP;
+		int mMaxAmmo;
+		int mMaxSupplies;
 		IntRange mAttackRange;
 		HashString mMovementTypeName;
 		HashString mAnimationSetName;		// Name of the animation set, Tank.anim
@@ -69,6 +75,18 @@ namespace mage
 	inline const Weapon& UnitType::GetWeaponByIndex( int index ) const
 	{
 		return mWeapons[ index ];
+	}
+
+
+	inline int UnitType::GetMaxAmmo() const
+	{
+		return mMaxAmmo;
+	}
+
+
+	inline int UnitType::GetMaxSupplies() const
+	{
+		return mMaxSupplies;
 	}
 
 
