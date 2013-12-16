@@ -392,12 +392,14 @@ int Unit::GetBestAvailableWeaponAgainst( const UnitType* unitType ) const
 
 		if( canFire && canTarget && isBestChoice )
 		{
+			// If this weapon can fire at the enemy and is better than any other weapon (so far),
+			// save it as the best choice.
 			bestDamagePercentage = damagePercentage;
 			bestWeaponIndex = i;
 		}
 
-		DebugPrintf( "Weapon %d (\"%s\") %s fire %s fire at the target's UnitType (%d%% damage)", i, weapon.GetName().GetString().c_str(),
-				     ( canFire ? "CAN" : "CANNOT" ), ( canTarget ? "and CAN" : "but CANNOT" ), damagePercentage );
+		DebugPrintf( "Weapon %d (\"%s\") %s fire at the target's UnitType (%d%% damage) %s %s currently fire", i, weapon.GetName().GetString().c_str(),
+				     ( canTarget ? "CAN" : "CANNOT" ), damagePercentage, ( canTarget == canFire ? "and" : "but" ), ( canFire ? "CAN" : "CANNOT" ) );
 	}
 
 	if( bestWeaponIndex > -1 )
