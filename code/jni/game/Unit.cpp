@@ -375,7 +375,7 @@ int Unit::GetBestAvailableWeaponAgainst( const UnitType* unitType ) const
 	assertion( unitType, "Cannot get best available weapon against NULL UnitType!" );
 
 	int bestDamagePercentage = 0;
-	int result = -1;
+	int bestWeaponIndex = -1;
 
 	DebugPrintf( "Choosing best weapon for Unit \"%s\" (%s) against UnitType \"%s\"...",
 			     mName.GetString().c_str(), mUnitType->GetName().GetString().c_str(), unitType->GetName().GetString().c_str() );
@@ -388,27 +388,28 @@ int Unit::GetBestAvailableWeaponAgainst( const UnitType* unitType ) const
 
 		bool isBestChoice = ( damagePercentage > bestDamagePercentage );
 		bool canFire = CanFireWeapon( i );
+		bool canTarget = weapon.CanTargetUnitType( unitType );
 
-		if( isBestChoice && canFire )
+		if( canFire && canTarget && isBestChoice )
 		{
 			bestDamagePercentage = damagePercentage;
-			result = i;
+			bestWeaponIndex = i;
 		}
 
-		DebugPrintf( "Weapon %d (\"%s\") %s fire (%d%% damage)", i, weapon.GetName().GetString().c_str(),
-				     ( canFire ? "CAN" : "CANNOT" ), damagePercentage );
+		DebugPrintf( "Weapon %d (\"%s\") %s fire %s fire at the target's UnitType (%d%% damage)", i, weapon.GetName().GetString().c_str(),
+				     ( canFire ? "CAN" : "CANNOT" ), ( canTarget ? "and CAN" : "but CANNOT" ), damagePercentage );
 	}
 
-	if( result > -1 )
+	if( bestWeaponIndex > -1 )
 	{
-		DebugPrintf( "BEST CHOICE: Weapon %d (\"%s\")", result, mUnitType->GetWeaponByIndex( result ).GetName().GetString().c_str() );
+		DebugPrintf( "BEST CHOICE: Weapon %d (\"%s\")", bestWeaponIndex, mUnitType->GetWeaponByIndex( bestWeaponIndex ).GetName().GetString().c_str() );
 	}
 	else
 	{
 		DebugPrintf( "NO WEAPON AVAILABLE!" );
 	}
 
-	return result;
+	return bestWeaponIndex;
 }
 
 
