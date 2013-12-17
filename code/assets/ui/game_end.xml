@@ -1,0 +1,6 @@
+<Widget name="game_end_dialog" sprite="background.anim" position="400,200" size="256,128" color="#FF8BE0CD">
+    <Label name="label" text="Game Over" font="default_s.fnt" margins="15,15,0,1" textColor="#FF88AAFF"/>
+    <Label name="winnerTxt" text=" wins" font="default_s.fnt" margins="15,2,0,1" layout_below="label" textColor="#FF88AAFF"/>
+    <Button name="button"  text="Again!"     font="default_s.fnt" style="testButtonStyle" onClickEvent="RestartGameEvent" layout_below="winnerTxt" margins="15,2,5,0" color="#FF00FF00"/>
+    <Button name="button2" text="Quit!" font="default_s.fnt" style="testButtonStyle" onClickEvent="ExitGameEvent" layout_below="winnerTxt" margins="0,2,0,0" layout_toRightOf="button" color="#FFFF0000"/>
+</Widget>

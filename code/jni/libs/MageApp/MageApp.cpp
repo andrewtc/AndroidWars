@@ -130,6 +130,11 @@ namespace mage
 		}
 	}
 	//---------------------------------------
+	void ExitApp()
+	{
+		ANativeActivity_finish( gEngine.app->activity );
+	}
+	//---------------------------------------
 	// Default Callbacks
 	//---------------------------------------
 	void DefaultUpdateFn( float dt )

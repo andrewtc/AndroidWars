@@ -53,6 +53,7 @@ void Unit::OnLoadProperty( const std::string& name, const std::string& value )
 
 		// Grab the owning player.
 		mOwner = gGame->GetPlayer( index );
+		mOwner->OnGainUnit();
 		assertion( mOwner, "Invalid Player index %d specified for %s!", ToString() );
 	}
 	else if ( name == "Ammo" )
@@ -461,6 +462,9 @@ inline void Unit::TakeDamage( int damageAmount, Unit* instigator )
 void Unit::OnDestroyed()
 {
 	DebugPrintf( "%s has been destroyed!", ToString() );
+	gGame->PostMessageFormat( mOwner->GetPlayerColor(), "%s has been destroyed", ToString() );
+	mOwner->OnLoseUnit();
+	gGame->CheckVictory();
 }
 
 

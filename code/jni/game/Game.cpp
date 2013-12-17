@@ -54,9 +54,10 @@ Game::Game()
 	mMap.SetNewMapObjectCB( &SpawnObjectFromXml );
 
 	// Create dialogs
-	mMoveDialog    = Widget::LoadWidget( "ui/move_dialog.xml" );
-	mAttackDialog  = Widget::LoadWidget( "ui/attack_dialog.xml" );
-	mCaptureDialog = Widget::LoadWidget( "ui/capture_dialog.xml" );
+	mMoveDialog     = Widget::LoadWidget( "ui/move_dialog.xml" );
+	mAttackDialog   = Widget::LoadWidget( "ui/attack_dialog.xml" );
+	mCaptureDialog  = Widget::LoadWidget( "ui/capture_dialog.xml" );
+	mGameOverDialog = Widget::LoadWidget( "ui/game_end.xml" );
 
 	// Hide them
 	HideAllDialogs();
@@ -122,16 +123,20 @@ void Game::Start()
 	Unit* testUnit = SpawnUnit( unitType, firstPlayer, 5, 5 );
 	mMap.AddMapObject( testUnit );*/
 
+	PostMessage( "Game started!" );
+
 	// Start the first turn.
 	NextTurn();
-
-	PostMessage( "Game started!" );
 }
 
 
 void Game::OnStartTurn()
 {
 	DebugPrintf( "Starting turn %d. It is Player %d's turn.", mCurrentTurnIndex, mCurrentPlayerIndex );
+	if ( mCurrentPlayerIndex == 0 )
+		PostMessage( "It is REDS turn!", Color::RED );
+	else
+		PostMessage( "It is BLUES turn!", Color::BLUE );
 }
 
 
@@ -168,8 +173,12 @@ void Game::OnUpdate( float dt )
 
 		mUnitsToRemove.clear();
 
-		UpdateMessages( dt );
 	}
+	else if ( mStatus == STATUS_GAME_OVER )
+	{
+	}
+
+	UpdateMessages( dt );
 }
 
 
@@ -221,8 +230,12 @@ void Game::OnDraw()
 			DrawTextFormat( 0, 196, fnt, GetCurrentPlayer()->GetPlayerColor(), "Unit: %s\n AP: %d/%d", mSelectedUnit->GetName().c_str(), mSelectedUnit->GetRemainingAP(), mSelectedUnit->GetTotalAP() );
 		}
 
-		DrawMessages();
 	}
+	else if ( mStatus == STATUS_GAME_OVER )
+	{
+	}
+
+	DrawMessages();
 }
 
 
@@ -303,10 +316,26 @@ void Game::SelectUnit( Unit* unit )
 			int playerId = currentPlayer->GetIndex();
 			if ( id == CITY_N_ID )
 				ShowCaptureDialog();
-			else if ( id == CITY_B_ID && playerId == 0 )
+			else if ( id == CITY_B_ID )
+			{
+				if ( playerId == 0 )
+				{
+					((Button*)mCaptureDialog->GetChildByName( "button" ))->Show();
+				}
+				else
+					((Button*)mCaptureDialog->GetChildByName( "button" ))->Hide();
 				ShowCaptureDialog();
-			else if ( id == CITY_R_ID && playerId == 1 )
+			}
+			else if ( id == CITY_R_ID )
+			{
+				if ( playerId == 1 )
+				{
+					((Button*)mCaptureDialog->GetChildByName( "button" ))->Show();
+				}
+				else
+					((Button*)mCaptureDialog->GetChildByName( "button" ))->Hide();
 				ShowCaptureDialog();
+			}
 			else
 				mCaptureDialog->Hide();
 
@@ -464,6 +493,38 @@ void Game::OnUnitReachedDestination( Unit* unit )
 }
 
 
+void Game::CheckVictory()
+{
+	for ( int i = 0; i < mPlayers.size(); ++i )
+	{
+		if ( mPlayers[i]->HasLost() )
+		{
+			OnGameOver();
+			break;
+		}
+	}
+}
+
+
+void Game::OnGameOver()
+{
+	Label* winnerText = (Label*)mGameOverDialog->GetChildByName( "winnerTxt" );
+	if ( mPlayers[0]->HasLost() )
+	{
+		winnerText->SetText( "BLUE wins!" );
+		winnerText->TextColor = Color::BLUE;
+		PostMessage( "BLUE wins!", Color::BLUE );
+	}
+	else if ( mPlayers[1]->HasLost() )
+	{
+		winnerText->SetText( "RED wins!" );
+		winnerText->TextColor = Color::RED;
+		PostMessage( "RED wins!", Color::RED );
+	}
+	mGameOverDialog->Show();
+}
+
+
 void Game::OnTouchEvent( float x, float y )
 {
 	// A widget is blocking input
@@ -540,13 +601,14 @@ TerrainType* Game::GetTerrainTypeOfTile( int x, int y )
 bool Game::WidgetIsOpen() const
 {
 	// Put all the dialogs that block game input here...
-	return mMoveDialog->Visible || mAttackDialog->Visible;
+	return mMoveDialog->Visible || mAttackDialog->Visible || mGameOverDialog->Visible;
 }
 
 void Game::HideAllDialogs()
 {
 	mMoveDialog->Hide();
 	mAttackDialog->Hide();
+	mGameOverDialog->Hide();
 }
 
 
@@ -632,6 +694,7 @@ ObjectEventFunc( Game, ConfirmCaptureEvent )
 				mMap.SetTileId( CITY_B_ID + 1, tile );
 			player->CitiesOwned++;
 			PostMessage( "City Captured!", player->GetPlayerColor() );
+			mSelectedUnit->ConsumeAP( 1 );
 		}
 		else if ( tileId == CITY_R_ID )
 		{
@@ -640,6 +703,7 @@ ObjectEventFunc( Game, ConfirmCaptureEvent )
 				mMap.SetTileId( CITY_N_ID + 1, tile );
 				other->CitiesOwned--;
 				PostMessage( "City Neutralized!", Color::GREY );
+				mSelectedUnit->ConsumeAP( 1 );
 			}
 		}
 		else if ( tileId == CITY_B_ID )
@@ -649,6 +713,7 @@ ObjectEventFunc( Game, ConfirmCaptureEvent )
 				mMap.SetTileId( CITY_N_ID + 1, tile );
 				other->CitiesOwned--;
 				PostMessage( "City Neutralized!", Color::GREY );
+				mSelectedUnit->ConsumeAP( 1 );
 			}
 		}
 
@@ -667,7 +732,7 @@ void Game::PostMessage( const std::string& msg, const Color& color )
 	mMessageQueue.push_back( gmsg );
 }
 
-void Game::PostMessageFormat( const char* msg, const Color& color, ... )
+void Game::PostMessageFormat( const Color& color, const char* msg, ... )
 {
 	char textFormatBuffer[ 1024 ];
 
@@ -691,11 +756,13 @@ void Game::DrawMessages()
 	for ( int i =  n - 1; i >= 0; --i )
 	{
 		GameMessage& gmsg = mMessageQueue[ i ];
-		int a = (uint8) ( gmsg.age / GAME_MESSAGE_LENGTH * 255 );
+		int a = 255;
+		if ( gmsg.age <= 1.0f )
+			a = (uint8) ( gmsg.age / 1.0f * 255 );
 		Color c = gmsg.color;
 		c.a = a;
-		DrawText( 1, 552 - h - dy, fnt, c, 0.75f, gmsg.msg.c_str() );
-		dy += fnt->GetLineHeight( 0.75f );
+		dy += fnt->GetLineHeight( gmsg.msg.c_str(), 0.75f, 256 );
+		DrawText( 1, 552 - dy, fnt, c, 0.75f, 256, gmsg.msg.c_str() );
 	}
 }
 
@@ -715,3 +782,31 @@ void Game::UpdateMessages( float dt )
 			return gmsg.age <= 0;
 		}), mMessageQueue.end() );
 }
+
+void Game::ShowCaptureDialog() const
+{
+	if ( mSelectedUnit )
+	{
+		Label* ownerText = (Label*) mCaptureDialog->GetChildByName( "ownerTxt" );
+		Vec2i tilePos = mSelectedUnit->GetTilePos();
+		TileMap::MapTile& tile = mMap.GetTile( tilePos.x, tilePos.y, TERRAIN_LAYER_INDEX );
+		int tileId = tile.GetTileId();
+		if ( tileId == CITY_N_ID )
+		{
+			ownerText->SetText( "None" );
+			ownerText->TextColor = Color::GREY;
+		}
+		else if ( tileId == CITY_R_ID )
+		{
+			ownerText->SetText( "Red" );
+			ownerText->TextColor = Color::RED;
+		}
+		else if ( tileId == CITY_B_ID )
+		{
+			ownerText->SetText( "Blue" );
+			ownerText->TextColor = Color::BLUE;
+		}
+	}
+	mCaptureDialog->Show();
+}
+

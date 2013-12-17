@@ -18,12 +18,16 @@ namespace mage
 		int GetFunds() const;
 		Color GetPlayerColor() const;
 		void GenerateFunds();
+		bool HasLost() const { return mUnits == 0; }
+		void OnGainUnit() { mUnits++; }
+		void OnLoseUnit() { mUnits--; }
 
 		int CitiesOwned;
 
 	protected:
 		int mIndex;
 		int mFunds;
+		int mUnits;
 		Game* mGame;
 
 		friend class Game;

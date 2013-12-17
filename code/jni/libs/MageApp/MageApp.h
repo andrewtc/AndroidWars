@@ -38,6 +38,9 @@ namespace mage
 	bool InitApp( const char* title, struct android_app* app );
 	// Run the app
 	void Run();
+	// Exit the app
+	// Note: this is a request and will happen as soon as the destroy cmd is processed
+	void ExitApp();
 
 	void DefaultUpdateFn( float dt );
 	void DefaultRenderFn();

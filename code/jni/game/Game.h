@@ -94,6 +94,8 @@ namespace mage
 
 		BitmapFont* GetDefaultFont() const { return mDefaultFont; }
 		void OnUnitReachedDestination( Unit* unit );
+		void CheckVictory();
+		void OnGameOver();
 
 		// Events
 		EventFunc( ConfirmMoveEvent );
@@ -127,7 +129,7 @@ namespace mage
 
 		void ShowMoveDialog() const { mMoveDialog->Show(); }
 		void ShowAttackDialog() const { mAttackDialog->Show(); }
-		void ShowCaptureDialog() const { mCaptureDialog->Show(); }
+		void ShowCaptureDialog() const;
 		// True if game input should be blocked
 		bool WidgetIsOpen() const;
 		// Hide all the game dialogs
@@ -151,6 +153,7 @@ namespace mage
 		Widget* mMoveDialog;
 		Widget* mAttackDialog;
 		Widget* mCaptureDialog;
+		Widget* mGameOverDialog;
 		BitmapFont* mDefaultFont;
 		bool mUnitMotionInProgress;
 		int mNextPathIndex;
@@ -165,7 +168,7 @@ namespace mage
 
 	public:
 		void PostMessage( const std::string& msg, const Color& color=Color::WHITE );
-		void PostMessageFormat( const char* msg, const Color& color, ... );
+		void PostMessageFormat( const Color& color, const char* msg, ... );
 	private:
 		void DrawMessages();
 		void UpdateMessages( float dt );

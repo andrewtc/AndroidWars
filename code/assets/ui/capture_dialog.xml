@@ -1,4 +1,8 @@
-<Widget name="capture_dialog" sprite="background.anim" position="0,100" size="256,128" color="#FF0000FF">
-    <Label name="label" text="City Info" font="default_s.fnt" margins="15,15,0,1" textColor="#FFFFFF00"/>
-    <Button name="button"  text="Capture City"     font="default_s.fnt" style="testButtonStyle" onClickEvent="ConfirmCaptureEvent" layout_below="label" margins="15,0,5,0" color="#FF00FF00"/>
+<Widget name="capture_dialog" sprite="background.anim" position="180,0" size="256,128" color="#FF8BE0CD">
+
+    <Label name="label"    text="City Info" font="default_s.fnt" margins="15,15,0,1" textColor="#FF88AAFF"/>
+    <Label name="label2"   text="Owner:"    font="default_s.fnt" margins="15,2,0,1" layout_below="label" textColor="#FF88AAFF"/>
+    <Label name="ownerTxt" text="None"      font="default_s.fnt" margins="15,2,0,1" layout_toRightOf="label2" layout_below="label" textColor="#FF333333"/>
+    
+    <Button name="button"  text="Capture City"     font="default_s.fnt" style="testButtonStyle" onClickEvent="ConfirmCaptureEvent" layout_below="label2" margins="15,2,5,0" color="#FF00FF00"/>
 </Widget>

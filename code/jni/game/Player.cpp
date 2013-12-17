@@ -8,6 +8,7 @@ Player::Player()
 	, mGame( nullptr )
 	, CitiesOwned( 0 )
 	, mFunds( 0 )
+	, mUnits( 0 )
 { }
 
 
@@ -30,5 +31,5 @@ void Player::GenerateFunds()
 {
 	int gain = CitiesOwned * 10;
 	mFunds += gain;
-	gGame->PostMessageFormat( "+$%d", GetPlayerColor(), gain );
+	gGame->PostMessageFormat( GetPlayerColor(), "+$%d", gain );
 };

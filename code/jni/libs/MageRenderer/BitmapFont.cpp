@@ -156,3 +156,57 @@ float BitmapFont::GetLineWidth( const char* text, float scale )
 	return fx;
 }
 //---------------------------------------
+float BitmapFont::GetLineHeight( const char* text, float scale, int maxLineLength ) const
+{
+	int c;
+	float fx = 0;
+	float fy = mLineHeight;
+
+	// Adjust the line length by the inverse scale
+	if ( maxLineLength > 0 )
+	{
+		maxLineLength /= scale;
+	}
+
+	for ( int i = 0; text[i]; ++i )
+	{
+		// Newline
+		if ( text[i] == '\n' )
+		{
+			fx = 0;
+			fy += mLineHeight;
+			continue;
+		}
+
+		// Tab
+		if ( text[i] == '\t' )
+		{
+			fx += mSpaceWidth * TabSize;
+			continue;
+		}
+
+		// Use a space for non-printable char
+		c = text[i] < ' ' ? ' ' : text[i];
+
+		auto gi = mGlyphs.find( c );
+		if ( gi != mGlyphs.end() )
+		{
+			const Glyph& g = gi->second;
+			Texture2D* tx = mPages[ g.page ];
+
+			// Line wrap
+			// TODO this could be better (like actually break words correctly)
+			if ( maxLineLength > 0 && c != ' ' && ( fx + g.a ) >= maxLineLength )
+			{
+				fx = 0;
+				fy += mLineHeight;
+			}
+
+			// TODO kerning...
+			fx += g.a;
+		}
+	}
+
+	return fy * scale;
+}
+//---------------------------------------
