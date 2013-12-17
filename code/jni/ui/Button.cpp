@@ -10,6 +10,7 @@ HashMap< Button::ButtonStyle > Button::sButtonStyles;
 //---------------------------------------
 Button::Button( const std::string& name, const XmlReader::XmlReaderIterator& itr, Widget* parent )
 	: Label( name, itr, parent )
+	, mEnabled( true )
 {
 	mStyleName = itr.GetAttributeAsString( "style" );
 	ButtonStyle& style = sButtonStyles[ mStyleName ];
@@ -37,7 +38,8 @@ Button::~Button()
 //---------------------------------------
 void Button::SetText( const char* text )
 {
-	Label::SetText( text );
+	//Label::SetText( text );
+	mText = text;
 	if ( mFont )
 	{
 		float w = mFont->GetLineWidth( text, mTextScale );
@@ -51,7 +53,7 @@ void Button::SetText( const char* text )
 bool Button::OnPointerDown( float x, float y )
 {
 	// If not visible, do not process this Widget or its children
-	if ( !Visible )
+	if ( !Visible || !mEnabled )
 		return false;
 
 	ButtonStyle& style = sButtonStyles[ mStyleName ];
@@ -84,7 +86,7 @@ bool Button::OnPointerDown( float x, float y )
 bool Button::OnPointerUp( float x, float y )
 {
 	// If not visible, do not process this Widget or its children
-	if ( !Visible )
+	if ( !Visible || !mEnabled )
 		return false;
 
 	ButtonStyle& style = sButtonStyles[ mStyleName ];
@@ -121,5 +123,18 @@ bool Button::OnPointerUp( float x, float y )
 	mSprite->PlayAnimation( style.DefaultAnimName );
 	mSprite->DrawColor = mDefaultColor;
 	return false;
+}
+//---------------------------------------
+void Button::Disable()
+{
+	ButtonStyle& style = sButtonStyles[ mStyleName ];
+	mSprite->DrawColor = style.DisabledColor;
+	mEnabled = false;
+}
+//---------------------------------------
+void Button::Enable()
+{
+	mSprite->DrawColor = mDefaultColor;
+	mEnabled = true;
 }
 //---------------------------------------

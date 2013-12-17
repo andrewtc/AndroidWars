@@ -1,0 +1,9 @@
+<Widget name="unit_dialog" sprite="background.anim" position="436,0" size="300,165" color="#FF8BE0CD">
+
+    <Label name="label"    text="Unit Info" font="default_s.fnt" margins="15,15,0,1" textColor="#FF88AAFF"/>
+    <Label name="nameTxt"  text="Name:"    font="default_s.fnt"  margins="15,2,0,1" layout_below="label" textColor="#FF88AAFF"/>
+    <Label name="hpTxt"    text="HP:"    font="default_s.fnt"    margins="15,2,0,1" layout_below="nameTxt" textColor="#FF880000"/>
+    <Label name="apTxt"    text="AP:"    font="default_s.fnt"    margins="15,2,0,1" layout_toRightOf="hpTxt" layout_below="nameTxt" textColor="#FF000088"/>
+    
+    <Button name="button"  text="Enforcements"     font="default_s.fnt" style="testButtonStyle" onClickEvent="BuyEnforcementsEvent" layout_below="hpTxt" margins="15,2,5,0" color="#FF00FF00"/>
+</Widget>

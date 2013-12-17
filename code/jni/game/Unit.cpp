@@ -443,7 +443,7 @@ void Unit::SetHP( int hp )
 }
 
 
-inline void Unit::TakeDamage( int damageAmount, Unit* instigator )
+void Unit::TakeDamage( int damageAmount, Unit* instigator )
 {
 	if( instigator != nullptr )
 	{
@@ -476,10 +476,15 @@ void Unit::ResetAP()
 
 void Unit::ConsumeAP( int ap )
 {
-	--mAP;
+	mAP -= ap;
 	if ( mAP <= 0 )
 	{
 		mAP = 0;
 		mSprite->DrawColor = mDefaultColor;
 	}
+}
+
+int Unit::GetTotalHP() const
+{
+	return mUnitType->GetMaxHP();
 }

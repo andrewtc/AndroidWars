@@ -58,10 +58,12 @@ Game::Game()
 	mAttackDialog   = Widget::LoadWidget( "ui/attack_dialog.xml" );
 	mCaptureDialog  = Widget::LoadWidget( "ui/capture_dialog.xml" );
 	mGameOverDialog = Widget::LoadWidget( "ui/game_end.xml" );
+	mUnitDialog     = Widget::LoadWidget( "ui/unit_dialog.xml" );
 
 	// Hide them
 	HideAllDialogs();
 	mCaptureDialog->Hide();
+	mUnitDialog->Hide();
 
 	// Register events
 	RegisterObjectEventFunc( Game, ConfirmMoveEvent );
@@ -69,6 +71,7 @@ Game::Game()
 	RegisterObjectEventFunc( Game, ConfirmAttackEvent );
 	RegisterObjectEventFunc( Game, CancelAttackEvent );
 	RegisterObjectEventFunc( Game, ConfirmCaptureEvent );
+	RegisterObjectEventFunc( Game, BuyEnforcementsEvent );
 
 	mDefaultFont = new BitmapFont( "fonts/small.fnt" );
 }
@@ -127,12 +130,21 @@ void Game::Start()
 
 	// Start the first turn.
 	NextTurn();
+
+	// Drain all AP for P2
+	void (*Fn)( Unit* unit ) = []( Unit* unit ) { if ( unit->GetOwner() == gGame->GetPlayer( 1 ) ) unit->ConsumeAP( 9999 ); };
+	mMap.ForeachObjectOfType( Fn );
 }
 
 
 void Game::OnStartTurn()
 {
 	DebugPrintf( "Starting turn %d. It is Player %d's turn.", mCurrentTurnIndex, mCurrentPlayerIndex );
+	Player* player = GetCurrentPlayer();
+	// Re-gen AP
+	void (*Fn)( Unit* unit ) = []( Unit* unit ) { if ( unit->GetOwner() == gGame->GetCurrentPlayer() ) unit->ResetAP(); };
+	mMap.ForeachObjectOfType( Fn );
+
 	if ( mCurrentPlayerIndex == 0 )
 		PostMessage( "It is REDS turn!", Color::RED );
 	else
@@ -144,10 +156,10 @@ void Game::OnEndTurn()
 {
 	DebugPrintf( "Ending turn %d.", mCurrentTurnIndex );
 	Player* player = GetCurrentPlayer();
-
+	// Get money
 	player->GenerateFunds();
-
-	void (*Fn)( Unit* unit ) = []( Unit* unit ) { unit->ResetAP(); };
+	// Drain all AP
+	void (*Fn)( Unit* unit ) = []( Unit* unit ) { if ( unit->GetOwner() == gGame->GetCurrentPlayer() ) unit->ConsumeAP( 9999 ); };
 	mMap.ForeachObjectOfType( Fn );
 
 	SelectUnit( 0 );
@@ -224,10 +236,6 @@ void Game::OnDraw()
 
 			int f = player->GetFunds();
 			DrawTextFormat( 0, 128 + i * fnt->GetLineHeight(), fnt, player->GetPlayerColor(), "%cFunds: $%d\n", mCurrentPlayerIndex == i ? '*' : ' ', f );
-		}
-		if ( mSelectedUnit )
-		{
-			DrawTextFormat( 0, 196, fnt, GetCurrentPlayer()->GetPlayerColor(), "Unit: %s\n AP: %d/%d", mSelectedUnit->GetName().c_str(), mSelectedUnit->GetRemainingAP(), mSelectedUnit->GetTotalAP() );
 		}
 
 	}
@@ -339,6 +347,9 @@ void Game::SelectUnit( Unit* unit )
 			else
 				mCaptureDialog->Hide();
 
+			// Show unit info
+			ShowUnitDialog();
+
 			// Select all reachable tiles from this Unit's position.
 			SelectReachableTilesForUnit( unit, unit->GetTilePos(), 0, CARDINAL_DIRECTION_NONE, unit->GetMovementRange() );
 
@@ -383,6 +394,7 @@ void Game::SelectUnit( Unit* unit )
 
 		// Hide capture dialog
 		mCaptureDialog->Hide();
+		mUnitDialog->Hide();
 	}
 }
 
@@ -475,6 +487,7 @@ void Game::MoveUnitToTile( Unit* unit, const Vec2i& tilePos )
 	mNextPathIndex = 0;
 	OnUnitReachedDestination( unit );
 //	unit->SetTilePos( tilePos );
+	PostMessage( "On my way!", GetCurrentPlayer()->GetPlayerColor() );
 	DebugPrintf( "Moving %s to tile (%d, %d).", unit->ToString(), tilePos.x, tilePos.y );
 }
 
@@ -484,6 +497,7 @@ void Game::OnUnitReachedDestination( Unit* unit )
 	{
 		mUnitMotionInProgress = false;
 		SelectUnit( 0 );
+		SelectUnit( unit );
 	}
 	else
 	{
@@ -646,6 +660,8 @@ ObjectEventFunc( Game, ConfirmAttackEvent )
 {
 	assertion( mSelectedUnit, "Cannot initiate attack because no Unit is selected!" );
 	assertion( mTargetUnit, "Cannot initiate attack because no target Unit was selected!" );
+
+	PostMessage( "To victory!", GetCurrentPlayer()->GetPlayerColor() );
 
 	// Allow the selected unit to attack the target.
 	DebugPrintf( "INITIAL ATTACK:" );
@@ -810,3 +826,36 @@ void Game::ShowCaptureDialog() const
 	mCaptureDialog->Show();
 }
 
+void Game::ShowUnitDialog() const
+{
+	Label* nameText = (Label*)mUnitDialog->GetChildByName( "nameTxt" );
+	Label* hpText   = (Label*)mUnitDialog->GetChildByName( "hpTxt" );
+	Label* apText   = (Label*)mUnitDialog->GetChildByName( "apTxt" );
+	Player* player  = GetCurrentPlayer();
+
+	if ( mSelectedUnit )
+	{
+		if ( player->GetFunds() < 100 || mSelectedUnit->GetRemainingAP() == 0 || mSelectedUnit->GetHP() == mSelectedUnit->GetTotalHP() )
+			((Button*)mUnitDialog->GetChildByName( "button" ))->Disable();
+		else
+			((Button*)mUnitDialog->GetChildByName( "button" ))->Enable();
+
+		nameText->SetText( mSelectedUnit->ToString() );
+		nameText->TextColor = player->GetPlayerColor();
+		hpText->SetText( std::string( "HP: " ) + StringUtil::ToString( mSelectedUnit->GetHP() ) + "/" + StringUtil::ToString( mSelectedUnit->GetTotalHP() ) );
+		apText->SetText( std::string( "AP: " ) + StringUtil::ToString( mSelectedUnit->GetRemainingAP() ) + "/" + StringUtil::ToString( mSelectedUnit->GetTotalAP() ) );
+	}
+
+	mUnitDialog->Show();
+}
+
+ObjectEventFunc( Game, BuyEnforcementsEvent )
+{
+	Player* player = GetCurrentPlayer();
+	player->AddFunds( -100 );
+	mSelectedUnit->TakeDamage( -1 );
+	mSelectedUnit->ConsumeAP( 1 );
+	Unit* u = mSelectedUnit;
+	SelectUnit( 0 );
+	SelectUnit( u );
+}

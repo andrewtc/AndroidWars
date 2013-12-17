@@ -26,11 +26,15 @@ namespace mage
 			HashString SelectedAnimName;
 			HashString SelectedSFXName;
 			Color PressedColor;
+			Color DisabledColor;
 			bool WrapText;
 		};
 		static HashMap< ButtonStyle > sButtonStyles;
 
 		virtual void SetText( const char* text );
+
+		void Disable();
+		void Enable();
 	protected:
 		virtual ~Button();
 
@@ -42,6 +46,7 @@ namespace mage
 		HashString mStyleName;
 		Color mDefaultColor;
 		Color mPressedColor;
+		bool mEnabled;
 	};
 
 }

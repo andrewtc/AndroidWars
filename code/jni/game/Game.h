@@ -103,6 +103,7 @@ namespace mage
 		EventFunc( ConfirmAttackEvent );
 		EventFunc( CancelAttackEvent );
 		EventFunc( ConfirmCaptureEvent );
+		EventFunc( BuyEnforcementsEvent );
 
 	protected:
 		struct TileInfo
@@ -130,6 +131,7 @@ namespace mage
 		void ShowMoveDialog() const { mMoveDialog->Show(); }
 		void ShowAttackDialog() const { mAttackDialog->Show(); }
 		void ShowCaptureDialog() const;
+		void ShowUnitDialog() const;
 		// True if game input should be blocked
 		bool WidgetIsOpen() const;
 		// Hide all the game dialogs
@@ -154,6 +156,7 @@ namespace mage
 		Widget* mAttackDialog;
 		Widget* mCaptureDialog;
 		Widget* mGameOverDialog;
+		Widget* mUnitDialog;
 		BitmapFont* mDefaultFont;
 		bool mUnitMotionInProgress;
 		int mNextPathIndex;

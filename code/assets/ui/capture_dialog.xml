@@ -1,4 +1,4 @@
-<Widget name="capture_dialog" sprite="background.anim" position="180,0" size="256,128" color="#FF8BE0CD">
+<Widget name="capture_dialog" sprite="background.anim" position="180,0" size="256,165" color="#FF8BE0CD">
 
     <Label name="label"    text="City Info" font="default_s.fnt" margins="15,15,0,1" textColor="#FF88AAFF"/>
     <Label name="label2"   text="Owner:"    font="default_s.fnt" margins="15,2,0,1" layout_below="label" textColor="#FF88AAFF"/>

@@ -171,6 +171,7 @@ void Widget::LoadDefinitions( const char* file )
 			s.WrapText        = itr.GetAttributeAsBool( "wrapText", true );
 			s.PressedColor    = itr.GetAttributeAsColor( "pressedColor", Color::WHITE );
 			s.SelectedSFXName = itr.GetAttributeAsString( "clickSFX", "" );
+			s.DisabledColor   = itr.GetAttributeAsColor( "disabledColor", Color::GREY );
 
 			Button::sButtonStyles[ name ] = s;
 		}

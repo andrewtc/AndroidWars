@@ -59,6 +59,7 @@ EventFunc( NextTurnEvent )
 	//gWidget->Show();
 
 	// TEST: End the current turn.
+	gGame->PostMessage( "Next Turn" );
 	gGame->NextTurn();
 
 	// Play a sfx - this is done through data now
@@ -83,7 +84,6 @@ EventFunc( ExitGameEvent )
 
 void RegisterEventFuncs()
 {
-	RegisterEventFunc( TestWidgetButtonEvent );
 	RegisterEventFunc( NextTurnEvent );
 	RegisterEventFunc( RestartGameEvent );
 	RegisterEventFunc( ExitGameEvent );
@@ -210,7 +210,7 @@ void OnPointerMotion( float x, float y, float dx, float dy, size_t which )
 		gCameraVelocity.Set( dx, dy );
 	}
 	Vec2f d( dx, dy );
-	DebugPrintf( "motion delta=%f", d.LengthSqr() );
+//	DebugPrintf( "motion delta=%f", d.LengthSqr() );
 	if ( d.LengthSqr() > 5 )
 	{
 		gWasMotion = true;

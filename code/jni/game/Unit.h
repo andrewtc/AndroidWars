@@ -65,6 +65,7 @@ namespace mage
 		void ResetAP();
 		int GetRemainingAP() const { return mAP; }
 		int GetTotalAP() const { return 2; }
+		int GetTotalHP() const;
 
 		const char* ToString() const;
 

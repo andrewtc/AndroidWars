@@ -21,6 +21,7 @@ namespace mage
 		bool HasLost() const { return mUnits == 0; }
 		void OnGainUnit() { mUnits++; }
 		void OnLoseUnit() { mUnits--; }
+		void AddFunds( int funds ) { mFunds -= funds; if ( mFunds < 0 ) mFunds = 0; }
 
 		int CitiesOwned;
 

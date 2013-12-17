@@ -57,5 +57,6 @@ void Label::SetText( const std::string& text )
 void Label::SetText( const char* text )
 {
 	mText = text;
+	mWidth = mFont->GetLineWidth( mText.c_str(), mTextScale );
 }
 //---------------------------------------
