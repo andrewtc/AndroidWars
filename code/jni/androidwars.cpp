@@ -13,6 +13,7 @@ Vec2f gCameraTarget;
 Vec2f gCameraVelocity;
 
 bool gInit = false;
+bool gWasMotion = false;
 
 Camera* gCamera;
 BitmapFont* gFont;
@@ -108,6 +109,8 @@ void OnScreenSizeChanged( int32 w, int32 h )
 
 	gCameraTarget.x = w / 2.0f;
 	gCameraTarget.y = h / 2.0f;
+
+	DebugPrintf( "Window size w=%d h=%d\n", gWindowWidth, gWindowHeight );
 }
 
 void OnWindowShown()
@@ -168,22 +171,32 @@ void OnPointerDown( float x, float y, size_t which )
 {
 	DebugPrintf( "Touch at %f %f\n", x, y );
 	Widget::ProcessOnPointerDown( x, y );
+	gWasMotion = false;
 }
 
 void OnPointerUp( float x, float y, size_t which )
 {
 	if ( !Widget::ProcessOnPointerUp( x, y ) )
 	{
-		if ( gGame )
+		if ( gGame && !gWasMotion )
 			gGame->OnTouchEvent( x, y );
 	}
+	gWasMotion = false;
 }
 
 void OnPointerMotion( float x, float y, float dx, float dy, size_t which )
 {
 //	DebugPrintf( "Motion (%3.f %.3f) d(%3.f %.3f) ", x, y, dx, dy );
 	if ( !Widget::ProcessOnPointerDown( x, y ) )
+	{
 		gCameraVelocity.Set( dx, dy );
+	}
+	Vec2f d( dx, dy );
+	DebugPrintf( "motion delta=%f", d.LengthSqr() );
+	if ( d.LengthSqr() > 5 )
+	{
+		gWasMotion = true;
+	}
 }
 
 void OnFocusLost()

@@ -155,6 +155,23 @@ namespace mage
 		bool mUnitMotionInProgress;
 		int mNextPathIndex;
 
+		struct GameMessage
+		{
+			std::string msg;
+			float age;
+			Color color;
+		};
+		ArrayList< GameMessage > mMessageQueue;
+
+	public:
+		void PostMessage( const std::string& msg, const Color& color=Color::WHITE );
+		void PostMessageFormat( const char* msg, const Color& color, ... );
+	private:
+		void DrawMessages();
+		void UpdateMessages( float dt );
+
+		static const float GAME_MESSAGE_LENGTH;
+
 		friend class Unit;
 	};
 

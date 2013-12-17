@@ -10,6 +10,7 @@ using namespace mage;
 
 const char* Game::MAPS_FOLDER_PATH = "maps";
 const char* Game::MAP_FILE_EXTENSION = "tmx";
+const float Game::GAME_MESSAGE_LENGTH = 5;	// in sec
 
 
 Game* Game::Create( int numPlayers, const std::string& mapName )
@@ -123,6 +124,8 @@ void Game::Start()
 
 	// Start the first turn.
 	NextTurn();
+
+	PostMessage( "Game started!" );
 }
 
 
@@ -164,6 +167,8 @@ void Game::OnUpdate( float dt )
 		}
 
 		mUnitsToRemove.clear();
+
+		UpdateMessages( dt );
 	}
 }
 
@@ -215,6 +220,8 @@ void Game::OnDraw()
 		{
 			DrawTextFormat( 0, 196, fnt, GetCurrentPlayer()->GetPlayerColor(), "Unit: %s\n AP: %d/%d", mSelectedUnit->GetName().c_str(), mSelectedUnit->GetRemainingAP(), mSelectedUnit->GetTotalAP() );
 		}
+
+		DrawMessages();
 	}
 }
 
@@ -624,6 +631,7 @@ ObjectEventFunc( Game, ConfirmCaptureEvent )
 			else
 				mMap.SetTileId( CITY_B_ID + 1, tile );
 			player->CitiesOwned++;
+			PostMessage( "City Captured!", player->GetPlayerColor() );
 		}
 		else if ( tileId == CITY_R_ID )
 		{
@@ -631,6 +639,7 @@ ObjectEventFunc( Game, ConfirmCaptureEvent )
 			{
 				mMap.SetTileId( CITY_N_ID + 1, tile );
 				other->CitiesOwned--;
+				PostMessage( "City Neutralized!", Color::GREY );
 			}
 		}
 		else if ( tileId == CITY_B_ID )
@@ -639,8 +648,70 @@ ObjectEventFunc( Game, ConfirmCaptureEvent )
 			{
 				mMap.SetTileId( CITY_N_ID + 1, tile );
 				other->CitiesOwned--;
+				PostMessage( "City Neutralized!", Color::GREY );
 			}
 		}
+
+
 	}
 	mCaptureDialog->Hide();
+	SelectUnit( 0 );
+}
+
+void Game::PostMessage( const std::string& msg, const Color& color )
+{
+	GameMessage gmsg;
+	gmsg.msg = msg;
+	gmsg.color = color;
+	gmsg.age = GAME_MESSAGE_LENGTH;
+	mMessageQueue.push_back( gmsg );
+}
+
+void Game::PostMessageFormat( const char* msg, const Color& color, ... )
+{
+	char textFormatBuffer[ 1024 ];
+
+	// Apply text formating
+	va_list vargs;
+	va_start( vargs, msg );
+	vsprintf_s( textFormatBuffer, msg, vargs );
+	va_end( vargs );
+
+	PostMessage( textFormatBuffer, color );
+}
+
+void Game::DrawMessages()
+{
+	BitmapFont* fnt = GetDefaultFont();
+	float dy = 0;
+	float h = fnt->GetLineHeight( 0.75f );
+	DrawRectOutlined( 1, 552 - h * 10, 256, h * 10, Color( 0x70000000 ), 1.0f, Color::BLACK );
+	int n = mMessageQueue.size();
+	n = n > 10 ? 10 : n;
+	for ( int i =  n - 1; i >= 0; --i )
+	{
+		GameMessage& gmsg = mMessageQueue[ i ];
+		int a = (uint8) ( gmsg.age / GAME_MESSAGE_LENGTH * 255 );
+		Color c = gmsg.color;
+		c.a = a;
+		DrawText( 1, 552 - h - dy, fnt, c, 0.75f, gmsg.msg.c_str() );
+		dy += fnt->GetLineHeight( 0.75f );
+	}
+}
+
+void Game::UpdateMessages( float dt )
+{
+	int n = mMessageQueue.size();
+	n = n > 10 ? 10 : n;
+	for ( int i = 0; i < n; ++i )
+	{
+		GameMessage& gmsg = mMessageQueue[ i ];
+		gmsg.age -= dt;
+	}
+
+	mMessageQueue.erase(
+		std::remove_if( mMessageQueue.begin(), mMessageQueue.end(), [&]( const GameMessage& gmsg )
+		{
+			return gmsg.age <= 0;
+		}), mMessageQueue.end() );
 }

@@ -28,5 +28,7 @@ Color Player::GetPlayerColor() const
 
 void Player::GenerateFunds()
 {
-	mFunds += CitiesOwned * 10;
+	int gain = CitiesOwned * 10;
+	mFunds += gain;
+	gGame->PostMessageFormat( "+$%d", GetPlayerColor(), gain );
 };
