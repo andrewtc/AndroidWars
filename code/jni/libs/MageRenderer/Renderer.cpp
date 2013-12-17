@@ -847,4 +847,21 @@ void ToWorldSpace( Vec2f& pos )
 	pos.y = halfHeight - pos.y;
 }
 
+void SetBlendFunc( IRenderer::BlendFunc sFactor, IRenderer::BlendFunc dFactor )
+{
+	// Need to flush when changing blend modes
+	FlushRenderer();
+	IRenderCall( SetBlendFunc( sFactor, dFactor ) );
+}
+
+void SetDefaultBlend()
+{
+	SetBlendFunc( IRenderer::BF_SRC_ALPHA, IRenderer::BF_ONE_MINUS_SRC_ALPHA );
+}
+
+void SetAdditiveBlend()
+{
+	SetBlendFunc( IRenderer::BF_SRC_ALPHA, IRenderer::BF_ONE );
+}
+
 }

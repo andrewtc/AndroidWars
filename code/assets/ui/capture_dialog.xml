@@ -1,0 +1,4 @@
+<Widget name="capture_dialog" sprite="background.anim" position="0,100" size="256,128" color="#FF0000FF">
+    <Label name="label" text="City Info" font="default_s.fnt" margins="15,15,0,1" textColor="#FFFFFF00"/>
+    <Button name="button"  text="Capture City"     font="default_s.fnt" style="testButtonStyle" onClickEvent="ConfirmCaptureEvent" layout_below="label" margins="15,0,5,0" color="#FF00FF00"/>
+</Widget>

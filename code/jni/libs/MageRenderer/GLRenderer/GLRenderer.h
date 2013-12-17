@@ -24,6 +24,7 @@ namespace mage
 		void SetActiveEffect( Effect* effect );
 		void ClearActiveEffect();
 		void BindTexture( IRenderer::TextureHandle hTexture, int channel );
+		void SetBlendFunc( IRenderer::BlendFunc sFactor, IRenderer::BlendFunc dFactor );
 
 	protected:
 		void CopyVertexListToBuffer( const VertexList& verts );

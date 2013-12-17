@@ -12,6 +12,29 @@ public:
 		Points
 	};
 
+	enum BlendFunc
+	{
+		BF_ZERO,
+		BF_ONE,
+		BF_SRC_COLOR,
+		BF_ONE_MINUS_SRC_COLOR,
+		BF_DST_COLOR,
+		BF_ONE_MINUS_DST_COLOR,
+		BF_SRC_ALPHA,
+		BF_ONE_MINUS_SRC_ALPHA,
+		BF_DST_ALPHA,
+		BF_ONE_MINUS_DST_ALPHA,
+		BF_CONSTANT_COLOR,
+		BF_ONE_MINUS_CONSTANT_COLOR,
+		BF_CONSTANT_ALPHA,
+		BF_ONE_MINUS_CONSTANT_ALPHA,
+		BF_SRC_ALPHA_SATURATE,
+		BF_SRC1_COLOR,
+		BF_ONE_MINUS_SRC1_COLOR,
+		BF_SRC1_ALPHA,
+		BF_ONE_MINUS_SRC1_ALPHA
+	};
+
 	struct Vertex2D
 	{
 		float x, y;
@@ -61,4 +84,6 @@ public:
 	virtual void SetViewport( int x, int y, int w, int h ) = 0;
 	// Bind a texture to a specific channel
 	virtual void BindTexture( IRenderer::TextureHandle hTexture, int channel ) = 0;
+	// Set how pixels are blended
+	virtual void SetBlendFunc( IRenderer::BlendFunc sFactor, IRenderer::BlendFunc dFactor ) = 0;
 };

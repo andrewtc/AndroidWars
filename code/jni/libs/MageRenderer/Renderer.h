@@ -127,4 +127,8 @@ namespace mage
 	void SetPickingID( int id );
 
 	void ToWorldSpace( Vec2f& pos );
+
+	void SetBlendFunc( IRenderer::BlendFunc sFactor, IRenderer::BlendFunc dFactor );
+	void SetDefaultBlend();
+	void SetAdditiveBlend();
 }

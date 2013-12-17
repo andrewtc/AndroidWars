@@ -101,6 +101,7 @@ namespace mage
 			void StopAnimation() { mAnimPlaying = false; }
 
 			const std::string& GetPropertyAsString( const HashString& propName ) const;
+			int GetTileId() const { return TileId; }
 
 			bool operator==( const MapTile& tile ) const;
 			bool operator!=( const MapTile& tile ) const;

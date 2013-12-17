@@ -1,5 +1,10 @@
 #include "androidwars.h"
 
+#   include <EGL/egl.h>
+#   include <GLES/gl.h>
+#   include <GLES2/gl2.h>
+#   include <GLES2/gl2ext.h>
+
 using namespace mage;
 
 
@@ -48,17 +53,20 @@ Game::Game()
 	mMap.SetNewMapObjectCB( &SpawnObjectFromXml );
 
 	// Create dialogs
-	mMoveDialog = Widget::LoadWidget( "ui/move_dialog.xml" );
-	mAttackDialog = Widget::LoadWidget( "ui/attack_dialog.xml" );
+	mMoveDialog    = Widget::LoadWidget( "ui/move_dialog.xml" );
+	mAttackDialog  = Widget::LoadWidget( "ui/attack_dialog.xml" );
+	mCaptureDialog = Widget::LoadWidget( "ui/capture_dialog.xml" );
 
 	// Hide them
 	HideAllDialogs();
+	mCaptureDialog->Hide();
 
 	// Register events
 	RegisterObjectEventFunc( Game, ConfirmMoveEvent );
 	RegisterObjectEventFunc( Game, CancelMoveEvent );
 	RegisterObjectEventFunc( Game, ConfirmAttackEvent );
 	RegisterObjectEventFunc( Game, CancelAttackEvent );
+	RegisterObjectEventFunc( Game, ConfirmCaptureEvent );
 
 	mDefaultFont = new BitmapFont( "fonts/small.fnt" );
 }
@@ -133,6 +141,8 @@ void Game::OnEndTurn()
 
 	void (*Fn)( Unit* unit ) = []( Unit* unit ) { unit->ResetAP(); };
 	mMap.ForeachObjectOfType( Fn );
+
+	SelectUnit( 0 );
 }
 
 
@@ -165,22 +175,31 @@ void Game::OnDraw()
 		// Draw the world.
 		mMap.OnDraw( *mCamera );
 
-		for( auto it = mReachableTiles.begin(); it != mReachableTiles.end(); ++it )
+		if ( !mUnitMotionInProgress && !mReachableTiles.empty() )
 		{
-			// Draw the currently selected tiles.
-			Vec2f topLeft = ( mMap.TileToWorld( it->second.tilePos ) - mCamera->GetPosition() );
-			DrawRectOutlined( topLeft.x, topLeft.y, mMap.GetTileWidth(), mMap.GetTileHeight(), Color( 0x8888AAFF ), 1.0f, Color( 0xF888AAFF ) );
-		}
-
-		if( mSelectedPath.IsValid() )
-		{
-			for( size_t i = 0, numWaypoints = mSelectedPath.GetNumWaypoints(); i < numWaypoints; ++i )
+			// Darken screen
+			DrawRect( 0, 0, 1200, 800, Color( 0x88000000 ) );
+			SetAdditiveBlend();
+			// Draw overlay on tiles
+			for( auto it = mReachableTiles.begin(); it != mReachableTiles.end(); ++it )
 			{
-				// Draw all tiles in the currently selected path.
-				Vec2i tilePos = mSelectedPath.GetWaypoint( i );
-				Vec2f topLeft = ( mMap.TileToWorld( tilePos ) - mCamera->GetPosition() );
-				DrawRect( topLeft.x, topLeft.y, mMap.GetTileWidth(), mMap.GetTileHeight(), Color( 0x88FF0000 ) );
+				// Draw the currently selected tiles.
+				Vec2f topLeft = ( mMap.TileToWorld( it->second.tilePos ) - mCamera->GetPosition() );
+				DrawRectOutlined( topLeft.x, topLeft.y, mMap.GetTileWidth(), mMap.GetTileHeight(), Color( 0x8888AAFF ), 1.0f, Color( 0xF888AAFF ) );
 			}
+
+			if( mSelectedPath.IsValid() )
+			{
+				for( size_t i = 0, numWaypoints = mSelectedPath.GetNumWaypoints(); i < numWaypoints; ++i )
+				{
+					// Draw all tiles in the currently selected path.
+					Vec2i tilePos = mSelectedPath.GetWaypoint( i );
+					Vec2f topLeft = ( mMap.TileToWorld( tilePos ) - mCamera->GetPosition() );
+					DrawRect( topLeft.x, topLeft.y, mMap.GetTileWidth(), mMap.GetTileHeight(), Color( 0x88FF0000 ) );
+				}
+			}
+			// Set blending back to default
+			SetDefaultBlend();
 		}
 
 		// UI
@@ -271,6 +290,19 @@ void Game::SelectUnit( Unit* unit )
 			unit->Select();
 			mSelectedUnit = unit;
 
+			Vec2f tilePos = unit->GetTilePos();
+			TileMap::MapTile& tile = mMap.GetTile( tilePos.x, tilePos.y, Game::TERRAIN_LAYER_INDEX );
+			int id = tile.GetTileId();
+			int playerId = currentPlayer->GetIndex();
+			if ( id == CITY_N_ID )
+				ShowCaptureDialog();
+			else if ( id == CITY_B_ID && playerId == 0 )
+				ShowCaptureDialog();
+			else if ( id == CITY_R_ID && playerId == 1 )
+				ShowCaptureDialog();
+			else
+				mCaptureDialog->Hide();
+
 			// Select all reachable tiles from this Unit's position.
 			SelectReachableTilesForUnit( unit, unit->GetTilePos(), 0, CARDINAL_DIRECTION_NONE, unit->GetMovementRange() );
 
@@ -312,6 +344,9 @@ void Game::SelectUnit( Unit* unit )
 
 		// Clear the currently selected path.
 		mSelectedPath.Clear();
+
+		// Hide capture dialog
+		mCaptureDialog->Hide();
 	}
 }
 
@@ -569,4 +604,43 @@ ObjectEventFunc( Game, CancelAttackEvent )
 	mTargetUnit->Deselect();
 	SelectUnit( 0 );
 	mAttackDialog->Hide();
+}
+
+ObjectEventFunc( Game, ConfirmCaptureEvent )
+{
+	if ( mSelectedUnit )
+	{
+		Vec2i tilePos = mSelectedUnit->GetTilePos();
+		TileMap::MapTile& tile = mMap.GetTile( tilePos.x, tilePos.y, TERRAIN_LAYER_INDEX );
+		int tileId = tile.GetTileId();
+		int playerId = mCurrentPlayerIndex;
+		Player* player = GetCurrentPlayer();
+		Player* other = mPlayers[ (mCurrentPlayerIndex + 1) % mPlayers.size() ];
+//		DebugPrintf( "Capturing city: t=%d p=%d", tileId, playerId );
+		if ( tileId == CITY_N_ID )
+		{
+			if ( playerId == 0 )
+				mMap.SetTileId( CITY_R_ID + 1, tile );
+			else
+				mMap.SetTileId( CITY_B_ID + 1, tile );
+			player->CitiesOwned++;
+		}
+		else if ( tileId == CITY_R_ID )
+		{
+			if ( playerId == 1 )
+			{
+				mMap.SetTileId( CITY_N_ID + 1, tile );
+				other->CitiesOwned--;
+			}
+		}
+		else if ( tileId == CITY_B_ID )
+		{
+			if ( playerId == 0 )
+			{
+				mMap.SetTileId( CITY_N_ID + 1, tile );
+				other->CitiesOwned--;
+			}
+		}
+	}
+	mCaptureDialog->Hide();
 }
