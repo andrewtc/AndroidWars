@@ -95,6 +95,7 @@
 		movementType="Treads"
 		movementRange="6"
         attackRange="1~2"
+		indirectFire="true"
         hp="10"
 		/>
 
@@ -125,6 +126,7 @@
 		movementType="Tires"
 		movementRange="4"
         attackRange="1~2"
+		indirectFire="true"
         hp="10"
 		/>
 		
@@ -135,6 +137,7 @@
 		movementType="Tires"
 		movementRange="4"
         attackRange="1~2"
+		indirectFire="true"
         hp="10"
 		/>
 		
