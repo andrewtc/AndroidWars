@@ -21,6 +21,7 @@ BitmapFont* gFont;
 Game* gGame;
 Database* gDatabase;
 SoundManager* gSoundManager;
+OnlineGameService* gOnlineGameService;
 
 // Test
 Widget* gWidget;
@@ -110,6 +111,9 @@ void OnUpdate( float dt )
 	// Update the game here...
 	Widget::UpdateAllWidgets( dt );
 
+	// Poll for online request results.
+	gOnlineGameService->pollRequestResults();
+
 	if ( gGame )
 		gGame->OnUpdate( dt );
 
@@ -168,6 +172,9 @@ void OnWindowShown()
 			gGame->SetCamera( gCamera );
 			gGame->Start();
 		}
+
+		// TEST REQUEST
+		gOnlineGameService->startRequest( "hello", "{}" );
 	}
 
 	gInit = true;
@@ -248,6 +255,9 @@ void main()
 	gSoundManager->Start();
 	// Starts background music.
 //	gSoundManager->PlayMusic( "music/super_mario_overworld.mp3" );
+
+	// Create the online game service.
+	gOnlineGameService = new OnlineGameService( app );
 
 	RegisterRenderFn( OnDraw );
 	RegisterUpdateFn( OnUpdate );

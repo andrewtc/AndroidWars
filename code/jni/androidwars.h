@@ -5,15 +5,19 @@ namespace mage
 	class Game;
 	class Database;
 	class SoundManager;
+	class OnlineGameService;
 }
 
 extern mage::Game* gGame;
 extern mage::Database* gDatabase;
 extern mage::SoundManager* gSoundManager;
+extern mage::OnlineGameService* gOnlineGameService;
 
 #include <MageApp.h>
 
 #include "sound/SoundManager.h"
+#include "online/OnlineGameService.h"
+#include "online/OnlineGameRequest.h"
 
 #include "ui/Widget.h"
 #include "ui/Label.h"
