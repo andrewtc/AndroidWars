@@ -1,0 +1,14 @@
+{
+    "applications": {
+        "AndroidWarsOnline": {
+            "applicationId": "PLhLDmLfRx1RB84ha7SUCryCkH5bkND4VxM1OFlq", 
+            "masterKey": "CNhpXTXprQhVLzsVx8s7w5j4pcczmTJs3PvmVNul"
+        }, 
+        "_default": {
+            "link": "AndroidWarsOnline"
+        }
+    }, 
+    "global": {
+        "parseVersion": "1.2.16"
+    }
+}
