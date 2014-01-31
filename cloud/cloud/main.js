@@ -3,7 +3,14 @@
 // For example:
 Parse.Cloud.define( "hello", function( request, response )
 {
-    response.success( "Hello, World!" );
+    var name = request.params[ "name" ];
+    
+    if( typeof name == 'undefined' || name.length == 0 )
+    {
+        name = "World";
+    }
+
+    response.success( "Hello, " + name + "!" );
 });
 
 

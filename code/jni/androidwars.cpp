@@ -174,7 +174,7 @@ void OnWindowShown()
 		}
 
 		// Test cloud function.
-		gOnlineGameClient->callCloudFunction( "hello", "{}" );
+		gOnlineGameClient->callCloudFunction( "hello", "{\"name\": \"Andrew\"}" );
 	}
 
 	gInit = true;

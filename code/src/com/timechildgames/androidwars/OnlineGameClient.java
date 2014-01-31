@@ -3,6 +3,7 @@ package com.timechildgames.androidwars;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
 
@@ -48,11 +49,21 @@ public class OnlineGameClient
 			URL url = formatFunctionURL( functionName );
 			
 			// Build necessary Parse headers for the request.
-			Header[] headers = 
+			ArrayList< Header > headerList = new ArrayList< Header >();
+			
+			headerList.add( new BasicHeader( "X-Parse-Application-ID", ANDROIDWARS_APPLICATION_ID ) );
+			headerList.add( new BasicHeader( "X-Parse-REST-API-Key", ANDROIDWARS_REST_API_KEY ) );
+			
+			// TODO: Session ID
+			String sessionID = "";
+			
+			if( sessionID.length() > 0 )
 			{
-				new BasicHeader( "X-Parse-Application-ID", ANDROIDWARS_APPLICATION_ID ),
-				new BasicHeader( "X-Parse-REST-API-Key", ANDROIDWARS_REST_API_KEY )
-			};
+				headerList.add( new BasicHeader( "X-Parse-Session-Token", sessionID ) );
+			}
+			
+			Header[] headers = { };
+			headers = headerList.toArray( headers );
 			
 			// Format POST data.
 			StringEntity data = new StringEntity( params );
@@ -75,15 +86,15 @@ public class OnlineGameClient
 				{
 					String errorMessage = UNKNOWN_ERROR_MESSAGE;
 					
-					if( exception != null )
-					{
-						// If an exception occurred, return the exception message.
-						errorMessage = exception.toString();
-					}
-					else if( response.length() > 0 )
+					if( response.length() > 0 )
 					{
 						// Otherwise, return the response as the error message.
 						errorMessage = response;
+					}
+					else if( exception != null )
+					{
+						// If an exception occurred, return the exception message.
+						errorMessage = exception.toString();
 					}
 
 					synchronized( responses )
