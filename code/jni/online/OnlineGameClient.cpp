@@ -86,83 +86,86 @@ void OnlineGameClient::update()
 {
 	assertion( isInitialized(), "Cannot update OnlineGameClient that hasn't been initialized!" );
 
-	JNIEnv* env;
-	mJavaVM->AttachCurrentThread( &env, nullptr );
-
-	while( true )
+	if( mOpenRequestsByID.size() > 0 )
 	{
-		//DebugPrintf( "Checking for responses..." );
+		JNIEnv* env;
+		mJavaVM->AttachCurrentThread( &env, nullptr );
 
-		// Fetch the next response (if any).
-		jobject response = fetchNextResponse( env );
-
-		if( response == nullptr )
+		while( true )
 		{
-			// If no response was returned, exit the loop.
-			break;
-		}
+			//DebugPrintf( "Checking for responses..." );
 
-		DebugPrintf( "Got response!" );
+			// Fetch the next response (if any).
+			jobject response = fetchNextResponse( env );
 
-		if( mJavaResponseClass == nullptr )
-		{
-			// Store a global reference to the Java OnlineRequestResponse class (as necessary).
-			mJavaResponseClass = (jclass) env->NewGlobalRef( env->GetObjectClass( response ) );
-
-			mJavaResponseRequestID  = env->GetFieldID( mJavaResponseClass, "requestID", "J" );
-			mJavaResponseStatusCode = env->GetFieldID( mJavaResponseClass, "statusCode", "I" );
-			mJavaResponseResult     = env->GetFieldID( mJavaResponseClass, "result", "Ljava/lang/String;" );
-
-			mJavaResponseIsError = env->GetMethodID( mJavaResponseClass, "isError", "()Z" );
-		}
-
-		// If a response has come in, fetch all relevant info from the response.
-		long requestID = env->GetLongField( response, mJavaResponseRequestID );
-		int statusCode = env->GetIntField( response, mJavaResponseStatusCode );
-		jstring result = (jstring) env->GetObjectField( response, mJavaResponseResult );
-
-		std::string resultText = env->GetStringUTFChars( result, nullptr );
-
-		DebugPrintf( "RESPONSE %d: Status Code %d : \"%s\"", requestID, statusCode, resultText.c_str() );
-
-		// Determine whether an error occurred.
-		bool isError = env->CallBooleanMethod( response, mJavaResponseIsError );
-		DebugPrintf( "Response %s an error.", ( isError ? "is" : "is not" ) );
-
-		// Look up the response info.
-		auto it = mOpenRequestsByID.find( requestID );
-		assertion( it != mOpenRequestsByID.end(), "No RequestInfo found for response %d!", requestID );
-
-		const RequestInfo& requestInfo = it->second;
-
-		if( isError )
-		{
-			// If an error occurred, call the error callback (if any).
-			if( requestInfo.onFailure != nullptr )
+			if( response == nullptr )
 			{
-				requestInfo.onFailure( statusCode, resultText );
+				// If no response was returned, exit the loop.
+				break;
 			}
-		}
-		else
-		{
-			// If the response was successful, call the success callback (if any).
-			if( requestInfo.onSuccess != nullptr )
+
+			DebugPrintf( "Got response!" );
+
+			if( mJavaResponseClass == nullptr )
 			{
-				requestInfo.onSuccess( statusCode, resultText );
+				// Store a global reference to the Java OnlineRequestResponse class (as necessary).
+				mJavaResponseClass = (jclass) env->NewGlobalRef( env->GetObjectClass( response ) );
+
+				mJavaResponseRequestID  = env->GetFieldID( mJavaResponseClass, "requestID", "J" );
+				mJavaResponseStatusCode = env->GetFieldID( mJavaResponseClass, "statusCode", "I" );
+				mJavaResponseResult     = env->GetFieldID( mJavaResponseClass, "result", "Ljava/lang/String;" );
+
+				mJavaResponseIsError = env->GetMethodID( mJavaResponseClass, "isError", "()Z" );
 			}
+
+			// If a response has come in, fetch all relevant info from the response.
+			long requestID = env->GetLongField( response, mJavaResponseRequestID );
+			int statusCode = env->GetIntField( response, mJavaResponseStatusCode );
+			jstring result = (jstring) env->GetObjectField( response, mJavaResponseResult );
+
+			std::string resultText = env->GetStringUTFChars( result, nullptr );
+
+			DebugPrintf( "RESPONSE %d: Status Code %d : \"%s\"", requestID, statusCode, resultText.c_str() );
+
+			// Determine whether an error occurred.
+			bool isError = env->CallBooleanMethod( response, mJavaResponseIsError );
+			DebugPrintf( "Response %s an error.", ( isError ? "is" : "is not" ) );
+
+			// Look up the response info.
+			auto it = mOpenRequestsByID.find( requestID );
+			assertion( it != mOpenRequestsByID.end(), "No RequestInfo found for response %d!", requestID );
+
+			const RequestInfo& requestInfo = it->second;
+
+			if( isError )
+			{
+				// If an error occurred, call the error callback (if any).
+				if( requestInfo.onFailure != nullptr )
+				{
+					requestInfo.onFailure( statusCode, resultText );
+				}
+			}
+			else
+			{
+				// If the response was successful, call the success callback (if any).
+				if( requestInfo.onSuccess != nullptr )
+				{
+					requestInfo.onSuccess( statusCode, resultText );
+				}
+			}
+
+			// Call the completion callback (if any).
+			if( requestInfo.onComplete != nullptr )
+			{
+				requestInfo.onComplete( statusCode, resultText );
+			}
+
+			// Remove the request from the list of open requests.
+			mOpenRequestsByID.erase( it );
 		}
 
-		// Call the completion callback (if any).
-		if( requestInfo.onComplete != nullptr )
-		{
-			requestInfo.onComplete( statusCode, resultText );
-		}
-
-		// Remove the request from the list of open requests.
-		mOpenRequestsByID.erase( it );
+		mJavaVM->DetachCurrentThread();
 	}
-
-	mJavaVM->DetachCurrentThread();
 }
 
 
