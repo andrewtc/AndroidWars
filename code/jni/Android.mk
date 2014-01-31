@@ -154,8 +154,7 @@ $(aw_game_path)/Unit.cpp \
  ui/Button.cpp \
  ui/Label.cpp \
  sound/SoundManager.cpp \
- online/OnlineGameService.cpp \
- online/OnlineGameRequest.cpp
+ online/OnlineGameClient.cpp
 
 LOCAL_LDLIBS := -llog -landroid -lEGL -lGLESv2 -lOpenSLES
 LOCAL_STATIC_LIBRARIES := android_native_app_glue _magemath _magecore _magerenderer png _mageapp

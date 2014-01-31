@@ -5,6 +5,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.util.Log;
 
 public class MainActivity extends NativeActivity
 {
@@ -12,19 +13,19 @@ public class MainActivity extends NativeActivity
 	
 	
 	@Override
-	public void onCreate( Bundle savedInstanceState )
+	public synchronized void onCreate( Bundle savedInstanceState )
 	{
 		super.onCreate( savedInstanceState );
-		
-		// Create online game service.
-		onlineGameService = new OnlineGameService( this );
-		onlineGameService.init();
+
+		// Create the online game client.
+		onlineGameClient = new OnlineGameClient( this );
+		Log.d( TAG, "Created Java OnlineGameClient instance!" );
 	}
 	
 	
-	public OnlineGameService getOnlineGameService()
+	public synchronized OnlineGameClient getOnlineGameClient()
 	{
-		return onlineGameService;
+		return onlineGameClient;
 	}
 	
 	
@@ -33,9 +34,10 @@ public class MainActivity extends NativeActivity
 		ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService( Context.CONNECTIVITY_SERVICE );
 		NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
 		
+		// Return true if this device can connect to the Internet and has a wireless connection.
 		return ( networkInfo != null && networkInfo.isConnected() );
 	}
 	
 	
-	protected OnlineGameService onlineGameService;
+	protected OnlineGameClient onlineGameClient;
 }
