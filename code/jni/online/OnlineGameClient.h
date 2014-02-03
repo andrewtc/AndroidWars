@@ -11,7 +11,7 @@ namespace mage
 	class OnlineGameClient
 	{
 	public:
-		typedef void (*RequestCallback)( int, const std::string& );
+		typedef void (*RequestCallback)( long, int, const std::string& );
 
 		enum GameType
 		{

@@ -15,19 +15,20 @@ Vec2f gCameraVelocity;
 bool gInit = false;
 bool gWasMotion = false;
 
-Camera* gCamera;
-BitmapFont* gFont;
+Camera* gCamera = nullptr;
+BitmapFont* gFont = nullptr;
 
-Game* gGame;
-Database* gDatabase;
-SoundManager* gSoundManager;
-OnlineGameClient* gOnlineGameClient;
+Game* gGame = nullptr;
+Database* gDatabase = nullptr;
+GameStateManager* gGameStateManager = nullptr;
+SoundManager* gSoundManager = nullptr;
+OnlineGameClient* gOnlineGameClient = nullptr;
 
 // Test
-Widget* gWidget;
-Widget* gTestWidget;
-SoundClip* gJumpSoundFx;
-SoundClip* gDieSoundFx;
+Widget* gWidget = nullptr;
+Widget* gTestWidget = nullptr;
+SoundClip* gJumpSoundFx = nullptr;
+SoundClip* gDieSoundFx = nullptr;
 
 
 // Closes the test widget
@@ -114,6 +115,7 @@ void OnUpdate( float dt )
 	// Poll for online request responses.
 	gOnlineGameClient->update();
 
+	// TODO: Move this to a game state.
 	if ( gGame )
 		gGame->OnUpdate( dt );
 
@@ -122,6 +124,9 @@ void OnUpdate( float dt )
 	gCameraVelocity *= 0.9f;
 	if ( gCamera )
 		gCamera->LookAtClamp( gCameraTarget );
+
+	// Update the current GameState.
+	gGameStateManager->Update( dt );
 }
 
 void OnScreenSizeChanged( int32 w, int32 h )
@@ -132,8 +137,23 @@ void OnScreenSizeChanged( int32 w, int32 h )
 	gCameraTarget.x = w / 2.0f;
 	gCameraTarget.y = h / 2.0f;
 
+	gGameStateManager->OnScreenSizeChanged( w, h );
+
 	DebugPrintf( "Window size w=%d h=%d\n", gWindowWidth, gWindowHeight );
 }
+
+
+void OnHelloWorldSuccess( long requestID, int statusCode, const std::string& response )
+{
+	DebugPrintf( "The online game server says: \"%s\"", response.c_str() );
+}
+
+
+void OnHelloWorldComplete( long requestID, int statusCode, const std::string& response )
+{
+	DebugPrintf( "RESPONSE %d: Status Code %d : \"%s\"", requestID, statusCode, response.c_str() );
+}
+
 
 void OnWindowShown()
 {
@@ -142,6 +162,7 @@ void OnWindowShown()
 
 	if ( !gInit )
 	{
+		// TODO: Move this into a GameState class.
 		// Load Widget definitions
 		Widget::LoadDefinitions( "ui/definitions.xml" );
 
@@ -174,11 +195,12 @@ void OnWindowShown()
 		}
 
 		// Test cloud function.
-		gOnlineGameClient->callCloudFunction( "hello", "{\"name\": \"Andrew\"}" );
+		gOnlineGameClient->callCloudFunction( "hello", "{\"name\": \"Andrew\"}", &OnHelloWorldSuccess, nullptr, &OnHelloWorldComplete );
 	}
 
 	gInit = true;
 }
+
 
 size_t OnSaveState( void* state )
 {
@@ -197,6 +219,8 @@ void OnPointerDown( float x, float y, size_t which )
 	DebugPrintf( "Touch at %f %f\n", x, y );
 	Widget::ProcessOnPointerDown( x, y );
 	gWasMotion = false;
+
+	gGameStateManager->OnPointerDown( x, y, which );
 }
 
 void OnPointerUp( float x, float y, size_t which )
@@ -207,6 +231,8 @@ void OnPointerUp( float x, float y, size_t which )
 			gGame->OnTouchEvent( x, y );
 	}
 	gWasMotion = false;
+
+	gGameStateManager->OnPointerUp( x, y, which );
 }
 
 void OnPointerMotion( float x, float y, float dx, float dy, size_t which )
@@ -222,6 +248,8 @@ void OnPointerMotion( float x, float y, float dx, float dy, size_t which )
 	{
 		gWasMotion = true;
 	}
+
+	gGameStateManager->OnPointerMotion( x, y, dx, dy, which );
 }
 
 void OnFocusLost()
@@ -259,6 +287,10 @@ void main()
 	// Create OnlineGameClient.
 	gOnlineGameClient = new OnlineGameClient();
 	gOnlineGameClient->init( app );
+
+	// Create the GameStateManager and create the first state.
+	gGameStateManager = new GameStateManager();
+	gGameStateManager->ChangeState< MainMenuState >();
 
 	RegisterRenderFn( OnDraw );
 	RegisterUpdateFn( OnUpdate );

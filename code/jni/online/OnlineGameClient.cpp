@@ -104,7 +104,7 @@ void OnlineGameClient::update()
 				break;
 			}
 
-			DebugPrintf( "Got response!" );
+			//DebugPrintf( "Got response!" );
 
 			if( mJavaResponseClass == nullptr )
 			{
@@ -125,11 +125,11 @@ void OnlineGameClient::update()
 
 			std::string resultText = env->GetStringUTFChars( result, nullptr );
 
-			DebugPrintf( "RESPONSE %d: Status Code %d : \"%s\"", requestID, statusCode, resultText.c_str() );
+			//DebugPrintf( "RESPONSE %d: Status Code %d : \"%s\"", requestID, statusCode, resultText.c_str() );
 
 			// Determine whether an error occurred.
 			bool isError = env->CallBooleanMethod( response, mJavaResponseIsError );
-			DebugPrintf( "Response %s an error.", ( isError ? "is" : "is not" ) );
+			//DebugPrintf( "Response %s an error.", ( isError ? "is" : "is not" ) );
 
 			// Look up the response info.
 			auto it = mOpenRequestsByID.find( requestID );
@@ -142,7 +142,8 @@ void OnlineGameClient::update()
 				// If an error occurred, call the error callback (if any).
 				if( requestInfo.onFailure != nullptr )
 				{
-					requestInfo.onFailure( statusCode, resultText );
+					DebugPrintf( "Calling onFailure() callback..." );
+					requestInfo.onFailure( requestID, statusCode, resultText );
 				}
 			}
 			else
@@ -150,14 +151,16 @@ void OnlineGameClient::update()
 				// If the response was successful, call the success callback (if any).
 				if( requestInfo.onSuccess != nullptr )
 				{
-					requestInfo.onSuccess( statusCode, resultText );
+					DebugPrintf( "Calling onSuccess() callback..." );
+					requestInfo.onSuccess( requestID, statusCode, resultText );
 				}
 			}
 
 			// Call the completion callback (if any).
 			if( requestInfo.onComplete != nullptr )
 			{
-				requestInfo.onComplete( statusCode, resultText );
+				DebugPrintf( "Calling onComplete() callback..." );
+				requestInfo.onComplete( requestID, statusCode, resultText );
 			}
 
 			// Remove the request from the list of open requests.

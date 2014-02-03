@@ -134,10 +134,15 @@ include $(BUILD_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 
 aw_game_path := game
+aw_mainmenu_path := mainmenu
 aw_data_path := data
+aw_states_path := states
 
 LOCAL_MODULE    := androidwars
 LOCAL_SRC_FILES := androidwars.cpp \
+$(aw_states_path)/GameState.cpp \
+$(aw_states_path)/GameStateManager.cpp \
+$(aw_mainmenu_path)/MainMenuState.cpp \
 $(aw_data_path)/Table.cpp \
 $(aw_data_path)/TerrainType.cpp \
 $(aw_data_path)/TerrainTypesTable.cpp \
@@ -147,6 +152,7 @@ $(aw_data_path)/UnitTypesTable.cpp \
 $(aw_data_path)/MovementType.cpp \
 $(aw_data_path)/MovementTypesTable.cpp \
 $(aw_data_path)/Database.cpp \
+$(aw_game_path)/GameplayState.cpp \
 $(aw_game_path)/Game.cpp \
 $(aw_game_path)/Player.cpp \
 $(aw_game_path)/Unit.cpp \
@@ -158,6 +164,7 @@ $(aw_game_path)/Unit.cpp \
 
 LOCAL_LDLIBS := -llog -landroid -lEGL -lGLESv2 -lOpenSLES
 LOCAL_STATIC_LIBRARIES := android_native_app_glue _magemath _magecore _magerenderer png _mageapp
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/libs/rapidjson
 LOCAL_CFLAGS += -std=c++11
 
 include $(BUILD_SHARED_LIBRARY)
