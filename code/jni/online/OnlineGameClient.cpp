@@ -78,7 +78,7 @@ void OnlineGameClient::Destroy()
 	mJavaVM->DetachCurrentThread();
 
 	// Clear the list of open requests.
-	mOpenRequestsByID.clear();
+	mCallbacksByID.clear();
 }
 
 
@@ -86,7 +86,7 @@ void OnlineGameClient::Update()
 {
 	assertion( IsInitialized(), "Cannot update OnlineGameClient that hasn't been initialized!" );
 
-	if( mOpenRequestsByID.size() > 0 )
+	if( mCallbacksByID.size() > 0 )
 	{
 		JNIEnv* env;
 		mJavaVM->AttachCurrentThread( &env, nullptr );
@@ -132,39 +132,18 @@ void OnlineGameClient::Update()
 			//DebugPrintf( "Response %s an error.", ( isError ? "is" : "is not" ) );
 
 			// Look up the response info.
-			auto it = mOpenRequestsByID.find( requestID );
-			assertion( it != mOpenRequestsByID.end(), "No RequestInfo found for response %d!", requestID );
+			auto it = mCallbacksByID.find( requestID );
+			//assertion( it != mCallbacksByID.end(), "No RequestInfo found for response %d!", requestID );
 
-			const RequestInfo& requestInfo = it->second;
-
-			if( isError )
+			if( it != mCallbacksByID.end() )
 			{
-				// If an error occurred, call the error callback (if any).
-				if( requestInfo.onFailure != nullptr )
-				{
-					//DebugPrintf( "Calling onFailure() callback..." );
-					requestInfo.onFailure( requestID, statusCode, resultText );
-				}
-			}
-			else
-			{
-				// If the response was successful, call the success callback (if any).
-				if( requestInfo.onSuccess != nullptr )
-				{
-					//DebugPrintf( "Calling onSuccess() callback..." );
-					requestInfo.onSuccess( requestID, statusCode, resultText );
-				}
-			}
+				// Call the request callback.
+				RequestCallback callback = it->second;
+				callback( requestID, isError, statusCode, resultText );
 
-			// Call the completion callback (if any).
-			if( requestInfo.onComplete != nullptr )
-			{
-				//DebugPrintf( "Calling onComplete() callback..." );
-				requestInfo.onComplete( requestID, statusCode, resultText );
+				// Remove the request from the list of open requests.
+				mCallbacksByID.erase( it );
 			}
-
-			// Remove the request from the list of open requests.
-			mOpenRequestsByID.erase( it );
 		}
 
 		mJavaVM->DetachCurrentThread();
@@ -172,8 +151,7 @@ void OnlineGameClient::Update()
 }
 
 
-long OnlineGameClient::CallCloudFunction( const std::string& functionName, const std::string& parameters,
-										  RequestCallback onSuccess, RequestCallback onFailure, RequestCallback onComplete )
+long OnlineGameClient::CallCloudFunction( const std::string& functionName, const std::string& parameters, RequestCallback callback )
 {
 	assertion( IsInitialized(), "Cannot call cloud function \"%s\" from OnlineGameClient that hasn't been initialized!", functionName.c_str() );
 
@@ -191,14 +169,11 @@ long OnlineGameClient::CallCloudFunction( const std::string& functionName, const
 
 	mJavaVM->DetachCurrentThread();
 
-	// Listen for responses to this request.
-	RequestInfo requestInfo;
-
-	requestInfo.onSuccess  = onSuccess;
-	requestInfo.onFailure  = onFailure;
-	requestInfo.onComplete = onComplete;
-
-	mOpenRequestsByID[ requestID ] = requestInfo;
+	if( callback.IsValid() )
+	{
+		// If a Callback was specified, listen for responses to this request.
+		mCallbacksByID[ requestID ] = callback;
+	}
 
 	// Return the ID of the new request.
 	return requestID;

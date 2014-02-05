@@ -1,18 +1,20 @@
 #pragma once
 
-#include <functional>
-
 
 namespace mage
 {
+	/**
+	 * Accepts any function or lambda with the signature: void (*)( long, bool, int, const std::string& )
+	 */
+	typedef Callback< void, long, bool, int, const std::string& > RequestCallback;
+
+
 	/**
 	 * Sends and receives requests from the AndroidWarsOnline web service.
 	 */
 	class OnlineGameClient
 	{
 	public:
-		typedef void (*RequestCallback)( long, int, const std::string& );
-
 		enum GameType
 		{
 			GAME_TYPE_DUEL,
@@ -27,31 +29,12 @@ namespace mage
 		void Update();
 		bool IsInitialized() const;
 
-		long CallCloudFunction( const std::string& functionName, const std::string& parameters,
-								RequestCallback onSuccess = nullptr,
-								RequestCallback onFailure = nullptr,
-								RequestCallback onComplete = nullptr );
+		long CallCloudFunction( const std::string& functionName, const std::string& parameters, RequestCallback callback = RequestCallback() );
 
-		long LogIn( const std::string& userName, const std::string& password,
-					RequestCallback onSuccess = nullptr,
-					RequestCallback onFailure = nullptr,
-					RequestCallback onComplete = nullptr );
-
-		long RequestMatchmakingGame( GameType gameType,
-									 RequestCallback onSuccess = nullptr,
-									 RequestCallback onFailure = nullptr,
-									 RequestCallback onComplete = nullptr );
+		long LogIn( const std::string& userName, const std::string& password, RequestCallback callback = RequestCallback() );
+		long RequestMatchmakingGame( GameType gameType, RequestCallback callback = RequestCallback() );
 
 	private:
-		struct RequestInfo
-		{
-			RequestInfo();
-
-			RequestCallback onSuccess;
-			RequestCallback onFailure;
-			RequestCallback onComplete;
-		};
-
 		jobject FetchNextResponse( JNIEnv* env );
 
 		JavaVM* mJavaVM;
@@ -66,13 +49,8 @@ namespace mage
 		jfieldID mJavaResponseResult;
 		jmethodID mJavaResponseIsError;
 
-		std::map< long, RequestInfo > mOpenRequestsByID;
+		std::map< long, RequestCallback > mCallbacksByID;
 	};
-
-
-	inline OnlineGameClient::RequestInfo::RequestInfo() :
-		onSuccess( nullptr ), onFailure( nullptr ), onComplete( nullptr )
-	{ }
 
 
 	inline bool OnlineGameClient::IsInitialized() const

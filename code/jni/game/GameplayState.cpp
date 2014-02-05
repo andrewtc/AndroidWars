@@ -19,34 +19,6 @@ GameplayState::~GameplayState()
 }
 
 
-void OnHelloComplete( long requestID, int statusCode, const std::string& result )
-{
-	DebugPrintf( "REQUEST %d: (%d) \"%s\"", requestID, statusCode, result.c_str() );
-}
-
-
-void OnHelloSuccess( long requestID, int statusCode, const std::string& result )
-{
-	// Parse the JSON response.
-	rapidjson::Document document;
-	document.Parse< 0 >( result.c_str() );
-
-	// Print the response in a nice, human-readable format.
-	DebugPrintf( "The response was: \"%s\"", document[ "result" ].GetString() );
-}
-
-
-void OnHelloError( long requestID, int statusCode, const std::string& result )
-{
-	// Parse the JSON response.
-	rapidjson::Document document;
-	document.Parse< 0 >( result.c_str() );
-
-	// Print the error message in a nice, human-readable format.
-	DebugPrintf( "Hello request error: \"%s\"", document[ "error" ].GetString() );
-}
-
-
 void GameplayState::OnEnter( const Dictionary& parameters )
 {
 	DebugPrintf( "GameplayState entered!" );
@@ -65,9 +37,38 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 	mGame->Start();
 
 	// Test the Parse cloud service.
-	gOnlineGameClient->CallCloudFunction( "hello", "{ \"name\": \"Andrew\" }", &OnHelloSuccess, &OnHelloError, &OnHelloComplete );
-	gOnlineGameClient->CallCloudFunction( "hello", "{ \"herp\": \"derp\" }", &OnHelloSuccess, &OnHelloError, &OnHelloComplete );
-	//gOnlineGameClient->CallCloudFunction( "hello", "Andrew", &OnHelloSuccess, &OnHelloError, &OnHelloComplete );
+	gOnlineGameClient->CallCloudFunction( "hello", "{ \"name\": \"Andrew\" }",
+		[]( long requestID, bool isError, int statusCode, const std::string& result )
+		{
+			DebugPrintf( "RESPONSE %d: (%d)" );
+
+			// Parse the JSON response.
+			rapidjson::Document document;
+			document.Parse< 0 >( result.c_str() );
+
+			if( isError )
+			{
+				const char* error;
+
+				if( !document.HasParseError() )
+				{
+					// Print the error string sent from Parse.
+					error = document[ "error" ].GetString();
+				}
+				else
+				{
+					// Print the result as the error message.
+					error = result.c_str();
+				}
+
+				DebugPrintf( "An error occurred: %s", error );
+			}
+			else
+			{
+				// Print the response from the server.
+				DebugPrintf( "The server says: \"%s\"", document[ "result" ].GetString() );
+			}
+		});
 }
 
 
