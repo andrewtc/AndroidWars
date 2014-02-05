@@ -2,7 +2,7 @@
 
 using namespace mage;
 
-const RTTI Object::TYPE( "mage.Object", 0 );
+MAGE_IMPLEMENT_RTTI_BASE( Object );
 HashMap< Object* > Object::ObjectRegistry;
 std::map< std::string, uint32 > Object::NameRefCount;
 

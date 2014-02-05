@@ -11,22 +11,24 @@ namespace mage
 	public:
 		static const int MAX_HP = 10;
 
-		Unit( const std::string& name );
-		Unit( UnitType* unitType, Player* owner );
+		Unit( const std::string& name = "Unit" );
 		virtual ~Unit();
 
-		void Init();
+		void Init( Game* game );
+		bool IsInitialized() const;
 
 		virtual void OnLoadProperty( const std::string& name, const std::string& value );
 		virtual void OnLoadFinished();
 		virtual void OnDraw( const Camera& camera ) const;
 		virtual void OnUpdate( float dt );
 
+		void SetUnitType( UnitType* unitType );
 		UnitType* GetUnitType() const;
 		void SetTilePos( int x, int y );
 		void SetTilePos( const Vec2i& tilePos );
 		Vec2i GetTilePos() const;
 
+		void SetOwner( Player* player );
 		Player* GetOwner() const;
 		int GetMovementRange() const;
 		int GetMovementCostAcrossTerrain( TerrainType* terrainType ) const;
@@ -70,10 +72,13 @@ namespace mage
 		const char* ToString() const;
 
 	protected:
+		Game* mGame;
 		std::string mDebugName;
+		HashString mUnitTypeName;
 		UnitType* mUnitType;
 		Vec2i mTilePos;
 		Sprite* mSprite;
+		int mOwnerIndex;
 		Player* mOwner;
 		Color mSelectionColor;
 		Color mDefaultColor;
@@ -81,6 +86,7 @@ namespace mage
 		Vec2f mDestination;
 		int mAP;
 		int mAmmo;
+		bool mWasLoadedByMap;
 	};
 
 

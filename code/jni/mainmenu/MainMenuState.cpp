@@ -31,6 +31,12 @@ void MainMenuState::OnUpdate( float elapsedTime )
 }
 
 
+void MainMenuState::OnDraw()
+{
+
+}
+
+
 void MainMenuState::OnExit()
 {
 	DebugPrintf( "MainMenuState exited!" );

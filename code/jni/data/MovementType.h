@@ -5,10 +5,8 @@ namespace mage
 	/**
 	 * Stores movement cost information over varying types of terrain.
 	 */
-	class MovementType : public Record
+	class MovementType : public MovementTypesTable::Record
 	{
-		DECLARE_RTTI
-
 	public:
 		MovementType( const HashString& name );
 		virtual ~MovementType();

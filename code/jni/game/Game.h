@@ -52,12 +52,19 @@ namespace mage
 		Game();
 		~Game();
 
+		void LoadDataFromFile( const char* filename );
+		void LoadDataFromXMLData( const char* xmlData );
+		void LoadDataFromXML( XmlReader::XmlReaderIterator rootIterator );
+
 		void SetMapName( const std::string& mapName );
 
 		void Start();
 		bool IsNotStarted() const;
 		bool IsInProgress() const;
 		bool IsGameOver() const;
+		void Destroy();
+
+		Database* GetDatabase() const;
 
 		void SetCamera( Camera* camera );
 		Camera* GetCamera() const;
@@ -142,6 +149,7 @@ namespace mage
 		int mNextPlayerIndex;
 		int mCurrentTurnIndex;
 		int mCurrentPlayerIndex;
+		Database* mDatabase;
 		Camera* mCamera;
 		Status mStatus;
 		Players mPlayers;
@@ -182,6 +190,33 @@ namespace mage
 	};
 
 
+	inline void Game::LoadDataFromFile( const char* filename )
+	{
+		mDatabase->LoadDataFromFile( filename );
+	}
+
+
+	inline void Game::LoadDataFromXMLData( const char* xmlData )
+	{
+		// Open the data file.
+		XmlReader xmlReader;
+		xmlReader.LoadData( xmlData );
+		assertion( !xmlReader.Fail(), "Could not load game data from raw XML data!" );
+
+		// Get the root element.
+		XmlReader::XmlReaderIterator rootIterator = xmlReader.ReadRoot();
+
+		// Load all game data.
+		mDatabase->LoadDataFromXML( rootIterator );
+	}
+
+
+	inline void Game::LoadDataFromXML( XmlReader::XmlReaderIterator rootIterator )
+	{
+		mDatabase->LoadDataFromXML( rootIterator );
+	}
+
+
 	inline void Game::SetMapName( const std::string& mapName )
 	{
 		mMapName = mapName;
@@ -203,6 +238,12 @@ namespace mage
 	inline bool Game::IsGameOver() const
 	{
 		return ( mStatus == STATUS_GAME_OVER );
+	}
+
+
+	inline Database* Game::GetDatabase() const
+	{
+		return mDatabase;
 	}
 
 

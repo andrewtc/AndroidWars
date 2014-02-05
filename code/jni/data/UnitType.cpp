@@ -2,10 +2,6 @@
 
 using namespace mage;
 
-
-MAGE_IMPLEMENT_RTTI( Record, UnitType );
-
-
 const char* const UnitType::SPRITE_DIRECTORY = "sprites";
 const char* const UnitType::ANIMATION_FILE_EXTENSION = "anim";
 const int UnitType::DEFAULT_MAX_SUPPLIES;
@@ -46,5 +42,6 @@ void UnitType::LoadAnimation()
 
 MovementType* UnitType::GetMovementType() const
 {
-	return gDatabase->MovementTypes.FindByName( mMovementTypeName );
+	// Look up the MovementType from the Database.
+	return GetDatabase()->MovementTypes.FindByName( mMovementTypeName );
 }

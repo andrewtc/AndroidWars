@@ -14,6 +14,7 @@ namespace mage
 	private:
 		virtual void OnEnter( const Dictionary& parameters );
 		virtual void OnUpdate( float elapsedTime );
+		virtual void OnDraw();
 		virtual void OnExit();
 	};
 }

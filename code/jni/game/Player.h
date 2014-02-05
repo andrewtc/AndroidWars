@@ -18,9 +18,9 @@ namespace mage
 		int GetFunds() const;
 		Color GetPlayerColor() const;
 		void GenerateFunds();
-		bool HasLost() const { return mUnits == 0; }
-		void OnGainUnit() { mUnits++; }
-		void OnLoseUnit() { mUnits--; }
+		bool HasLost() const;
+		void OnGainUnit( Unit* unit );
+		void OnLoseUnit( Unit* unit );
 		void AddFunds( int funds ) { mFunds -= funds; if ( mFunds < 0 ) mFunds = 0; }
 
 		int CitiesOwned;

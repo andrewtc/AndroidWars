@@ -7,10 +7,12 @@ Parse.Cloud.define( "hello", function( request, response )
     
     if( typeof name == 'undefined' || name.length == 0 )
     {
-        name = "World";
+        response.error( "You must supply a name in the 'name' parameter." );
     }
-
-    response.success( "Hello, " + name + "!" );
+    else
+    {
+        response.success( "Hello, " + name + "!" );
+    }
 });
 
 

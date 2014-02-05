@@ -43,6 +43,7 @@ std::string Game::FormatMapPath( const std::string& mapName )
 Game::Game()
 	: mNextPlayerIndex( 0 )
 	, mStatus( STATUS_NOT_STARTED )
+	, mDatabase( nullptr )
 	, mCamera( nullptr )
 	, mSelectedUnit( nullptr )
 	, mTargetUnit( nullptr )
@@ -50,6 +51,9 @@ Game::Game()
 	, mCurrentPlayerIndex( -1 )
 	, mUnitMotionInProgress( false )
 {
+	// Create the game Database.
+	mDatabase = new Database();
+
 	// Add map object creation callback.
 	mMap.SetNewMapObjectCB( &SpawnObjectFromXml );
 
@@ -79,7 +83,8 @@ Game::Game()
 
 Game::~Game()
 {
-	EventManager::UnregisterObjectForAllEvent( *this );
+	// Clean up the Game (to be safe).
+	Destroy();
 }
 
 
@@ -110,6 +115,15 @@ void Game::Start()
 	std::string pathToMapFile = FormatMapPath( mMapName );
 	mMap.Load( pathToMapFile.c_str() );
 
+	mMap.ForeachObjectOfType< Unit >( [this]( Unit* unit )
+	{
+		if( !unit->IsInitialized() )
+		{
+			// Initialize all Units loaded from the TileMap.
+			unit->Init( this );
+		}
+	});
+
 	mCamera->SetWorldBounds( mMap.GetMapBounds() );
 
 	// TODO this should be more flexible with data in a perfect world
@@ -132,18 +146,42 @@ void Game::Start()
 	NextTurn();
 
 	// Drain all AP for P2
-	void (*Fn)( Unit* unit ) = []( Unit* unit ) { if ( unit->GetOwner() == gGame->GetPlayer( 1 ) ) unit->ConsumeAP( 9999 ); };
-	mMap.ForeachObjectOfType( Fn );
+	Player* player = GetPlayer( 1 );
+	mMap.ForeachObjectOfType< Unit >( [player]( Unit* unit )
+	{
+		if ( unit->GetOwner() == player )
+		{
+			unit->ConsumeAP( 9999 );
+		}
+	});
+}
+
+
+void Game::Destroy()
+{
+	// Destroy all event bindings for this Game.
+	EventManager::UnregisterObjectForAllEvent( *this );
+
+	// Unload all game data.
+	mDatabase->ClearData();
 }
 
 
 void Game::OnStartTurn()
 {
 	DebugPrintf( "Starting turn %d. It is Player %d's turn.", mCurrentTurnIndex, mCurrentPlayerIndex );
+
 	Player* player = GetCurrentPlayer();
+	assertion( player, "Player does not exist!" );
+
 	// Re-gen AP
-	void (*Fn)( Unit* unit ) = []( Unit* unit ) { if ( unit->GetOwner() == gGame->GetCurrentPlayer() ) unit->ResetAP(); };
-	mMap.ForeachObjectOfType( Fn );
+	mMap.ForeachObjectOfType< Unit >( [player]( Unit* unit )
+	{
+		if ( unit->GetOwner() == player )
+		{
+			unit->ResetAP();
+		}
+	});
 
 	if ( mCurrentPlayerIndex == 0 )
 		PostMessage( "It is REDS turn!", Color::RED );
@@ -159,8 +197,14 @@ void Game::OnEndTurn()
 	// Get money
 	player->GenerateFunds();
 	// Drain all AP
-	void (*Fn)( Unit* unit ) = []( Unit* unit ) { if ( unit->GetOwner() == gGame->GetCurrentPlayer() ) unit->ConsumeAP( 9999 ); };
-	mMap.ForeachObjectOfType( Fn );
+
+	mMap.ForeachObjectOfType< Unit >( [player]( Unit* unit )
+	{
+		if ( unit->GetOwner() == player )
+		{
+			unit->ConsumeAP( 9999 );
+		}
+	});
 
 	SelectUnit( 0 );
 }
@@ -273,11 +317,14 @@ MapObject* Game::SpawnObjectFromXml( const XmlReader::XmlReaderIterator& xmlIter
 
 	if( type == "Unit" )
 	{
-		// Spawn a new unit with the specified UnitType.
-		result = new Unit( name );
+		// Spawn a new unit with the specified name.
+		Unit* unit = new Unit( name );
 
 		// Load generic properties
-		TileMap::LoadDefaultMapObjectFields( *result, xmlIterator );
+		TileMap::LoadDefaultMapObjectFields( *unit, xmlIterator );
+
+		// Return the newly created Unit.
+		result = unit;
 	}
 	// Object is unknown - just use the default loading
 	else
@@ -292,11 +339,13 @@ MapObject* Game::SpawnObjectFromXml( const XmlReader::XmlReaderIterator& xmlIter
 Unit* Game::SpawnUnit( UnitType* unitType, Player* owner, int x, int y )
 {
 	// Create a new Unit of the specified type at the specified location on the map.
-	Unit* unit = new Unit( unitType, owner );
+	Unit* unit = new Unit();
+	unit->SetUnitType( unitType );
+	unit->SetOwner( owner );
 	unit->SetTilePos( x, y );
 
 	// Initialize the Unit.
-	unit->Init();
+	unit->Init( this );
 
 	return unit;
 }
@@ -609,7 +658,7 @@ TerrainType* Game::GetTerrainTypeOfTile( int x, int y )
 
 	// TODO: Make this actually use the properties of the Tile to determine TerrainType.
 	HashString terrainTypeName = tile.GetPropertyAsString( "TerrainType" );
-	return gDatabase->TerrainTypes.FindByName( terrainTypeName );
+	return mDatabase->TerrainTypes.FindByName( terrainTypeName );
 }
 
 bool Game::WidgetIsOpen() const

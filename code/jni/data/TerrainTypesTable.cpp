@@ -3,6 +3,9 @@
 using namespace mage;
 
 
+MAGE_AUTO_GENERATE_TABLE_NAME( TerrainTypesTable, TerrainType );
+
+
 TerrainTypesTable::TerrainTypesTable( Database* database )
 	: Table( database )
 { }

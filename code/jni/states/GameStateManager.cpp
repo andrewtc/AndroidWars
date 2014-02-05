@@ -37,6 +37,15 @@ void GameStateManager::Update( float elapsedTime )
 }
 
 
+void GameStateManager::Draw()
+{
+	if( HasActiveState() )
+	{
+		mActiveState->Draw();
+	}
+}
+
+
 void GameStateManager::OnScreenSizeChanged( int32 w, int32 h )
 {
 	if( HasActiveState() )

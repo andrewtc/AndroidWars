@@ -19,6 +19,7 @@ namespace mage
 		void DestroyAllStates();
 
 		void Update( float elapsedTime );
+		void Draw();
 
 		void OnScreenSizeChanged( int32 w, int32 h );
 		void OnPointerDown( float x, float y, size_t which );

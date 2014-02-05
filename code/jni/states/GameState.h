@@ -13,6 +13,7 @@ namespace mage
 
 		void Enter( GameStateManager* manager, const Dictionary& parameters );
 		void Update( float elapsedTime );
+		void Draw();
 		void Exit();
 
 		virtual void OnScreenSizeChanged( int32 w, int32 h ) { };
@@ -26,6 +27,7 @@ namespace mage
 	protected:
 		virtual void OnEnter( const Dictionary& parameters ) = 0;
 		virtual void OnUpdate( float elapsedTime ) = 0;
+		virtual void OnDraw() = 0;
 		virtual void OnExit() = 0;
 
 	private:

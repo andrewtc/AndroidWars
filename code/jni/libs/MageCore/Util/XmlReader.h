@@ -111,8 +111,12 @@ namespace mage
 			XmlReader* mReader;
 		};
 
+		XmlReader();
 		XmlReader( const char* filename );
 		~XmlReader();
+
+		void LoadFile( const char* filename );
+		void LoadData( const char* data );
 
 		// Use Read to parse the entire doc in depth order
 		// while ( reader.Read() )

@@ -910,26 +910,46 @@ void XmlReader::XmlReaderIterator::ConvertToVector( TVector& vector, unsigned si
 //---------------------------------------
 // XmlReader
 //---------------------------------------
+XmlReader::XmlReader()
+	: mFilename( "" )
+	, mError( false )
+//	, mCurrentElement( nullptr )
+{ }
+//---------------------------------------
 XmlReader::XmlReader( const char* filename )
-	: mFilename( filename )
+	: mFilename( "" )
 	, mError( false )
 //	, mCurrentElement( nullptr )
 {
-	mDoc = new tinyxml2::XMLDocument();
-	char* buffer=0;
-	unsigned int bufferSize;
-	OpenDataFile( filename, buffer, bufferSize );
-	mDoc->Parse( buffer );
-	//XmlAssertError( mCurrentItr, /*mDoc->LoadFile( mFilename )*/ mDoc->Parse( buffer ),
-	//	"Unable to open file\n" );
-	//delete[] buffer;
-	//mCurrentElement = mDoc->RootElement();
-	mCurrentItr = XmlReaderIterator( mDoc->RootElement(), this );
+	LoadFile( filename );
 }
 //---------------------------------------
 XmlReader::~XmlReader()
 {
 	Delete0( mDoc );
+}
+//---------------------------------------
+void XmlReader::LoadFile( const char* filename )
+{
+	mFilename = filename;
+	//mDoc = new tinyxml2::XMLDocument();
+	char* buffer=0;
+	unsigned int bufferSize;
+	OpenDataFile( filename, buffer, bufferSize );
+	//mDoc->Parse( buffer );
+	//XmlAssertError( mCurrentItr, /*mDoc->LoadFile( mFilename )*/ mDoc->Parse( buffer ),
+	//	"Unable to open file\n" );
+	//delete[] buffer;
+	//mCurrentElement = mDoc->RootElement();
+	//mCurrentItr = XmlReaderIterator( mDoc->RootElement(), this );
+	LoadData( buffer );
+}
+//---------------------------------------
+void XmlReader::LoadData( const char* data )
+{
+	mDoc = new tinyxml2::XMLDocument();
+	mDoc->Parse( data );
+	mCurrentItr = XmlReaderIterator( mDoc->RootElement(), this );
 }
 //---------------------------------------
 bool XmlReader::Read()

@@ -3,11 +3,8 @@
 using namespace mage;
 
 
-MAGE_IMPLEMENT_RTTI( Record, Weapon );
-
-
 Weapon::Weapon( const HashString& name ) :
-	Record( name )
+	mName( name )
 { }
 
 

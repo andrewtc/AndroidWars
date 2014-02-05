@@ -2,10 +2,13 @@
 
 namespace mage
 {
+	class UnitType;
+	class Weapon;
+
 	/**
 	 * Table that keeps track of UnitTypes.
 	 */
-	class UnitTypesTable : public Table< UnitType >
+	class UnitTypesTable : public Table< UnitTypesTable, UnitType >
 	{
 	public:
 		UnitTypesTable( Database* database );

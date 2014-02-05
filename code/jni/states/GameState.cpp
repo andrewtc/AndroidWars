@@ -35,6 +35,13 @@ void GameState::Update( float elapsedTime )
 }
 
 
+void GameState::Draw()
+{
+	// Run the state draw code.
+	OnDraw();
+}
+
+
 void GameState::Exit()
 {
 	assertion( IsInitialized(), "Cannot exit GameState because it is not currently initialized!" );

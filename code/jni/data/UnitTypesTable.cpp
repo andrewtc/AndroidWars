@@ -3,6 +3,9 @@
 using namespace mage;
 
 
+MAGE_AUTO_GENERATE_TABLE_NAME( UnitTypesTable, UnitType );
+
+
 UnitTypesTable::UnitTypesTable( Database* database )
 	: Table( database )
 { }
@@ -56,7 +59,7 @@ void UnitTypesTable::LoadWeaponFromXml( Weapon& weapon, XmlReader::XmlReaderIter
 	weapon.mDisplayName = xmlIterator.GetAttributeAsString( "displayName", "" );
 	weapon.mAmmoPerShot = xmlIterator.GetAttributeAsInt( "ammoPerShot", 0 );
 
-	DebugPrintf( "Loaded %s (%s ammo)", weapon.ToString(), ( weapon.ConsumesAmmo() ? "uses" : "does not use" ) );
+	DebugPrintf( "Loaded weapon %s (%s ammo)", weapon.GetName().GetCString(), ( weapon.ConsumesAmmo() ? "uses" : "does not use" ) );
 
 	for( auto damageIterator = xmlIterator.NextChild( "Damage" );
 		 damageIterator.IsValid(); damageIterator = damageIterator.NextSibling( "Damage" ) )

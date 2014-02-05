@@ -11,7 +11,9 @@ namespace mage
 		Database();
 		~Database();
 
-		void LoadGameData();
+		void LoadDataFromFile( const char* file );
+		void LoadDataFromXML( XmlReader::XmlReaderIterator rootIterator );
+		void ClearData();
 
 		TerrainTypesTable TerrainTypes;
 		UnitTypesTable UnitTypes;

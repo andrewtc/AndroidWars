@@ -2,10 +2,12 @@
 
 namespace mage
 {
+	class MovementType;
+
 	/**
 	 * Table that keeps track of MovementTypes.
 	 */
-	class MovementTypesTable : public Table< MovementType >
+	class MovementTypesTable : public Table< MovementTypesTable, MovementType >
 	{
 	public:
 		MovementTypesTable( Database* database );

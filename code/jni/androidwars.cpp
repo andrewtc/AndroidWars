@@ -9,98 +9,28 @@ using namespace mage;
 int32 gWindowWidth;
 int32 gWindowHeight;
 
-Vec2f gCameraTarget;
-Vec2f gCameraVelocity;
-
 bool gInit = false;
-bool gWasMotion = false;
 
-Camera* gCamera = nullptr;
 BitmapFont* gFont = nullptr;
 
-Game* gGame = nullptr;
-Database* gDatabase = nullptr;
 GameStateManager* gGameStateManager = nullptr;
 SoundManager* gSoundManager = nullptr;
 OnlineGameClient* gOnlineGameClient = nullptr;
 
-// Test
-Widget* gWidget = nullptr;
-Widget* gTestWidget = nullptr;
-SoundClip* gJumpSoundFx = nullptr;
-SoundClip* gDieSoundFx = nullptr;
-
-
-// Closes the test widget
-EventFunc( TestWidgetButtonEvent )
-{
-	DebugPrintf( "The Test Button Was Pressed" );
-	// Widget events always have a pointer to themselves in the params as Widget*
-	// Use the RTTI to see what kind of widget it is
-	Widget* w = params.Get( "Widget", (Widget*)0 );
-	// Hide the entire widget set
-	w->GetRootWidget()->Hide();
-	// You could also destroy the widget but this will
-	// cause the widget to be constructed from disk
-	// when we need to show it again
-	//Widget::DestroyWidget( gWidget );
-
-	// Play a sfx - this is done through data now
-//	gSoundManager->PlaySound( gDieSoundFx );
-}
-
-// Show the test widget
-EventFunc( NextTurnEvent )
-{
-	// Make widget if does not exist
-	//if ( !gWidget )
-	//{
-	//	gWidget = Widget::LoadWidget( "ui/test.xml" );
-	//}
-	// Show the widget
-	//gWidget->Show();
-
-	// TEST: End the current turn.
-	gGame->PostMessage( "Next Turn" );
-	gGame->NextTurn();
-
-	// Play a sfx - this is done through data now
-//	gSoundManager->PlaySound( gJumpSoundFx );
-}
-
-EventFunc( RestartGameEvent )
-{
-	if ( gGame )
-	{
-		delete gGame;
-	}
-	gGame = Game::Create( 2, "Cobra Cove" );
-	gGame->SetCamera( gCamera );
-	gGame->Start();
-}
-
-EventFunc( ExitGameEvent )
-{
-	ExitApp();
-}
-
-void RegisterEventFuncs()
-{
-	RegisterEventFunc( NextTurnEvent );
-	RegisterEventFunc( RestartGameEvent );
-	RegisterEventFunc( ExitGameEvent );
-}
 
 void OnDraw()
 {
 	static int sTestCount = 0;
 	ClearScreen();
 
-	// Draw the game.
-	if ( gGame )
-		gGame->OnDraw();
+	if( gGameStateManager )
+	{
+		// Draw the game.
+		gGameStateManager->Draw();
+	}
+
 	// Draw the UI
-	Widget::DrawAllWidgets( *gCamera );
+	//Widget::DrawAllWidgets( *gCamera );
 
 	// Camera debug
 //	DrawRect( gCameraTarget.x - 5, gCameraTarget.y - 5, 10, 10, Color::PINK );
@@ -113,20 +43,13 @@ void OnUpdate( float dt )
 	Widget::UpdateAllWidgets( dt );
 
 	// Poll for online request responses.
-	gOnlineGameClient->update();
+	gOnlineGameClient->Update();
 
-	// TODO: Move this to a game state.
-	if ( gGame )
-		gGame->OnUpdate( dt );
-
-	// Camera test
-	gCameraTarget += gCameraVelocity;
-	gCameraVelocity *= 0.9f;
-	if ( gCamera )
-		gCamera->LookAtClamp( gCameraTarget );
-
-	// Update the current GameState.
-	gGameStateManager->Update( dt );
+	if( gGameStateManager )
+	{
+		// Update the current GameState.
+		gGameStateManager->Update( dt );
+	}
 }
 
 void OnScreenSizeChanged( int32 w, int32 h )
@@ -134,10 +57,10 @@ void OnScreenSizeChanged( int32 w, int32 h )
 	gWindowWidth = w;
 	gWindowHeight = h;
 
-	gCameraTarget.x = w / 2.0f;
-	gCameraTarget.y = h / 2.0f;
-
-	gGameStateManager->OnScreenSizeChanged( w, h );
+	if( gGameStateManager )
+	{
+		gGameStateManager->OnScreenSizeChanged( w, h );
+	}
 
 	DebugPrintf( "Window size w=%d h=%d\n", gWindowWidth, gWindowHeight );
 }
@@ -166,36 +89,12 @@ void OnWindowShown()
 		// Load Widget definitions
 		Widget::LoadDefinitions( "ui/definitions.xml" );
 
-		gTestWidget = Widget::LoadWidget( "ui/next_turn.xml" );
+		//gTestWidget = Widget::LoadWidget( "ui/next_turn.xml" );
 
-		if( !gCamera )
-		{
-			// Create a camera
-			gCamera = new Camera( gWindowWidth, gWindowHeight );
-		//	gFont = new BitmapFont( "fonts/font.fnt" );
-		}
-
-		if( !gDatabase )
-		{
-			// Create the global Database.
-			DebugPrintf( "Creating database..." );
-			gDatabase = new Database();
-
-			// Load all data into the Database.
-			DebugPrintf( "Loading game data..." );
-			gDatabase->LoadGameData();
-		}
-
-		if( !gGame )
-		{
-			// Create a new Game and start it.
-			gGame = Game::Create( 2, "Cobra Cove" );
-			gGame->SetCamera( gCamera );
-			gGame->Start();
-		}
-
-		// Test cloud function.
-		gOnlineGameClient->callCloudFunction( "hello", "{\"name\": \"Andrew\"}", &OnHelloWorldSuccess, nullptr, &OnHelloWorldComplete );
+		// Create the GameStateManager and create the first state.
+		DebugPrintf( "Creating GameStateManager..." );
+		gGameStateManager = new GameStateManager();
+		gGameStateManager->ChangeState< MainMenuState >();
 	}
 
 	gInit = true;
@@ -217,46 +116,46 @@ void OnSaveStateRestore( const void* state )
 void OnPointerDown( float x, float y, size_t which )
 {
 	DebugPrintf( "Touch at %f %f\n", x, y );
-	Widget::ProcessOnPointerDown( x, y );
-	gWasMotion = false;
-
-	gGameStateManager->OnPointerDown( x, y, which );
+	if( !Widget::ProcessOnPointerDown( x, y ) )
+	{
+		if( gGameStateManager )
+		{
+			gGameStateManager->OnPointerDown( x, y, which );
+		}
+	}
 }
 
 void OnPointerUp( float x, float y, size_t which )
 {
 	if ( !Widget::ProcessOnPointerUp( x, y ) )
 	{
-		if ( gGame && !gWasMotion )
-			gGame->OnTouchEvent( x, y );
+		if( gGameStateManager )
+		{
+			gGameStateManager->OnPointerUp( x, y, which );
+		}
 	}
-	gWasMotion = false;
-
-	gGameStateManager->OnPointerUp( x, y, which );
 }
+
 
 void OnPointerMotion( float x, float y, float dx, float dy, size_t which )
 {
-//	DebugPrintf( "Motion (%3.f %.3f) d(%3.f %.3f) ", x, y, dx, dy );
+	// DebugPrintf( "Motion (%3.f %.3f) d(%3.f %.3f) ", x, y, dx, dy );
 	if ( !Widget::ProcessOnPointerDown( x, y ) )
 	{
-		gCameraVelocity.Set( dx, dy );
+		if( gGameStateManager )
+		{
+			gGameStateManager->OnPointerMotion( x, y, dx, dy, which );
+		}
 	}
-	Vec2f d( dx, dy );
-//	DebugPrintf( "motion delta=%f", d.LengthSqr() );
-	if ( d.LengthSqr() > 5 )
-	{
-		gWasMotion = true;
-	}
-
-	gGameStateManager->OnPointerMotion( x, y, dx, dy, which );
 }
+
 
 void OnFocusLost()
 {
 	if ( gSoundManager )
 		gSoundManager->Stop();
 }
+
 
 void OnFocusGained()
 {
@@ -285,12 +184,9 @@ void main()
 //	gSoundManager->PlayMusic( "music/super_mario_overworld.mp3" );
 
 	// Create OnlineGameClient.
+	DebugPrintf( "Creating OnlineGameClient..." );
 	gOnlineGameClient = new OnlineGameClient();
-	gOnlineGameClient->init( app );
-
-	// Create the GameStateManager and create the first state.
-	gGameStateManager = new GameStateManager();
-	gGameStateManager->ChangeState< MainMenuState >();
+	gOnlineGameClient->Init( app );
 
 	RegisterRenderFn( OnDraw );
 	RegisterUpdateFn( OnUpdate );
@@ -305,7 +201,7 @@ void main()
 	RegisterOnFocusGainedFn( OnFocusGained );
 	RegisterOnVolumeChangedFn( OnVolumeChanged );
 
-	RegisterEventFuncs();
+	//RegisterEventFuncs();
 
 	// Run the application
 	Run();

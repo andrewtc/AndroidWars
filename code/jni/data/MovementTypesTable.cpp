@@ -3,6 +3,9 @@
 using namespace mage;
 
 
+MAGE_AUTO_GENERATE_TABLE_NAME( MovementTypesTable, MovementType );
+
+
 MovementTypesTable::MovementTypesTable( Database* database )
 	: Table( database )
 { }

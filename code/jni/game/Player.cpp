@@ -31,5 +31,23 @@ void Player::GenerateFunds()
 {
 	int gain = CitiesOwned * 10;
 	mFunds += gain;
-	gGame->PostMessageFormat( GetPlayerColor(), "+$%d", gain );
+	//gGame->PostMessageFormat( GetPlayerColor(), "+$%d", gain );
 };
+
+
+bool Player::HasLost() const
+{
+	return mUnits == 0;
+}
+
+
+void Player::OnGainUnit( Unit* unit )
+{
+	mUnits++;
+}
+
+
+void Player::OnLoseUnit( Unit* unit )
+{
+	mUnits--;
+}

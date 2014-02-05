@@ -5,10 +5,8 @@ namespace mage
 	/**
 	 * Represents all non-changing aspects of a tile.
 	 */
-	class TerrainType : public Record
+	class TerrainType : public TerrainTypesTable::Record
 	{
-		DECLARE_RTTI
-
 	public:
 		TerrainType( const HashString& name );
 		virtual ~TerrainType();

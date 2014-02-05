@@ -22,22 +22,22 @@ namespace mage
 		OnlineGameClient();
 		~OnlineGameClient();
 
-		void init( android_app* app );
-		void destroy();
-		void update();
-		bool isInitialized() const;
+		void Init( android_app* app );
+		void Destroy();
+		void Update();
+		bool IsInitialized() const;
 
-		long callCloudFunction( const std::string& functionName, const std::string& parameters,
+		long CallCloudFunction( const std::string& functionName, const std::string& parameters,
 								RequestCallback onSuccess = nullptr,
 								RequestCallback onFailure = nullptr,
 								RequestCallback onComplete = nullptr );
 
-		long logIn( const std::string& userName, const std::string& password,
+		long LogIn( const std::string& userName, const std::string& password,
 					RequestCallback onSuccess = nullptr,
 					RequestCallback onFailure = nullptr,
 					RequestCallback onComplete = nullptr );
 
-		long requestMatchmakingGame( GameType gameType,
+		long RequestMatchmakingGame( GameType gameType,
 									 RequestCallback onSuccess = nullptr,
 									 RequestCallback onFailure = nullptr,
 									 RequestCallback onComplete = nullptr );
@@ -52,7 +52,7 @@ namespace mage
 			RequestCallback onComplete;
 		};
 
-		jobject fetchNextResponse( JNIEnv* env );
+		jobject FetchNextResponse( JNIEnv* env );
 
 		JavaVM* mJavaVM;
 		jclass mJavaClass;
@@ -75,7 +75,7 @@ namespace mage
 	{ }
 
 
-	inline bool OnlineGameClient::isInitialized() const
+	inline bool OnlineGameClient::IsInitialized() const
 	{
 		return ( mJavaObject != nullptr );
 	}

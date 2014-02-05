@@ -143,7 +143,6 @@ LOCAL_SRC_FILES := androidwars.cpp \
 $(aw_states_path)/GameState.cpp \
 $(aw_states_path)/GameStateManager.cpp \
 $(aw_mainmenu_path)/MainMenuState.cpp \
-$(aw_data_path)/Table.cpp \
 $(aw_data_path)/TerrainType.cpp \
 $(aw_data_path)/TerrainTypesTable.cpp \
 $(aw_data_path)/UnitType.cpp \

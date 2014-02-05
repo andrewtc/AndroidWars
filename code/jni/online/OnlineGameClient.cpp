@@ -19,16 +19,16 @@ OnlineGameClient::OnlineGameClient() :
 
 OnlineGameClient::~OnlineGameClient()
 {
-	if( isInitialized() )
+	if( IsInitialized() )
 	{
-		destroy();
+		Destroy();
 	}
 }
 
 
-void OnlineGameClient::init( android_app* app )
+void OnlineGameClient::Init( android_app* app )
 {
-	assertion( !isInitialized(), "Cannot initialize OnlineGameClient that has already been initialized!" );
+	assertion( !IsInitialized(), "Cannot initialize OnlineGameClient that has already been initialized!" );
 
 	// Keep a reference to the Java virtual machine.
 	assertion( app, "Cannot create OnlineGameClient without a reference to the Java app instance!" );
@@ -58,9 +58,9 @@ void OnlineGameClient::init( android_app* app )
 }
 
 
-void OnlineGameClient::destroy()
+void OnlineGameClient::Destroy()
 {
-	assertion( isInitialized(), "Cannot destroy OnlineGameClient that hasn't been initialized!" );
+	assertion( IsInitialized(), "Cannot destroy OnlineGameClient that hasn't been initialized!" );
 
 	JNIEnv* env;
 	mJavaVM->AttachCurrentThread( &env, nullptr );
@@ -82,9 +82,9 @@ void OnlineGameClient::destroy()
 }
 
 
-void OnlineGameClient::update()
+void OnlineGameClient::Update()
 {
-	assertion( isInitialized(), "Cannot update OnlineGameClient that hasn't been initialized!" );
+	assertion( IsInitialized(), "Cannot update OnlineGameClient that hasn't been initialized!" );
 
 	if( mOpenRequestsByID.size() > 0 )
 	{
@@ -96,7 +96,7 @@ void OnlineGameClient::update()
 			//DebugPrintf( "Checking for responses..." );
 
 			// Fetch the next response (if any).
-			jobject response = fetchNextResponse( env );
+			jobject response = FetchNextResponse( env );
 
 			if( response == nullptr )
 			{
@@ -142,7 +142,7 @@ void OnlineGameClient::update()
 				// If an error occurred, call the error callback (if any).
 				if( requestInfo.onFailure != nullptr )
 				{
-					DebugPrintf( "Calling onFailure() callback..." );
+					//DebugPrintf( "Calling onFailure() callback..." );
 					requestInfo.onFailure( requestID, statusCode, resultText );
 				}
 			}
@@ -151,7 +151,7 @@ void OnlineGameClient::update()
 				// If the response was successful, call the success callback (if any).
 				if( requestInfo.onSuccess != nullptr )
 				{
-					DebugPrintf( "Calling onSuccess() callback..." );
+					//DebugPrintf( "Calling onSuccess() callback..." );
 					requestInfo.onSuccess( requestID, statusCode, resultText );
 				}
 			}
@@ -159,7 +159,7 @@ void OnlineGameClient::update()
 			// Call the completion callback (if any).
 			if( requestInfo.onComplete != nullptr )
 			{
-				DebugPrintf( "Calling onComplete() callback..." );
+				//DebugPrintf( "Calling onComplete() callback..." );
 				requestInfo.onComplete( requestID, statusCode, resultText );
 			}
 
@@ -172,10 +172,10 @@ void OnlineGameClient::update()
 }
 
 
-long OnlineGameClient::callCloudFunction( const std::string& functionName, const std::string& parameters,
+long OnlineGameClient::CallCloudFunction( const std::string& functionName, const std::string& parameters,
 										  RequestCallback onSuccess, RequestCallback onFailure, RequestCallback onComplete )
 {
-	assertion( isInitialized(), "Cannot call cloud function \"%s\" from OnlineGameClient that hasn't been initialized!", functionName.c_str() );
+	assertion( IsInitialized(), "Cannot call cloud function \"%s\" from OnlineGameClient that hasn't been initialized!", functionName.c_str() );
 
 	long requestID = -1;
 
@@ -205,7 +205,8 @@ long OnlineGameClient::callCloudFunction( const std::string& functionName, const
 }
 
 
-jobject OnlineGameClient::fetchNextResponse( JNIEnv* env )
+jobject OnlineGameClient::FetchNextResponse( JNIEnv* env )
 {
+	assertion( IsInitialized(), "Cannot fetch response for OnlineGameClient that hasn't been initialized!" );
 	return env->CallObjectMethod( mJavaObject, mJavaFetchNextResponse );
 }

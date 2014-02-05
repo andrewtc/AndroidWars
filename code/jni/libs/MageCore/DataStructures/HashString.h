@@ -22,6 +22,7 @@ namespace mage
 
 		void Set( const char* str );
 		const std::string& GetString() const					{ return mString; }
+		const char* GetCString() const							{ return mString.c_str(); }
 		uint32 GetHash() const									{ return mHash; }
 
 		HashString& operator=( const HashString& other )		{ mHash = other.mHash; mString = other.mString; return *this; }

@@ -10,24 +10,16 @@ MAGE_IMPLEMENT_RTTI( MapObject, Unit );
 
 
 Unit::Unit( const std::string& name )
-: MapObject( name )
+	: MapObject( name )
+	, mGame( nullptr )
 	, mUnitType( nullptr )
 	, mSprite( nullptr )
 	, mOwner( nullptr )
+	, mOwnerIndex( -1 )
 	, mHP( 0 )
 	, mAP( 0 )
 	, mAmmo( -1 )
-{}
-
-
-Unit::Unit( UnitType* unitType, Player* owner )
-	: MapObject( "Unit" )
-	, mUnitType( unitType )
-	, mSprite( nullptr )
-	, mOwner( owner )
-	, mHP( 0 )
-	, mAP( 0 )
-	, mAmmo( -1 )
+	, mWasLoadedByMap( false )
 { }
 
 
@@ -41,27 +33,19 @@ void Unit::OnLoadProperty( const std::string& name, const std::string& value )
 
 	if ( name == "UnitType" )
 	{
+		// Read in the name of the UnitType to use for this Unit.
 		parseWasSuccessful = true;
-		mUnitType = gDatabase->UnitTypes.FindByName( value );
-		assertion( mUnitType, "UnitType \"%s\" not found!", value.c_str() );
+		mUnitTypeName = value;
 	}
 	else if ( name == "Owner" )
 	{
 		// Read the Player index from the property.
-		int index;
-		parseWasSuccessful = StringUtil::StringToType( value, &index );
-
-		// Grab the owning player.
-		mOwner = gGame->GetPlayer( index );
-		mOwner->OnGainUnit();
-		assertion( mOwner, "Invalid Player index %d specified for %s!", ToString() );
+		parseWasSuccessful = StringUtil::StringToType( value, &mOwnerIndex );
 	}
 	else if ( name == "Ammo" )
 	{
 		// Read in ammo amount.
-		int ammo;
-		parseWasSuccessful = StringUtil::StringToType( value, &ammo );
-		mAmmo = ammo;
+		parseWasSuccessful = StringUtil::StringToType( value, &mAmmo );
 	}
 
 	assertion( parseWasSuccessful, "Could not parse %s value for %s! (\"%s\" specified.)", name.c_str(), ToString(), value.c_str() );
@@ -70,30 +54,51 @@ void Unit::OnLoadProperty( const std::string& name, const std::string& value )
 
 void Unit::OnLoadFinished()
 {
-	// Determine the tile location of the unit.
-	Vec2i tilePos = gGame->GetMap()->WorldToTile( Position );
-
-	// Snap the unit to the tile grid.
-	SetTilePos( tilePos );
-
-	Init();
+	// Mark that this Unit was loaded by the TileMap.
+	mWasLoadedByMap = true;
 }
 
 
-void Unit::Init()
+void Unit::Init( Game* game )
 {
-	// Make sure the Unit has a valid UnitType.
-	assertion( mUnitType != nullptr, "Unit::Init(): \"%s\" does not have a valid UnitType!", mName.GetString().c_str() );
+	DebugPrintf( "Initializing Unit \"%s\".", mDebugName.c_str() );
+
+	// Keep track of the Game that spawned this Unit.
+	mGame = game;
+
+	// Make sure a valid Game was specified.
+	assertion( mGame, "Cannot initialize Unit because it is not associated with a valid Game!" );
+
+	if( mUnitType == nullptr )
+	{
+		// Load the UnitType for this Unit (if necessary).
+		mUnitType = mGame->GetDatabase()->UnitTypes.FindByName( mUnitTypeName );
+		assertion( mUnitType, "UnitType \"%s\" not found!", mUnitTypeName.GetCString() );
+	}
 
 	// Format debug name string.
 	static const size_t BUFFER_SIZE = 256;
 	char buffer[ BUFFER_SIZE ];
 
-	snprintf( buffer, BUFFER_SIZE, "%s \"%s\"", mUnitType->GetName().GetString().c_str(), mName.GetString().c_str() );
+	snprintf( buffer, BUFFER_SIZE, "%s \"%s\"", mUnitType->GetName().GetCString(), mName.GetCString() );
 	mDebugName = buffer;
 
-	// Make sure the Unit has a valid Player.
-	assertion( mOwner != nullptr, "Unit::Init(): %s does not have an owner Player!", ToString() );
+	if( mOwner == nullptr )
+	{
+		// If the player does not have  the owning player.
+		Player* owner = mGame->GetPlayer( mOwnerIndex );
+		assertion( owner, "Invalid Player index %d specified for %s!", mOwnerIndex, ToString() );
+		SetOwner( owner );
+	}
+
+	if( mWasLoadedByMap )
+	{
+		// Determine the tile location of the unit.
+		Vec2i tilePos = mGame->GetMap()->WorldToTile( Position );
+
+		// Snap the unit to the tile grid.
+		SetTilePos( tilePos );
+	}
 
 	// Create a sprite for this Unit.
 	mSprite = SpriteManager::CreateSprite( mUnitType->GetAnimationSetName(), Position, "Idle" );
@@ -128,8 +133,16 @@ void Unit::Init()
 }
 
 
+bool Unit::IsInitialized() const
+{
+	return ( mGame != nullptr );
+}
+
+
 void Unit::OnDraw( const Camera& camera ) const
 {
+	assertion( IsInitialized(), "Cannot draw Unit because it is not initialized!", ToString() );
+
 	if ( mSprite )
 	{
 		// Draw the sprite at the location of the Unit.
@@ -153,6 +166,8 @@ void Unit::OnDraw( const Camera& camera ) const
 
 void Unit::OnUpdate( float dt )
 {
+	assertion( IsInitialized(), "Cannot update Unit because it is not initialized!", ToString() );
+
 	float delta = ( Position - mDestination ).LengthSqr();
 	if ( delta > 1 )
 	{
@@ -163,7 +178,18 @@ void Unit::OnUpdate( float dt )
 
 		delta = ( Position - mDestination ).LengthSqr();
 		if ( delta < 1 )
-			gGame->OnUnitReachedDestination( this );
+			mGame->OnUnitReachedDestination( this );
+	}
+}
+
+
+void Unit::SetUnitType( UnitType* unitType )
+{
+	mUnitType = unitType;
+
+	if( IsInitialized() )
+	{
+		assertion( unitType, "Cannot set UnitType of Unit to null!" );
 	}
 }
 
@@ -174,14 +200,36 @@ void Unit::SetTilePos( const Vec2i& tilePos )
 	mTilePos = tilePos;
 
 	// Update the position of the object in the world.
-	Position = gGame->GetMap()->TileToWorld( tilePos );
+	Position = mGame->GetMap()->TileToWorld( tilePos );
 }
 
 
 void Unit::SetDestination( const Vec2i& tilePos )
 {
-	mDestination = gGame->GetMap()->TileToWorld( tilePos );
-	mTilePos = gGame->GetMap()->WorldToTile( mDestination );
+	mDestination = mGame->GetMap()->TileToWorld( tilePos );
+	mTilePos = mGame->GetMap()->WorldToTile( mDestination );
+}
+
+
+void Unit::SetOwner( Player* owner )
+{
+	// Give the Unit to the new owner.
+	Player* formerOwner = mOwner;
+	mOwner = owner;
+
+	if( IsInitialized() )
+	{
+		assertion( owner, "Cannot give Unit to null Player!" );
+
+		if( formerOwner != nullptr )
+		{
+			// If there was a previous owner, notify it that it no longer owns this Unit.
+			formerOwner->OnLoseUnit( this );
+		}
+
+		// Notify the new player that it gained a Unit.
+		mOwner->OnGainUnit( this );
+	}
 }
 
 
@@ -248,7 +296,7 @@ void Unit::Attack( Unit& target )
 	assertion( bestWeaponIndex > -1, "Cannot calculate damage: No weapon can currently target that Unit!" );
 
 	const Weapon bestWeapon = mUnitType->GetWeaponByIndex( bestWeaponIndex );
-	DebugPrintf( "Best weapon: %d (%s)", bestWeaponIndex, bestWeapon.ToString() );
+	DebugPrintf( "Best weapon: %d (%s)", bestWeaponIndex, bestWeapon.GetName().GetCString() );
 
 	// Calculate damage percentage (before randomness).
 	int damagePercentage = CalculateDamagePercentage( target, bestWeaponIndex );
@@ -301,7 +349,7 @@ int Unit::CalculateDamagePercentage( const Unit& target, int weaponIndex ) const
 	const Weapon& weapon = mUnitType->GetWeaponByIndex( weaponIndex );
 
 	DebugPrintf( "Calculating damage of %s against %s with weapon %d (%s)...", ToString(), target.ToString(),
-				 weaponIndex, weapon.ToString() );
+				 weaponIndex, weapon.GetName().GetCString() );
 
 	// Get the base amount of damage to apply.
 	int baseDamagePercentage = weapon.GetDamagePercentageAgainstUnitType( target.GetUnitType() );
@@ -333,7 +381,7 @@ float Unit::GetDefenseBonus() const
 	DebugPrintf( "Calculating defense bonus for %s...", ToString() );
 
 	// Get the defensive bonus supplied by the current tile.
-	TerrainType* terrainType = gGame->GetTerrainTypeOfTile( GetTilePos() );
+	TerrainType* terrainType = mGame->GetTerrainTypeOfTile( GetTilePos() );
 	int coverBonus = terrainType->GetCoverBonus();
 	float coverBonusScale = ( coverBonus * 0.1f );
 	DebugPrintf( "Cover bonus: %d (%f)", coverBonus, coverBonusScale );
@@ -410,13 +458,13 @@ int Unit::GetBestAvailableWeaponAgainst( const UnitType* unitType ) const
 			bestWeaponIndex = i;
 		}
 
-		DebugPrintf( "Weapon %d (%s) %s fire at a %s (%d%% damage) %s %s currently fire", i, weapon.ToString(), ( canTarget ? "CAN" : "CANNOT" ),
+		DebugPrintf( "Weapon %d (%s) %s fire at a %s (%d%% damage) %s %s currently fire", i, weapon.GetName().GetCString(), ( canTarget ? "CAN" : "CANNOT" ),
 					 unitType->ToString(), damagePercentage, ( canTarget == canFire ? "and" : "but" ), ( canFire ? "CAN" : "CANNOT" ) );
 	}
 
 	if( bestWeaponIndex > -1 )
 	{
-		DebugPrintf( "BEST CHOICE: Weapon %d (%s)", bestWeaponIndex, mUnitType->GetWeaponByIndex( bestWeaponIndex ).ToString() );
+		DebugPrintf( "BEST CHOICE: Weapon %d (%s)", bestWeaponIndex, mUnitType->GetWeaponByIndex( bestWeaponIndex ).GetName().GetCString() );
 	}
 	else
 	{
@@ -438,7 +486,7 @@ void Unit::SetHP( int hp )
 		OnDestroyed();
 
 		// If the Unit is now dead, schedule it for removal from the Game.
-		gGame->RemoveUnit( this );
+		mGame->RemoveUnit( this );
 	}
 }
 
@@ -462,9 +510,9 @@ void Unit::TakeDamage( int damageAmount, Unit* instigator )
 void Unit::OnDestroyed()
 {
 	DebugPrintf( "%s has been destroyed!", ToString() );
-	gGame->PostMessageFormat( mOwner->GetPlayerColor(), "%s has been destroyed", ToString() );
-	mOwner->OnLoseUnit();
-	gGame->CheckVictory();
+	mGame->PostMessageFormat( mOwner->GetPlayerColor(), "%s has been destroyed", ToString() );
+	mOwner->OnLoseUnit( this );
+	mGame->CheckVictory();
 }
 
 

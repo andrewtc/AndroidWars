@@ -7,6 +7,8 @@
  
 #pragma once
 
+#include <functional>
+
 namespace mage
 {
 
@@ -214,8 +216,10 @@ namespace mage
 		// Iterate over MapObjects of given type
 		// Use the canBeDerived flag to get MapObjects derived from type as well
 		// These derived objects will be passed into your callback as TObject*
-		template< typename TObject >
-		void ForeachObjectOfType( void( *fn )( TObject* ), bool canBeDerived=false )
+		//template< typename TObject >
+		//void ForeachObjectOfType( void( *fn )( TObject* ), bool canBeDerived=false )
+		template< typename TObject, typename Function >
+		void ForeachObjectOfType( Function fn, bool canBeDerived = false )
 		{
 			for ( auto itr = mObjects.begin(); itr != mObjects.end(); ++itr )
 			{

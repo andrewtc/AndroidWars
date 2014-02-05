@@ -3,9 +3,6 @@
 using namespace mage;
 
 
-MAGE_IMPLEMENT_RTTI( Record, TerrainType );
-
-
 TerrainType::TerrainType( const HashString& name )
 	: Record( name )
 	, mDisplayName( "" )
