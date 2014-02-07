@@ -19,6 +19,8 @@ extern mage::int32 gWindowHeight;
 
 #include <MageApp.h>
 
+#include "util/JNI.h"
+
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/document.h"
 

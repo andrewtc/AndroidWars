@@ -24,6 +24,8 @@ namespace mage
 		virtual void OnPointerUp( float x, float y, size_t which );
 		virtual void OnPointerMotion( float x, float y, float dx, float dy, size_t which );
 
+		void OnHelloResponse( const OnlineRequestResult& result );
+
 		bool mWasMotion;
 		Game* mGame;
 		Camera* mCamera;

@@ -1,6 +1,4 @@
 package com.timechildgames.androidwars;
-
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -30,6 +28,10 @@ public class OnlineGameClient
 	
 	private static AsyncHttpClient client = new AsyncHttpClient();
 	
+	private MainActivity activity;
+	private long nextRequestID = 0;
+	private Deque< OnlineRequestResponse > responses;
+	
 	
 	public OnlineGameClient( MainActivity activity )
 	{
@@ -38,7 +40,50 @@ public class OnlineGameClient
 	}
 	
 	
-	public long callCloudFunction( String functionName, String params )
+	public static RequestParams createRequestParams()
+	{
+		return new RequestParams();
+	}
+	
+	
+	private Header[] createRequestHeaders( String sessionToken )
+	{
+		// Build necessary Parse headers for the request.
+		ArrayList< Header > headers = new ArrayList< Header >();
+		
+		headers.add( new BasicHeader( "X-Parse-Application-ID", ANDROIDWARS_APPLICATION_ID ) );
+		headers.add( new BasicHeader( "X-Parse-REST-API-Key", ANDROIDWARS_REST_API_KEY ) );
+		
+		if( !sessionToken.isEmpty() )
+		{
+			// Add the user session header if the request is authenticated.
+			headers.add( new BasicHeader( "X-Parse-Session-Token", sessionToken ) );
+		}
+		
+		return headers.toArray( new Header[] { } );
+	}
+	
+	
+	private String headersToString( Header[] headers )
+	{
+		String headersString = "";
+		
+		for( Header header : headers )
+		{
+			headersString += header.toString() + "; ";
+		}
+		
+		return headersString;
+	}
+	
+	
+	/**
+	 * Sends an HTTP GET request to the AndroidWarsOnline service.
+	 * @param resource The path (i.e. URL fragment) of the resource to access.
+	 * @param parameters An object containing the parameters to send with the request.
+	 * @return
+	 */
+	public long sendGetRequest( String resource, RequestParams parameters, String sessionToken )
 	{
 		// Reserve the next request ID.
 		final long requestID = reserveRequestID();
@@ -46,71 +91,19 @@ public class OnlineGameClient
 		try
 		{
 			// Format the request URL.
-			URL url = formatFunctionURL( functionName );
+			URL url = formatRequestURL( resource );
 			
-			// Build necessary Parse headers for the request.
-			ArrayList< Header > headerList = new ArrayList< Header >();
+			// Build necessary headers for the request.
+			Header[] headers = createRequestHeaders( sessionToken );
 			
-			headerList.add( new BasicHeader( "X-Parse-Application-ID", ANDROIDWARS_APPLICATION_ID ) );
-			headerList.add( new BasicHeader( "X-Parse-REST-API-Key", ANDROIDWARS_REST_API_KEY ) );
-			
-			// TODO: Session ID
-			String sessionID = "";
-			
-			if( sessionID.length() > 0 )
-			{
-				headerList.add( new BasicHeader( "X-Parse-Session-Token", sessionID ) );
-			}
-			
-			Header[] headers = { };
-			headers = headerList.toArray( headers );
-			
-			// Format POST data.
-			StringEntity data = new StringEntity( params );
-			
-			// Initiate the request.
-			client.post( activity, url.toString(), headers, data, "application/json", new TextHttpResponseHandler()
-			{
-				@Override
-				public void onSuccess( int statusCode, Header[] headers, String response )
-				{
-					synchronized( responses )
-					{
-						// Queue up the successful response.
-						responses.addLast( OnlineRequestResponse.createSuccessfulResponse( requestID, statusCode, response ) );
-					}
-				}
-				
-				@Override
-				public void onFailure( int statusCode, Header[] headers, String response, Throwable exception )
-				{
-					String errorMessage = UNKNOWN_ERROR_MESSAGE;
-					
-					if( response.length() > 0 )
-					{
-						// Otherwise, return the response as the error message.
-						errorMessage = response;
-					}
-					else if( exception != null )
-					{
-						// If an exception occurred, return the exception message.
-						errorMessage = exception.toString();
-					}
+			// Create a new response handler for the request callbacks.
+			ResponseHandler responseHandler = new ResponseHandler( requestID );
 
-					synchronized( responses )
-					{
-						// Queue up the error response.
-						responses.addLast( OnlineRequestResponse.createErrorResponse( requestID, statusCode, errorMessage ) );
-					}
-				}
-			});
+			// Initiate the request.
+			Log.d( MainActivity.TAG, "Sending GET request to \"" + url.toString() + "\" with parameters \"" + parameters + "\" and " + headers.length + " headers (\"" + headersToString( headers ) + "\")" );
+			client.get( activity, url.toString(), headers, parameters, responseHandler );
 		}
-		catch( MalformedURLException exception )
-		{
-			// Print the exception.
-			Log.d( MainActivity.TAG, exception.toString() );
-		}
-		catch( UnsupportedEncodingException exception )
+		catch( Exception exception )
 		{
 			// Print the exception.
 			Log.d( MainActivity.TAG, exception.toString() );
@@ -121,9 +114,97 @@ public class OnlineGameClient
 	}
 	
 	
-	public static URL formatFunctionURL( String functionName ) throws MalformedURLException
+	/**
+	 * Sends an HTTP POST request to the AndroidWarsOnline service.
+	 * @param resource The path (i.e. URL fragment) of the resource to access.
+	 * @param data The JSON data to send with the request.
+	 * @return The request ID of the request that was initiated.
+	 */
+	public long sendPostRequest( String resource, String data, String sessionToken )
 	{
-		return new URL( PARSE_REST_URL + PARSE_FUNCTION_PREFIX + functionName );
+		// Reserve the next request ID.
+		final long requestID = reserveRequestID();
+		
+		try
+		{
+			// Format the request URL.
+			URL url = formatRequestURL( resource );
+			
+			// Build necessary headers for the request.
+			Header[] headers = createRequestHeaders( sessionToken );
+			
+			// Format POST data.
+			StringEntity dataEntity = new StringEntity( data );
+			
+			// Create a new response handler for the request callbacks.
+			ResponseHandler responseHandler = new ResponseHandler( requestID );
+
+			// Initiate the request.
+			Log.d( MainActivity.TAG, "Sending POST request to \"" + url.toString() + "\" with data \"" + data + "\" and " + headers.length + " headers (\"" + headersToString( headers ) + "\")" );
+			client.post( activity, url.toString(), headers, dataEntity, "application/json", responseHandler );
+		}
+		catch( Exception exception )
+		{
+			// Print the exception.
+			Log.d( MainActivity.TAG, exception.toString() );
+		}
+		
+		// Return the ID of the request.
+		return requestID;
+	}
+	
+	
+	class ResponseHandler extends TextHttpResponseHandler
+	{
+		private long requestID;
+		
+		
+		public ResponseHandler( long requestID )
+		{
+			this.requestID = requestID;
+		}
+		
+		
+		@Override
+		public void onSuccess( int statusCode, Header[] headers, String response )
+		{
+			Log.d( MainActivity.TAG, "Received successful response for request " + requestID + "." );
+			synchronized( responses )
+			{
+				// Queue up the successful response.
+				responses.addLast( OnlineRequestResponse.createSuccessfulResponse( requestID, statusCode, response ) );
+			}
+		}
+		
+		@Override
+		public void onFailure( int statusCode, Header[] headers, String response, Throwable exception )
+		{
+			Log.d( MainActivity.TAG, "Received failed response for request " + requestID + "." );
+			String errorMessage = UNKNOWN_ERROR_MESSAGE;
+			
+			if( response.length() > 0 )
+			{
+				// Otherwise, return the response as the error message.
+				errorMessage = response;
+			}
+			else if( exception != null )
+			{
+				// If an exception occurred, return the exception message.
+				errorMessage = exception.toString();
+			}
+
+			synchronized( responses )
+			{
+				// Queue up the error response.
+				responses.addLast( OnlineRequestResponse.createErrorResponse( requestID, statusCode, errorMessage ) );
+			}
+		}
+	}
+	
+	
+	public static URL formatRequestURL( String resource ) throws MalformedURLException
+	{
+		return new URL( PARSE_REST_URL + resource );
 	}
 	
 	
@@ -149,9 +230,4 @@ public class OnlineGameClient
 		// Return the next available requestID.
 		return nextRequestID++;
 	}
-	
-	
-	private MainActivity activity;
-	private long nextRequestID = 0;
-	private Deque< OnlineRequestResponse > responses;
 }

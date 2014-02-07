@@ -36,39 +36,59 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 	mGame->SetCamera( mCamera );
 	mGame->Start();
 
-	// Test the Parse cloud service.
-	gOnlineGameClient->CallCloudFunction( "hello", "{ \"name\": \"Andrew\" }",
-		[]( long requestID, bool isError, int statusCode, const std::string& result )
+	// Log in.
+	gOnlineGameClient->LogIn( "andrewtc", "test", [this]( bool success )
+	{
+		DebugPrintf( "Login %s successful!", ( success ? "was" : "was NOT" ) );
+
+		if( success )
 		{
-			DebugPrintf( "RESPONSE %d: (%d)" );
+			DebugPrintf( "User session token is now \"%s\".", gOnlineGameClient->GetUserSessionToken().c_str() );
 
-			// Parse the JSON response.
-			rapidjson::Document document;
-			document.Parse< 0 >( result.c_str() );
-
-			if( isError )
+			// Start a new request.
+			gOnlineGameClient->CallCloudFunction( "hello", "{ \"name\": \"Andrew\" }", [this]( const OnlineRequestResult& result )
 			{
-				const char* error;
+				OnHelloResponse( result );
+			});
 
-				if( !document.HasParseError() )
-				{
-					// Print the error string sent from Parse.
-					error = document[ "error" ].GetString();
-				}
-				else
-				{
-					// Print the result as the error message.
-					error = result.c_str();
-				}
+			//gOnlineGameClient->SendPostRequest( "functions/hello", "{ \"name\": \"Andrew\" }" );
+		}
+	});
+}
 
-				DebugPrintf( "An error occurred: %s", error );
-			}
-			else
-			{
-				// Print the response from the server.
-				DebugPrintf( "The server says: \"%s\"", document[ "result" ].GetString() );
-			}
+
+void GameplayState::OnHelloResponse( const OnlineRequestResult& result )
+{
+	DebugPrintf( "RESPONSE %d: (%d)", result.requestID, result.statusCode );
+
+	if( !result.isError )
+	{
+		// Print the response from the server.
+		DebugPrintf( "The server says: \"%s\"", result.json[ "result" ].GetString() );
+
+		// Call another request.
+		gOnlineGameClient->CallCloudFunction( "hello", "{ \"name\": \"Trevin\" }", []( const OnlineRequestResult& result )
+		{
+			DebugPrintf( "The second callback worked!" );
 		});
+	}
+	else
+	{
+		const char* error;
+
+		if( result.resultIsJSON )
+		{
+			// Print the error string sent from Parse.
+			error = result.json[ "error" ].GetString();
+		}
+		else
+		{
+			// Print the result as the error message.
+			error = result.string.c_str();
+		}
+
+		DebugPrintf( "An error occurred: %s", error );
+	}
 }
 
 

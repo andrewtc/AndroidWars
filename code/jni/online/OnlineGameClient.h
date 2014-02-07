@@ -5,10 +5,38 @@
 
 namespace mage
 {
+	struct OnlineRequestResult
+	{
+		OnlineRequestResult( long requestID, bool isError, int statusCode, const std::string& result );
+
+		bool isError;
+		bool resultIsJSON;
+		long requestID;
+		int statusCode;
+		std::string string;
+		rapidjson::Document json;
+	};
+
+
 	/**
-	 * Accepts any function or lambda with the signature: void (*)( long, bool, int, const std::string& )
+	 * Accepts any function or lambda with the signature: void (*)( const OnlineRequestResult& result )
 	 */
-	typedef Callback< void, long, bool, int, const std::string& > RequestCallback;
+	typedef Callback< void, const OnlineRequestResult& > OnlineRequestCallback;
+
+	/**
+	 * Accepts any function or lambda with the signature: void (*)( bool isSuccessful )
+	 */
+	typedef Callback< void, bool > OnlineLoginCallback;
+
+	/**
+	 * Holds a single parameter to send with a GET request.
+	 */
+	typedef std::pair< std::string, std::string > OnlineRequestParameter;
+
+	/**
+	 * Holds a list of parameters to send with a GET request.
+	 */
+	typedef std::vector< OnlineRequestParameter > OnlineRequestParameters;
 
 
 	/**
@@ -17,11 +45,7 @@ namespace mage
 	class OnlineGameClient
 	{
 	public:
-		enum GameType
-		{
-			GAME_TYPE_DUEL,
-			GAME_TYPE_ALLIANCES
-		};
+		static const char* const SESSION_TOKEN_KEY = "sessionToken";
 
 		OnlineGameClient();
 		~OnlineGameClient();
@@ -31,19 +55,29 @@ namespace mage
 		void Update();
 		bool IsInitialized() const;
 
-		long CallCloudFunction( const std::string& functionName, const std::string& parameters, RequestCallback callback = RequestCallback() );
+		std::string GetUserSessionToken() const;
+		bool IsAuthenticated() const;
 
-		long LogIn( const std::string& userName, const std::string& password, RequestCallback callback = RequestCallback() );
-		long RequestMatchmakingGame( GameType gameType, RequestCallback callback = RequestCallback() );
+		long SendGetRequest( const std::string& resource, const OnlineRequestParameters& parameters = OnlineRequestParameters(), OnlineRequestCallback = OnlineRequestCallback() );
+		long SendPostRequest( const std::string& resource, const std::string& data, OnlineRequestCallback = OnlineRequestCallback() );
+
+		long CallCloudFunction( const std::string& functionName, const std::string& data, OnlineRequestCallback callback = OnlineRequestCallback() );
+
+		long LogIn( const std::string& userName, const std::string& password, OnlineLoginCallback callback = OnlineLoginCallback() );
+		void LogOut();
 
 	private:
-		jobject FetchNextResponse( JNIEnv* env );
+		static const char* const PARSE_FUNCTION_PREFIX = "functions/";
 
-		JavaVM* mJavaVM;
+		jobject CreateJavaRequestParams( const OnlineRequestParameters& parameters );
+		jobject FetchNextResponse();
+
 		jclass mJavaClass;
 		jobject mJavaObject;
+		jmethodID mJavaCreateRequestParams;
 		jmethodID mJavaFetchNextResponse;
-		jmethodID mJavaCallCloudFunction;
+		jmethodID mJavaSendGetRequest;
+		jmethodID mJavaSendPostRequest;
 
 		jclass mJavaResponseClass;
 		jfieldID mJavaResponseRequestID;
@@ -51,8 +85,25 @@ namespace mage
 		jfieldID mJavaResponseResult;
 		jmethodID mJavaResponseIsError;
 
-		std::map< long, RequestCallback > mCallbacksByID;
+		jclass mJavaRequestParamsClass;
+		jmethodID mJavaRequestParamsPut;
+
+		std::string mUserSessionToken;
+		std::map< long, OnlineRequestCallback > mCallbacksByID;
 	};
+
+
+	inline long OnlineGameClient::CallCloudFunction( const std::string& functionName, const std::string& data, OnlineRequestCallback callback )
+	{
+		// Fire off a POST request to the AndroidWarsOnline cloud function URL.
+		return SendPostRequest( PARSE_FUNCTION_PREFIX + functionName, data, callback );
+	}
+
+
+	inline std::string OnlineGameClient::GetUserSessionToken() const
+	{
+		return mUserSessionToken;
+	}
 
 
 	inline bool OnlineGameClient::IsInitialized() const

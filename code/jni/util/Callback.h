@@ -16,7 +16,7 @@ namespace mage
 		 */
 		struct FunctionBase
 		{
-			virtual ReturnType operator()( ParameterTypes... parameters ) = 0;
+			virtual ReturnType Invoke( ParameterTypes... parameters ) const = 0;
 			virtual FunctionBase* Clone() const = 0;
 		};
 
@@ -30,11 +30,7 @@ namespace mage
 				function( function )
 			{ }
 
-			FunctionWrapper( const FunctionWrapper< Function >& other ) :
-				function( other.function )
-			{ }
-
-			virtual ReturnType operator()( ParameterTypes... parameters )
+			virtual ReturnType Invoke( ParameterTypes... parameters ) const
 			{
 				return function( parameters... );
 			}
@@ -44,7 +40,7 @@ namespace mage
 			 */
 			virtual FunctionBase* Clone() const
 			{
-				return new FunctionWrapper< Function >( *this );
+				return new FunctionWrapper< Function >( function );
 			}
 
 			Function function;
@@ -58,14 +54,18 @@ namespace mage
 		 */
 		Callback() :
 			mWrapper( nullptr )
-		{ }
+		{
+			//DebugPrintf( "Created Callback wrapping 0x%x!", mWrapper );
+		}
 
 		/**
 		 * Copy constructor that clones another Callback.
 		 */
 		Callback( const Callback& other ) :
 			mWrapper( other.IsValid() ? other.mWrapper->Clone() : nullptr )
-		{ }
+		{
+			//DebugPrintf( "Cloned Callback wrapping 0x%x! (Clone wraps 0x%x.)", other.mWrapper, mWrapper );
+		}
 
 		/**
 		 * Templated constructor allowing the creation of a Callback that wraps any valid function or lambda type.
@@ -73,7 +73,9 @@ namespace mage
 		template< typename Function >
 		Callback( Function function ) :
 			mWrapper( new FunctionWrapper< Function >( function ) )
-		{ }
+		{
+			//DebugPrintf( "Created Callback wrapping 0x%x!", mWrapper );
+		}
 
 		/**
 		 * Basic destructor.
@@ -83,6 +85,7 @@ namespace mage
 			if( mWrapper )
 			{
 				// Delete the internal function wrapper.
+				//DebugPrintf( "Deleting wrapper 0x%x...", mWrapper );
 				delete mWrapper;
 			}
 		}
@@ -94,6 +97,7 @@ namespace mage
 		{
 			// Clone the internal function wrapper of the other object.
 			mWrapper = other.mWrapper->Clone();
+			//DebugPrintf( "Cloned Callback wrapping 0x%x! (Clone wraps 0x%x.)", other.mWrapper, mWrapper );
 		}
 
 		/**
@@ -107,10 +111,10 @@ namespace mage
 		/**
 		 * Invokes the internal function or lambda.
 		 */
-		ReturnType operator()( ParameterTypes... parameters )
+		ReturnType Invoke( ParameterTypes... parameters ) const
 		{
 			assertion( IsValid(), "Cannot call Callback because the internal function pointer is invalid!" );
-			return ( *mWrapper )( parameters... );
+			return mWrapper->Invoke( parameters... );
 		}
 	};
 }
