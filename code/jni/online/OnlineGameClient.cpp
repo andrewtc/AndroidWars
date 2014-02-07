@@ -288,6 +288,7 @@ void OnlineGameClient::LogOut()
 {
 	// Clear the session token.
 	mUserSessionToken = "";
+	DebugPrintf( "Logged out." );
 }
 
 

@@ -168,7 +168,7 @@ public class OnlineGameClient
 		@Override
 		public void onSuccess( int statusCode, Header[] headers, String response )
 		{
-			Log.d( MainActivity.TAG, "Received successful response for request " + requestID + "." );
+			Log.d( MainActivity.TAG, "Received successful response for request " + requestID + ": \"" + response + "\"" );
 			synchronized( responses )
 			{
 				// Queue up the successful response.
@@ -179,7 +179,7 @@ public class OnlineGameClient
 		@Override
 		public void onFailure( int statusCode, Header[] headers, String response, Throwable exception )
 		{
-			Log.d( MainActivity.TAG, "Received failed response for request " + requestID + "." );
+			Log.d( MainActivity.TAG, "Received failed response for request " + requestID + ": \"" + response + "\"" );
 			String errorMessage = UNKNOWN_ERROR_MESSAGE;
 			
 			if( response.length() > 0 )

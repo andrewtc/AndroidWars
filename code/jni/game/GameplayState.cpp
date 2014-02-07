@@ -67,7 +67,7 @@ void GameplayState::OnHelloResponse( const OnlineRequestResult& result )
 		DebugPrintf( "The server says: \"%s\"", result.json[ "result" ].GetString() );
 
 		// Call another request.
-		gOnlineGameClient->CallCloudFunction( "hello", "{ \"name\": \"Trevin\" }", []( const OnlineRequestResult& result )
+		gOnlineGameClient->CallCloudFunction( "requestMatchmakingGame", "{}", []( const OnlineRequestResult& result )
 		{
 			DebugPrintf( "The second callback worked!" );
 		});
