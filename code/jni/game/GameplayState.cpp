@@ -50,8 +50,6 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 			{
 				OnHelloResponse( result );
 			});
-
-			//gOnlineGameClient->SendPostRequest( "functions/hello", "{ \"name\": \"Andrew\" }" );
 		}
 	});
 }
@@ -70,6 +68,8 @@ void GameplayState::OnHelloResponse( const OnlineRequestResult& result )
 		gOnlineGameClient->CallCloudFunction( "requestMatchmakingGame", "{}", []( const OnlineRequestResult& result )
 		{
 			DebugPrintf( "The second callback worked!" );
+
+			gOnlineGameClient->CallCloudFunction( "getCurrentGameList", "{}" );
 		});
 	}
 	else
