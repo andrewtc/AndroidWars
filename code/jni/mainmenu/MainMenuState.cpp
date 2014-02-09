@@ -4,7 +4,7 @@ using namespace mage;
 
 
 MainMenuState::MainMenuState() :
-	GameState()
+	GameState(), mWidget( nullptr )
 {
 	DebugPrintf( "MainMenuState created!" );
 }
@@ -20,8 +20,8 @@ void MainMenuState::OnEnter( const Dictionary& parameters )
 {
 	DebugPrintf( "MainMenuState entered!" );
 
-	// TEST: Enter the GameplayState immediately.
-	GetManager()->ChangeState< GameplayState >();
+	mWidget = Widget::LoadWidget( "ui/main_menu.xml" );
+	mWidget->Show();
 }
 
 
@@ -40,4 +40,8 @@ void MainMenuState::OnDraw()
 void MainMenuState::OnExit()
 {
 	DebugPrintf( "MainMenuState exited!" );
+
+	mWidget->Hide();
+	Widget::DestroyWidget( mWidget );
+	mWidget = nullptr;
 }

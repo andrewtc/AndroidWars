@@ -6,6 +6,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.inputmethod.InputMethodManager;
 
 public class MainActivity extends NativeActivity
 {
@@ -36,6 +37,20 @@ public class MainActivity extends NativeActivity
 		
 		// Return true if this device can connect to the Internet and has a wireless connection.
 		return ( networkInfo != null && networkInfo.isConnected() );
+	}
+	
+	
+	public void showKeyboard()
+	{
+		InputMethodManager manager = (InputMethodManager) getSystemService( INPUT_METHOD_SERVICE );
+		manager.toggleSoftInput( InputMethodManager.SHOW_FORCED, 0 );
+	}
+	
+	
+	public void hideKeyboard()
+	{
+		InputMethodManager manager = (InputMethodManager) getSystemService( INPUT_METHOD_SERVICE );
+		manager.toggleSoftInput( 0, 0 );
 	}
 	
 	

@@ -16,5 +16,7 @@ namespace mage
 		virtual void OnUpdate( float elapsedTime );
 		virtual void OnDraw();
 		virtual void OnExit();
+
+		Widget* mWidget;
 	};
 }

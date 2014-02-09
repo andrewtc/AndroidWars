@@ -2,14 +2,41 @@
     <!-- Fonts used in UI -->
     <Font name="test.fnt" file="fonts/font.fnt"/>
     <Font name="default_s.fnt" file="fonts/small.fnt"/>
+    <Font name="main_menu.fnt" file="fonts/main_menu.fnt"/>
     
     <!-- Sprites used in UI -->
     <Sprite file="ui/background.anim"/>
     <Sprite file="ui/button.anim"/>
+    <Sprite file="ui/main_menu_bg.anim"/>
+    <Sprite file="ui/main_menu_button.anim"/>
+    <Sprite file="ui/main_menu_text_field.anim"/>
     
     <!-- Sounds used in UI -->
     <Sound file="sfx/super_mario_jump.wav" name="click.sfx"/>
     
     <!-- Button styles -->
     <ButtonStyle name="testButtonStyle" sprite="button.anim" wrapText="true" default="d" pressed="p" selected="s" pressedColor="#FFFF7700" clickSFX=""/>
+    
+    <ButtonStyle
+        name="mainMenuButtonStyle"
+        sprite="main_menu_button.anim"
+        wrapText="false"
+        default="up"
+        pressed="down"
+        selected="up"
+        pressedColor="#FFFFFFFF"
+        clickSFX=""
+        />
+        
+    <ButtonStyle
+        name="mainMenuTextFieldStyle"
+        sprite="main_menu_text_field.anim"
+        wrapText="false"
+        default="default"
+        pressed="default"
+        selected="default"
+        pressedColor="#FFFFFFFF"
+        clickSFX=""
+        />
+        
 </UIDefinitions>

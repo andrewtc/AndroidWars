@@ -16,6 +16,7 @@ BitmapFont* gFont = nullptr;
 GameStateManager* gGameStateManager = nullptr;
 SoundManager* gSoundManager = nullptr;
 OnlineGameClient* gOnlineGameClient = nullptr;
+Camera* gDefaultCamera;
 
 
 void OnDraw()
@@ -30,7 +31,10 @@ void OnDraw()
 	}
 
 	// Draw the UI
-	//Widget::DrawAllWidgets( *gCamera );
+	if( gDefaultCamera )
+	{
+		Widget::DrawAllWidgets( *gDefaultCamera );
+	}
 
 	// Camera debug
 //	DrawRect( gCameraTarget.x - 5, gCameraTarget.y - 5, 10, 10, Color::PINK );
@@ -90,6 +94,9 @@ void OnWindowShown()
 		Widget::LoadDefinitions( "ui/definitions.xml" );
 
 		//gTestWidget = Widget::LoadWidget( "ui/next_turn.xml" );
+
+		// Create camera.
+		gDefaultCamera = new Camera( gWindowWidth, gWindowHeight );
 
 		// Create the GameStateManager and create the first state.
 		DebugPrintf( "Creating GameStateManager..." );
