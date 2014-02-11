@@ -138,6 +138,7 @@ DashboardInputState::DashboardInputState( GameState* owner ) :
 {
 	// Register callbacks.
 	RegisterObjectEventFunc( DashboardInputState, OnLogOutButtonPressed );
+	RegisterObjectEventFunc( DashboardInputState, OnRefreshButtonPressed );
 
 	// Create the log in widget.
 	mWidget = Widget::LoadWidget( "ui/dashboard.xml" );
@@ -153,6 +154,7 @@ DashboardInputState::~DashboardInputState()
 
 	// Unregister callbacks.
 	UnregisterObjectEventFunc( DashboardInputState, OnLogOutButtonPressed );
+	UnregisterObjectEventFunc( DashboardInputState, OnRefreshButtonPressed );
 }
 
 
@@ -180,5 +182,20 @@ ObjectEventFunc( DashboardInputState, OnLogOutButtonPressed )
 	// If the login was successful, go to the login screen.
 	MainMenuState* owner = GetOwnerDerived();
 	owner->ChangeState( owner->GetLogInState() );
+}
+
+
+ObjectEventFunc( DashboardInputState, OnRefreshButtonPressed )
+{
+	DebugPrintf( "Refresh button pressed!" );
+
+	// Log the current user out.
+	gOnlineGameClient->RequestCurrentGamesList( [this]( bool success, const std::vector< OnlineGameListData >& currentGameList )
+	{
+		for( auto it = currentGameList.begin(); it != currentGameList.end(); ++it )
+		{
+			DebugPrintf( "Found game: \"%s\" (id: %s)", it->name.c_str(), it->id.c_str() );
+		}
+	});
 }
 

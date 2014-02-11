@@ -293,6 +293,58 @@ void OnlineGameClient::LogOut()
 }
 
 
+void OnlineGameClient::RequestCurrentGamesList( OnlineGameListCallback callback )
+{
+	// Fire off the request.
+	CallCloudFunction( "getCurrentGameList", "{}", [ this, callback ]( const OnlineRequestResult& result )
+	{
+		bool success = false;
+		std::vector< OnlineGameListData > onlineGameList;
+
+		if( !result.isError )
+		{
+			assertion( result.resultIsJSON, "The games list response was not a JSON object!" );
+			DebugPrintf( "Current games: \"%s\"", result.string.c_str() );
+
+			const rapidjson::Value& list = result.json[ "result" ];
+			assertion( list.IsArray(), "Result of game list request is not an array!" );
+
+			for( rapidjson::SizeType i = 0; i < list.Size(); ++i )
+			{
+				DebugPrintf( "Hello!" );
+				const rapidjson::Value& gameJSON = list[ i ];
+
+				// Construct a new game data entry.
+				OnlineGameListData gameData;
+
+				if( gameJSON.HasMember( "objectId" ) )
+				{
+					gameData.id = gameJSON[ "objectId" ].GetString();
+				}
+
+				if( gameJSON.HasMember( "name" ) )
+				{
+					gameData.name = gameJSON[ "name" ].GetString();
+				}
+
+				// Add the new entry to the list of current games.
+				onlineGameList.push_back( gameData );
+			}
+		}
+		else
+		{
+			DebugPrintf( "Error retrieving current games list: %s", result.string.c_str() );
+		}
+
+		if( callback.IsValid() )
+		{
+			// Pass the list of games to the success callback.
+			callback.Invoke( success, onlineGameList );
+		}
+	});
+}
+
+
 jobject OnlineGameClient::CreateJavaRequestParams( const OnlineRequestParameters& parameters )
 {
 	assertion( IsInitialized(), "Cannot create Java RequestParams object for OnlineGameClient that hasn't been initialized!" );

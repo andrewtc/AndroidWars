@@ -76,6 +76,7 @@ namespace mage
 		virtual ~DashboardInputState();
 
 		void OnLogOutButtonPressed( Dictionary& params );
+		void OnRefreshButtonPressed( Dictionary& params );
 
 		Widget* mWidget;
 

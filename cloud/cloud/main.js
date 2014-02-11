@@ -167,11 +167,12 @@ Parse.Cloud.define( "getCurrentGameList", function( request, response )
                 {
                     // Build the list of game data to send back to the client.
                     var game = list[ i ].get( "game" );
-                    games.push(
+                    /*games.push(
                     {
                         id:   game.id,
                         name: game.name
-                    });
+                    });*/
+                    games.push( game );
                 }
                 
                 // Return the list of current games for the current Player.
@@ -179,7 +180,7 @@ Parse.Cloud.define( "getCurrentGameList", function( request, response )
             },
             error: function( error )
             {
-                response.error( "Error retrieving current game list for player \"" + player.get( "name" ) + "\": " + error );
+                response.error( "Error retrieving current game list for player \"" + player.get( "name" ) + "\": " + error.message );
             }
         });
     });

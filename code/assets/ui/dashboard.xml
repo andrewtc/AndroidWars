@@ -22,4 +22,14 @@
         layout_below="greetingLabel"
         color="#FFFFFFFF"
         />
+    <Button
+        name="refreshButton"
+        text="Refresh"
+        font="main_menu.fnt"
+        margins="32,16,0,0"
+        style="mainMenuButtonStyle"
+        onClickEvent="OnRefreshButtonPressed"
+        layout_below="logOutButton"
+        color="#FFFFFFFF"
+        />
 </Widget>

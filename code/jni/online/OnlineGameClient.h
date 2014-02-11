@@ -18,15 +18,27 @@ namespace mage
 	};
 
 
+	struct OnlineGameListData
+	{
+		std::string id;
+		std::string name;
+	};
+
+
 	/**
 	 * Accepts any function or lambda with the signature: void (*)( const OnlineRequestResult& result )
 	 */
 	typedef Callback< void, const OnlineRequestResult& > OnlineRequestCallback;
 
 	/**
-	 * Accepts any function or lambda with the signature: void (*)( bool isSuccessful )
+	 * Accepts any function or lambda with the signature: void (*)( bool success )
 	 */
 	typedef Callback< void, bool > OnlineLoginCallback;
+
+	/**
+	 * Accepts any function or lambda with the signature: void (*)( bool success, const std::vector< OnlineGameListData >& onlineGameList )
+	 */
+	typedef Callback< void, bool, const std::vector< OnlineGameListData >& > OnlineGameListCallback;
 
 	/**
 	 * Holds a single parameter to send with a GET request.
@@ -65,6 +77,8 @@ namespace mage
 
 		long LogIn( const std::string& userName, const std::string& password, OnlineLoginCallback callback = OnlineLoginCallback() );
 		void LogOut();
+
+		void RequestCurrentGamesList( OnlineGameListCallback callback = OnlineGameListCallback() );
 
 	private:
 		static const char* const PARSE_FUNCTION_PREFIX = "functions/";
