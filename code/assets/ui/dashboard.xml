@@ -1,0 +1,25 @@
+<Widget
+    name="dashboard"
+    sprite="dashboard.anim"
+    position="128,72"
+    size="1024,640"
+    color="#FFFFFFFF"
+    >
+    <Label
+        name="greetingLabel"
+        text="Hello, World!"
+        font="main_menu.fnt"
+        margins="32,144,0,0"
+        textColor="#FF000000"
+        />
+    <Button
+        name="logOutButton"
+        text="Log Out"
+        font="main_menu.fnt"
+        margins="32,16,0,0"
+        style="mainMenuButtonStyle"
+        onClickEvent="OnLogOutButtonPressed"
+        layout_below="greetingLabel"
+        color="#FFFFFFFF"
+        />
+</Widget>

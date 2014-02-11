@@ -12,7 +12,7 @@ GameStateManager::GameStateManager() :
 GameStateManager::~GameStateManager()
 {
 	// Destroy all states (to be safe).
-	DestroyAllStates();
+	DestroyActiveState();
 }
 
 
@@ -109,7 +109,7 @@ void GameStateManager::ExitActiveState()
 }
 
 
-void GameStateManager::DestroyAllStates()
+void GameStateManager::DestroyActiveState()
 {
 	// Make sure the active game state has been cleaned up.
 	ExitActiveState();

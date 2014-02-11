@@ -106,6 +106,12 @@ namespace mage
 	}
 
 
+	inline bool OnlineGameClient::IsAuthenticated() const
+	{
+		return !( mUserSessionToken.empty() );
+	}
+
+
 	inline bool OnlineGameClient::IsInitialized() const
 	{
 		return ( mJavaObject != nullptr );

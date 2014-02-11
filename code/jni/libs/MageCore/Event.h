@@ -11,6 +11,7 @@
 #define ObjectEventFunc( Object, Name ) void Object::Name( mage::Dictionary& params )
 #define RegisterEventFunc( Name ) mage::EventManager::RegisterFunctionForEvent( #Name, &Name )
 #define RegisterObjectEventFunc( Object, Name ) mage::EventManager::RegisterObjectForEvent( #Name, *this, &Object::Name )
+#define UnregisterObjectEventFunc( Object, Name ) mage::EventManager::RegisterObjectForEvent( #Name, *this, &Object::Name )
 
 namespace mage
 {

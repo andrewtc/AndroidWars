@@ -2,6 +2,8 @@
 
 namespace mage
 {
+	class InputState;
+	class GameState;
 	class GameStateManager;
 	class SoundManager;
 	class OnlineGameClient;
@@ -24,6 +26,7 @@ extern mage::int32 gWindowHeight;
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/document.h"
 
+#include "states/InputState.h"
 #include "states/GameState.h"
 #include "states/GameStateManager.h"
 
@@ -34,6 +37,7 @@ extern mage::int32 gWindowHeight;
 #include "ui/Widget.h"
 #include "ui/Label.h"
 #include "ui/Button.h"
+#include "ui/TextField.h"
 
 #include "mainmenu/MainMenuState.h"
 

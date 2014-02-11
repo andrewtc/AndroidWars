@@ -14,8 +14,12 @@ namespace mage
 	{
 	DECLARE_RTTI;
 	protected:
-		Widget( const std::string& name, const XmlReader::XmlReaderIterator& itr, Widget* parent );
+		Widget( const std::string& name, Widget* parent );
 		virtual ~Widget();
+
+		virtual void OnLoadFromXML( const XmlReader::XmlReaderIterator& xml );
+		virtual void OnLoadFromDictionary( const Dictionary& dictionary );
+		virtual void OnInit();
 
 		virtual void OnUpdate( float dt );
 		virtual void OnDraw( const Camera& camera ) const;
@@ -35,6 +39,9 @@ namespace mage
 		static bool ProcessOnPointerDown( float x, float y );
 		static bool ProcessOnPointerUp( float x, float y );
 		static void LoadDefinitions( const char* file );
+
+		void LoadFromXML( const XmlReader::XmlReaderIterator& xml );
+		void LoadFromDictionary( const Dictionary& dictionary );
 
 		float GetWidth() const;
 		float GetHeight() const;
@@ -59,7 +66,7 @@ namespace mage
 		static Widget* LoadComponent( Widget* parent, const XmlReader::XmlReaderIterator& itr );
 		static BitmapFont* GetFontByName( const HashString& name );
 
-		void LoadLayoutParam( Widget*& target, const XmlReader::XmlReaderIterator& itr, const char* paramName );
+		Widget* GetLayoutWidget( const char* name );
 		Vec2f GetPosition() const;
 		void SetSprite( const HashString& spriteName );
 		void UpdateLayout();

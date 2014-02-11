@@ -1,30 +1,19 @@
-/*
- * Author      : Matthew Johnson
- * Date        : 26/Nov/2013
- * Description :
- *   
- */
- 
 #pragma once
 
 namespace mage
 {
-
-	class Label
-		: public Widget
+	class TextField : public Widget
 	{
-	DECLARE_RTTI;
+		DECLARE_RTTI;
+
 	public:
-		Label( const std::string& name, Widget* parent );
-		virtual ~Label();
+		TextField( const std::string& name, Widget* parent );
+		virtual ~TextField();
 
 		virtual void OnDraw( const Camera& camera ) const;
 
 		void SetText( const std::string& text );
-		virtual void SetText( const char* text );
 		std::string GetText() const;
-
-		Color TextColor;
 
 	protected:
 		virtual void OnLoadFromXML( const XmlReader::XmlReaderIterator& xml );
@@ -33,13 +22,20 @@ namespace mage
 
 		BitmapFont* mFont;
 		std::string mText;
+		Vec2f mTextDrawOffset;
+		Color mTextColor;
 		float mTextScale;
 		int mMaxLineLength;
-		Vec2f mTextDrawOffset;
 	};
 
 
-	inline std::string Label::GetText() const
+	inline void TextField::SetText( const std::string& text )
+	{
+		mText = text;
+	}
+
+
+	inline std::string TextField::GetText() const
 	{
 		return mText;
 	}

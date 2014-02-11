@@ -16,7 +16,7 @@ namespace mage
 	{
 	DECLARE_RTTI;
 	public:
-		Button( const std::string& name, const XmlReader::XmlReaderIterator& itr, Widget* parent );
+		Button( const std::string& name, Widget* parent );
 
 		struct ButtonStyle
 		{
@@ -29,7 +29,10 @@ namespace mage
 			Color DisabledColor;
 			bool WrapText;
 		};
-		static HashMap< ButtonStyle > sButtonStyles;
+
+		static ButtonStyle* CreateButtonStyle( const HashString& name );
+		static ButtonStyle* GetButtonStyle( const HashString& name );
+		static void DestroyAllButtonStyles();
 
 		virtual void SetText( const char* text );
 
@@ -37,6 +40,10 @@ namespace mage
 		void Enable();
 	protected:
 		virtual ~Button();
+
+		virtual void OnLoadFromXML( const XmlReader::XmlReaderIterator& xml );
+		virtual void OnLoadFromDictionary( const Dictionary& dictionary );
+		virtual void OnInit();
 
 		virtual bool OnPointerDown( float x, float y );
 		virtual bool OnPointerUp( float x, float y );
@@ -47,6 +54,7 @@ namespace mage
 		Color mDefaultColor;
 		Color mPressedColor;
 		bool mEnabled;
-	};
 
+		static HashMap< ButtonStyle* > sButtonStyles;
+	};
 }

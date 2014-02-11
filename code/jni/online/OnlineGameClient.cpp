@@ -166,7 +166,7 @@ void OnlineGameClient::Update()
 			}
 			else
 			{
-				// If no responses were queued, stop cheking for responses.
+				// If no responses were queued, stop checking for responses.
 				break;
 			}
 		}
@@ -262,6 +262,7 @@ long OnlineGameClient::LogIn( const std::string& userName, const std::string& pa
 			{
 				// Pull the user session token from the result.
 				mUserSessionToken = result.json[ SESSION_TOKEN_KEY ].GetString();
+				DebugPrintf( "User session token is now \"%s\".", mUserSessionToken.c_str() );
 			}
 			else
 			{

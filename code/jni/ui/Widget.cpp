@@ -21,7 +21,8 @@ Widget* Widget::LoadWidget( const char* file )
 		return 0;
 	XmlReader::XmlReaderIterator itr = reader.ReadRoot();
 	std::string name = itr.GetAttributeAsString( "name", "Widget" );
-	Widget* w = new Widget( name, itr, 0 );
+	Widget* w = new Widget( name, 0 );
+	w->LoadFromXML( itr );
 
 	for ( XmlReader::XmlReaderIterator jtr = itr.NextChild();
 		  jtr.IsValid(); jtr = jtr.NextSibling() )
@@ -41,21 +42,28 @@ Widget* Widget::LoadComponent( Widget* parent, const XmlReader::XmlReaderIterato
 	std::string name = itr.GetAttributeAsString( "name", "Widget" );
 	if ( itr.ElementNameEquals( "Widget" ) )
 	{
-		w = new Widget( name, itr, parent );
+		w = new Widget( name, parent );
 	}
 	else if ( itr.ElementNameEquals( "Button" ) )
 	{
-		w = new Button( name, itr, parent );
+		w = new Button( name, parent );
 	}
 	else if ( itr.ElementNameEquals( "Label" ) )
 	{
-		w = new Label( name, itr, parent );
+		w = new Label( name, parent );
+	}
+	else if ( itr.ElementNameEquals( "TextField" ) )
+	{
+		w = new TextField( name, parent );
 	}
 	else
 	{
 		WarnFail( "Widget : Unknown element : %s\n", itr.ElementName() );
 		return 0;
 	}
+
+	// Load the component from XML.
+	w->LoadFromXML( itr );
 
 	if ( w )
 	{
@@ -161,19 +169,17 @@ void Widget::LoadDefinitions( const char* file )
 		// Button styles
 		else if ( itr.ElementNameEquals( "ButtonStyle" ) )
 		{
-			Button::ButtonStyle s;
 			HashString name = itr.GetAttributeAsString( "name" );
+			Button::ButtonStyle* style = Button::CreateButtonStyle( name );
 
-			s.SpriteName = itr.GetAttributeAsString( "sprite" );
-			s.DefaultAnimName = itr.GetAttributeAsString( "default", "d" );
-			s.PressedAnimName = itr.GetAttributeAsString( "pressed", "p" );
-			s.SelectedAnimName= itr.GetAttributeAsString( "selected", "s" );
-			s.WrapText        = itr.GetAttributeAsBool( "wrapText", true );
-			s.PressedColor    = itr.GetAttributeAsColor( "pressedColor", Color::WHITE );
-			s.SelectedSFXName = itr.GetAttributeAsString( "clickSFX", "" );
-			s.DisabledColor   = itr.GetAttributeAsColor( "disabledColor", Color::GREY );
-
-			Button::sButtonStyles[ name ] = s;
+			style->SpriteName      = itr.GetAttributeAsString( "sprite" );
+			style->DefaultAnimName = itr.GetAttributeAsString( "default", "d" );
+			style->PressedAnimName = itr.GetAttributeAsString( "pressed", "p" );
+			style->SelectedAnimName= itr.GetAttributeAsString( "selected", "s" );
+			style->WrapText        = itr.GetAttributeAsBool( "wrapText", true );
+			style->PressedColor    = itr.GetAttributeAsColor( "pressedColor", Color::WHITE );
+			style->SelectedSFXName = itr.GetAttributeAsString( "clickSFX", "" );
+			style->DisabledColor   = itr.GetAttributeAsColor( "disabledColor", Color::GREY );
 		}
 		// Sounds
 		else if ( itr.ElementNameEquals( "Sound" ) )
@@ -204,7 +210,7 @@ BitmapFont* Widget::GetFontByName( const HashString& name )
 //---------------------------------------
 // Widget
 //---------------------------------------
-Widget::Widget( const std::string& name, const XmlReader::XmlReaderIterator& itr, Widget* parent )
+Widget::Widget( const std::string& name, Widget* parent )
 	: mName( name )
 	, mSprite( 0 )
 	, mParent( parent )
@@ -217,14 +223,42 @@ Widget::Widget( const std::string& name, const XmlReader::XmlReaderIterator& itr
 	, Visible( true )
 	, DebugLayout( false )
 {
-	const char* backgroundAnim = itr.GetAttributeAsCString( "sprite", 0 );
 
-	mMargins = itr.GetAttributeAsVec4f( "margins", Vec4f::ZERO );
-	mPosition = itr.GetAttributeAsVec2f( "position", Vec2f::ZERO );
-	mCenterInParent = itr.GetAttributeAsBool( "layout_centerParent", false );
-	mDrawColor = itr.GetAttributeAsColor( "color", Color::WHITE );
+}
+//---------------------------------------
+Widget::~Widget()
+{
+	DestroyMapByValue( mChildren );
+}
+//---------------------------------------
+void Widget::LoadFromXML( const XmlReader::XmlReaderIterator& xml )
+{
+	// Load the widget from XML.
+	OnLoadFromXML( xml );
 
-	Vec2f size = itr.GetAttributeAsVec2f( "size", Vec2f::ZERO );
+	// Initialize the widget.
+	OnInit();
+}
+//---------------------------------------
+void Widget::LoadFromDictionary( const Dictionary& dictionary )
+{
+	// Load the widget from the dictionary.
+	OnLoadFromDictionary( dictionary );
+
+	// Initialize the widget.
+	OnInit();
+}
+//---------------------------------------
+void Widget::OnLoadFromXML( const XmlReader::XmlReaderIterator& xml )
+{
+	const char* backgroundAnim = xml.GetAttributeAsCString( "sprite", 0 );
+
+	mMargins = xml.GetAttributeAsVec4f( "margins", Vec4f::ZERO );
+	mPosition = xml.GetAttributeAsVec2f( "position", Vec2f::ZERO );
+	mCenterInParent = xml.GetAttributeAsBool( "layout_centerParent", false );
+	mDrawColor = xml.GetAttributeAsColor( "color", Color::WHITE );
+
+	Vec2f size = xml.GetAttributeAsVec2f( "size", Vec2f::ZERO );
 
 	// If size is non-zero, the Widget is a fixed size and so should the sprite be
 	mFixedSizeSprite = size.LengthSqr() != 0;
@@ -245,17 +279,51 @@ Widget::Widget( const std::string& name, const XmlReader::XmlReaderIterator& itr
 	// Layout
 	if ( mParent )
 	{
-		LoadLayoutParam( mBelow, itr, "layout_below" );
-		LoadLayoutParam( mAbove, itr, "layout_above" );
-		LoadLayoutParam( mToLeftOf, itr, "layout_toLeftOf" );
-		LoadLayoutParam( mToRightOf, itr, "layout_toRightOf" );
+		mBelow     = GetLayoutWidget( xml.GetAttributeAsCString( "layout_below", nullptr ) );
+		mAbove     = GetLayoutWidget( xml.GetAttributeAsCString( "layout_above", nullptr ) );
+		mToLeftOf  = GetLayoutWidget( xml.GetAttributeAsCString( "layout_toLeftOf", nullptr ) );
+		mToRightOf = GetLayoutWidget( xml.GetAttributeAsCString( "layout_toRightOf", nullptr ) );
 	}
 }
 //---------------------------------------
-Widget::~Widget()
+void Widget::OnLoadFromDictionary( const Dictionary& dictionary )
 {
-	DestroyMapByValue( mChildren );
+	const char* backgroundAnim = dictionary.Get( "sprite", (const char*) 0 );
+
+	mMargins = dictionary.Get( "margins", Vec4f::ZERO );
+	mPosition = dictionary.Get( "position", Vec2f::ZERO );
+	mCenterInParent = dictionary.Get( "layout_centerParent", false );
+	mDrawColor = dictionary.Get( "color", Color::WHITE );
+
+	Vec2f size = dictionary.Get( "size", Vec2f::ZERO );
+
+	// If size is non-zero, the Widget is a fixed size and so should the sprite be
+	mFixedSizeSprite = size.LengthSqr() != 0;
+	if ( mFixedSizeSprite )
+	{
+		mWidth = size.x;
+		mHeight = size.y;
+	}
+
+	// Create the background
+	if ( backgroundAnim )
+	{
+		SetSprite( backgroundAnim );
+	}
+
+	DebugPrintf( "Widget : Created '%s' w=%.3f h=%.3f\n", mName.GetString().c_str(), mWidth, mHeight );
+
+	// Layout
+	if ( mParent )
+	{
+		mBelow     = GetLayoutWidget( dictionary.Get< const char* >( "layout_below", nullptr ) );
+		mAbove     = GetLayoutWidget( dictionary.Get< const char* >( "layout_above", nullptr ) );
+		mToLeftOf  = GetLayoutWidget( dictionary.Get< const char* >( "layout_toLeftOf", nullptr ) );
+		mToRightOf = GetLayoutWidget( dictionary.Get< const char* >( "layout_toRightOf", nullptr ) );
+	}
 }
+//---------------------------------------
+void Widget::OnInit() { }
 //---------------------------------------
 void Widget::OnUpdate( float dt )
 {
@@ -373,17 +441,20 @@ Vec2f Widget::GetPosition() const
 	return pos;
 }
 //---------------------------------------
-void Widget::LoadLayoutParam( Widget*& target, const XmlReader::XmlReaderIterator& itr, const char* paramName )
+Widget* Widget::GetLayoutWidget( const char* name )
 {
-	const char* param = itr.GetAttributeAsCString( paramName, 0 );
-	if ( param )
+	Widget* result = nullptr;
+
+	if ( name )
 	{
-		target = GetChildByName( param );
+		result = GetChildByName( name );
 	}
 	/*else
 	{
 		WarnInfo( "Widget %s : no such param '%s'\n", mName.GetString().c_str(), paramName );
 	}*/
+
+	return result;
 }
 //---------------------------------------
 float Widget::GetWidth() const

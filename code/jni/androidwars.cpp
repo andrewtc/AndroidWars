@@ -213,5 +213,6 @@ void main()
 	// Run the application
 	Run();
 
+	Button::DestroyAllButtonStyles();
 	gSoundManager->Stop();
 }

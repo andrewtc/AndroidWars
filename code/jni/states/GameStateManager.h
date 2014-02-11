@@ -16,7 +16,7 @@ namespace mage
 		void ChangeState( const Dictionary& parameters = Dictionary() );
 
 		void CancelStateChange();
-		void DestroyAllStates();
+		void DestroyActiveState();
 
 		void Update( float elapsedTime );
 		void Draw();

@@ -7,20 +7,44 @@ using namespace mage;
 MAGE_IMPLEMENT_RTTI( Widget, Label );
 
 //---------------------------------------
-Label::Label( const std::string& name, const XmlReader::XmlReaderIterator& itr, Widget* parent )
-	: Widget( name, itr, parent )
+Label::Label( const std::string& name, Widget* parent )
+	: Widget( name, parent )
 	, mTextScale( 1.0f )
 	, TextColor( Color::WHITE )
 	, mMaxLineLength( -1 )
 	, mFont( 0 )
+{ }
+//---------------------------------------
+void Label::OnLoadFromXML( const XmlReader::XmlReaderIterator& xml )
 {
-	mText = itr.GetAttributeAsCString( "text", "" );
-	TextColor = itr.GetAttributeAsColor( "textColor", Color::WHITE );
-	const char* fontName = itr.GetAttributeAsCString( "font", 0 );
+	Widget::OnLoadFromXML( xml );
+
+	mText = xml.GetAttributeAsCString( "text", "" );
+	TextColor = xml.GetAttributeAsColor( "textColor", Color::WHITE );
+	const char* fontName = xml.GetAttributeAsCString( "font", 0 );
 	if ( fontName )
 	{
 		mFont = GetFontByName( fontName );
 	}
+}
+//---------------------------------------
+void Label::OnLoadFromDictionary( const Dictionary& dictionary )
+{
+	Widget::OnLoadFromDictionary( dictionary );
+
+	mText = dictionary.Get( "text", "" );
+	TextColor = dictionary.Get( "textColor", Color::WHITE );
+	const char* fontName = dictionary.Get< const char* >( "font", 0 );
+	if ( fontName )
+	{
+		mFont = GetFontByName( fontName );
+	}
+}
+//---------------------------------------
+void Label::OnInit()
+{
+	Widget::OnInit();
+
 	// Use text area if no sprite
 	if ( mFont && !mSprite && !mFixedSizeSprite )
 	{

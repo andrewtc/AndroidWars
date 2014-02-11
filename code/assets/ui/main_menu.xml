@@ -14,7 +14,7 @@
         />
     <Button
         name="usernameField"
-        text=""
+        text="andrewtc"
         font="main_menu.fnt"
         margins="40,0,0,0"
         style="mainMenuTextFieldStyle"
@@ -32,7 +32,7 @@
         />
     <Button
         name="passwordField"
-        text=""
+        text="test"
         font="main_menu.fnt"
         margins="40,0,0,0"
         style="mainMenuTextFieldStyle"
@@ -46,7 +46,7 @@
         font="main_menu.fnt"
         margins="40,20,0,0"
         style="mainMenuButtonStyle"
-        onClickEvent=""
+        onClickEvent="OnLogInButtonPressed"
         layout_below="passwordField"
         color="#FFFFFFFF"
         />

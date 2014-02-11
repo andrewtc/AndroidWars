@@ -140,6 +140,7 @@ aw_states_path := states
 
 LOCAL_MODULE    := androidwars
 LOCAL_SRC_FILES := androidwars.cpp \
+$(aw_states_path)/InputState.cpp \
 $(aw_states_path)/GameState.cpp \
 $(aw_states_path)/GameStateManager.cpp \
 $(aw_mainmenu_path)/MainMenuState.cpp \
@@ -158,6 +159,7 @@ $(aw_game_path)/Unit.cpp \
  ui/Widget.cpp \
  ui/Button.cpp \
  ui/Label.cpp \
+ ui/TextField.cpp \
  sound/SoundManager.cpp \
  online/OnlineGameClient.cpp \
  util/JNI.cpp

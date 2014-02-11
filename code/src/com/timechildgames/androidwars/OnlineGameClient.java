@@ -179,7 +179,6 @@ public class OnlineGameClient
 		@Override
 		public void onFailure( int statusCode, Header[] headers, String response, Throwable exception )
 		{
-			Log.d( MainActivity.TAG, "Received failed response for request " + requestID + ": \"" + response + "\"" );
 			String errorMessage = UNKNOWN_ERROR_MESSAGE;
 			
 			if( response.length() > 0 )
@@ -192,6 +191,8 @@ public class OnlineGameClient
 				// If an exception occurred, return the exception message.
 				errorMessage = exception.toString();
 			}
+			
+			Log.d( MainActivity.TAG, "Received failed response for request " + requestID + " (error code " + statusCode + "): \"" + errorMessage + "\"" );
 
 			synchronized( responses )
 			{
