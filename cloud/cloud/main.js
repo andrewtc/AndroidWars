@@ -167,12 +167,13 @@ Parse.Cloud.define( "getCurrentGameList", function( request, response )
                 {
                     // Build the list of game data to send back to the client.
                     var game = list[ i ].get( "game" );
-                    /*games.push(
+                    console.log( JSON.stringify( game ) );
+                    games.push(
                     {
                         id:   game.id,
-                        name: game.name
-                    });*/
-                    games.push( game );
+                        name: game.get( "name" )
+                    });
+                    //games.push( game );
                 }
                 
                 // Return the list of current games for the current Player.

@@ -130,4 +130,32 @@ namespace mage
 	{
 		return ( mJavaObject != nullptr );
 	}
+
+
+#define MAGE_IMPLEMENT_GET_JSON_VALUE( type, rapidjsonType ) \
+	inline type GetJSON ## rapidjsonType ## Value( const rapidjson::Value& object, const char* name, type const & defaultValue ) \
+	{ \
+		type result = defaultValue; \
+		\
+		if( object.HasMember( name ) ) \
+		{ \
+			const rapidjson::Value& member = object[ name ]; \
+			\
+			if( member.Is ## rapidjsonType () ) \
+			{ \
+				result = member.Get ## rapidjsonType (); \
+			} \
+		} \
+		\
+		return result; \
+	}
+
+
+	MAGE_IMPLEMENT_GET_JSON_VALUE( bool, Bool );
+	MAGE_IMPLEMENT_GET_JSON_VALUE( double, Double );
+	MAGE_IMPLEMENT_GET_JSON_VALUE( int, Int );
+	MAGE_IMPLEMENT_GET_JSON_VALUE( int64_t, Int64 );
+	MAGE_IMPLEMENT_GET_JSON_VALUE( unsigned int, Uint );
+	MAGE_IMPLEMENT_GET_JSON_VALUE( uint64_t, Uint64 );
+	MAGE_IMPLEMENT_GET_JSON_VALUE( const char*, String );
 }

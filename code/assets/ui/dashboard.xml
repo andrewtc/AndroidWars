@@ -23,13 +23,23 @@
         color="#FFFFFFFF"
         />
     <Button
+        name="newGameButton"
+        text="Start New Game"
+        font="main_menu.fnt"
+        margins="32,16,0,0"
+        style="mainMenuButtonStyle"
+        onClickEvent="OnNewGameButtonPressed"
+        layout_below="logOutButton"
+        color="#FFFFFFFF"
+        />
+    <Button
         name="refreshButton"
         text="Refresh"
         font="main_menu.fnt"
         margins="32,16,0,0"
         style="mainMenuButtonStyle"
         onClickEvent="OnRefreshButtonPressed"
-        layout_below="logOutButton"
+        layout_below="newGameButton"
         color="#FFFFFFFF"
         />
 </Widget>

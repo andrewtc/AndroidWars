@@ -77,6 +77,7 @@ namespace mage
 
 		void OnLogOutButtonPressed( Dictionary& params );
 		void OnRefreshButtonPressed( Dictionary& params );
+		void OnNewGameButtonPressed( Dictionary& params );
 
 		Widget* mWidget;
 

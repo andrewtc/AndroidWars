@@ -139,6 +139,7 @@ DashboardInputState::DashboardInputState( GameState* owner ) :
 	// Register callbacks.
 	RegisterObjectEventFunc( DashboardInputState, OnLogOutButtonPressed );
 	RegisterObjectEventFunc( DashboardInputState, OnRefreshButtonPressed );
+	RegisterObjectEventFunc( DashboardInputState, OnNewGameButtonPressed );
 
 	// Create the log in widget.
 	mWidget = Widget::LoadWidget( "ui/dashboard.xml" );
@@ -155,6 +156,7 @@ DashboardInputState::~DashboardInputState()
 	// Unregister callbacks.
 	UnregisterObjectEventFunc( DashboardInputState, OnLogOutButtonPressed );
 	UnregisterObjectEventFunc( DashboardInputState, OnRefreshButtonPressed );
+	UnregisterObjectEventFunc( DashboardInputState, OnNewGameButtonPressed );
 }
 
 
@@ -189,7 +191,7 @@ ObjectEventFunc( DashboardInputState, OnRefreshButtonPressed )
 {
 	DebugPrintf( "Refresh button pressed!" );
 
-	// Log the current user out.
+	// Request the current games list.
 	gOnlineGameClient->RequestCurrentGamesList( [this]( bool success, const std::vector< OnlineGameListData >& currentGameList )
 	{
 		for( auto it = currentGameList.begin(); it != currentGameList.end(); ++it )
@@ -197,5 +199,14 @@ ObjectEventFunc( DashboardInputState, OnRefreshButtonPressed )
 			DebugPrintf( "Found game: \"%s\" (id: %s)", it->name.c_str(), it->id.c_str() );
 		}
 	});
+}
+
+
+ObjectEventFunc( DashboardInputState, OnNewGameButtonPressed )
+{
+	DebugPrintf( "New game button pressed!" );
+
+	// Request a new game.
+	gOnlineGameClient->CallCloudFunction( "requestMatchmakingGame", "{}" );
 }
 
