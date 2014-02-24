@@ -9,244 +9,105 @@ using namespace mage;
 const RTTI Widget::TYPE( "mage.Widget", 0 );
 
 //---------------------------------------
-// Static
-//---------------------------------------
-HashMap< Widget* > Widget::sWidgets;
-HashMap< BitmapFont* > Widget::sFonts;
-//---------------------------------------
-Widget* Widget::LoadWidget( const char* file )
-{
-	XmlReader reader( file );
-	if ( reader.Fail() )
-		return 0;
-	XmlReader::XmlReaderIterator itr = reader.ReadRoot();
-	std::string name = itr.GetAttributeAsString( "name", "Widget" );
-	Widget* w = new Widget( name, 0 );
-	w->LoadFromXML( itr );
-
-	for ( XmlReader::XmlReaderIterator jtr = itr.NextChild();
-		  jtr.IsValid(); jtr = jtr.NextSibling() )
-	{
-		Widget* child = LoadComponent( w, jtr );
-		if ( child )
-			w->mChildren[ child->mName ] = child;
-	}
-
-	sWidgets[ w->mName ] = w;
-	return w;
-}
-//---------------------------------------
-Widget* Widget::LoadComponent( Widget* parent, const XmlReader::XmlReaderIterator& itr )
-{
-	Widget* w = 0;
-	std::string name = itr.GetAttributeAsString( "name", "Widget" );
-	if ( itr.ElementNameEquals( "Widget" ) )
-	{
-		w = new Widget( name, parent );
-	}
-	else if ( itr.ElementNameEquals( "Button" ) )
-	{
-		w = new Button( name, parent );
-	}
-	else if ( itr.ElementNameEquals( "Label" ) )
-	{
-		w = new Label( name, parent );
-	}
-	else if ( itr.ElementNameEquals( "TextField" ) )
-	{
-		w = new TextField( name, parent );
-	}
-	else
-	{
-		WarnFail( "Widget : Unknown element : %s\n", itr.ElementName() );
-		return 0;
-	}
-
-	// Load the component from XML.
-	w->LoadFromXML( itr );
-
-	if ( w )
-	{
-		for ( XmlReader::XmlReaderIterator jtr = itr.NextChild();
-			  jtr.IsValid(); jtr = jtr.NextSibling() )
-		{
-			Widget* child = LoadComponent( w, jtr );
-			if ( child )
-				w->mChildren[ child->mName ] = child;
-		}
-	}
-
-	return w;
-}
-//---------------------------------------
-void Widget::DestroyWidget( Widget*& w )
-{
-	if ( w )
-	{
-		auto i = sWidgets.find( w->mName );
-		if ( i != sWidgets.end() )
-			sWidgets.erase( i );
-		delete w;
-		w = 0;
-	}
-}
-//---------------------------------------
-void Widget::DestroyAllWidgets()
-{
-	for ( auto itr = sWidgets.begin(); itr != sWidgets.end(); ++itr )
-	{
-		delete itr->second;
-	}
-	sWidgets.clear();
-}
-//---------------------------------------
-void Widget::UpdateAllWidgets( float dt )
-{
-	for ( auto itr = sWidgets.begin(); itr != sWidgets.end(); ++itr )
-	{
-		Widget* w = itr->second;
-//		if ( w->Visible )
-			w->OnUpdate( dt );
-	}
-}
-//---------------------------------------
-void Widget::DrawAllWidgets( const Camera& camera )
-{
-	for ( auto itr = sWidgets.begin(); itr != sWidgets.end(); ++itr )
-	{
-		Widget* w = itr->second;
-		if ( w->Visible )
-			w->OnDraw( camera );
-	}
-}
-//---------------------------------------
-bool Widget::ProcessOnPointerDown( float x, float y )
-{
-	bool ret = false;
-	for ( auto itr = sWidgets.begin(); itr != sWidgets.end(); ++itr )
-	{
-		Widget* w = itr->second;
-		if ( w->Visible && ( w->OnPointerDown( x, y ) || w->Contains( x, y ) ) )
-			ret = true;
-	}
-	return ret;
-}
-//---------------------------------------
-bool Widget::ProcessOnPointerUp( float x, float y )
-{
-	bool ret = false;
-	for ( auto itr = sWidgets.begin(); itr != sWidgets.end(); ++itr )
-	{
-		Widget* w = itr->second;
-		if ( w->Visible && w->OnPointerUp( x, y ) )
-			ret = true;
-	}
-	return ret;
-}
-//---------------------------------------
-void Widget::LoadDefinitions( const char* file )
-{
-	XmlReader reader( file );
-	XmlReader::XmlReaderIterator root = reader.ReadRoot();
-
-	for ( XmlReader::XmlReaderIterator itr = root.NextChild();
-		  itr.IsValid(); itr = itr.NextSibling() )
-	{
-		// Fonts to load
-		if ( itr.ElementNameEquals( "Font" ) )
-		{
-			const char* file = itr.GetAttributeAsCString( "file" );
-			const char* name = itr.GetAttributeAsCString( "name" );
-			BitmapFont* fnt = new BitmapFont( file );
-			sFonts[ name ] = fnt;
-		}
-		// Sprites to load
-		else if ( itr.ElementNameEquals( "Sprite" ) )
-		{
-			const char* file = itr.GetAttributeAsCString( "file" );
-			SpriteManager::LoadSpriteAnimations( file, false );
-		}
-		// Button styles
-		else if ( itr.ElementNameEquals( "ButtonStyle" ) )
-		{
-			HashString name = itr.GetAttributeAsString( "name" );
-			Button::ButtonStyle* style = Button::CreateButtonStyle( name );
-
-			style->SpriteName      = itr.GetAttributeAsString( "sprite" );
-			style->DefaultAnimName = itr.GetAttributeAsString( "default", "d" );
-			style->PressedAnimName = itr.GetAttributeAsString( "pressed", "p" );
-			style->SelectedAnimName= itr.GetAttributeAsString( "selected", "s" );
-			style->WrapText        = itr.GetAttributeAsBool( "wrapText", true );
-			style->PressedColor    = itr.GetAttributeAsColor( "pressedColor", Color::WHITE );
-			style->SelectedSFXName = itr.GetAttributeAsString( "clickSFX", "" );
-			style->DisabledColor   = itr.GetAttributeAsColor( "disabledColor", Color::GREY );
-		}
-		// Sounds
-		else if ( itr.ElementNameEquals( "Sound" ) )
-		{
-			const char* file = itr.GetAttributeAsCString( "file" );
-			const char* name = itr.GetAttributeAsCString( "name" );
-			SoundClip* clip = gSoundManager->LoadSoundClip( file, name );
-			if ( !clip )
-			{
-				WarnFail( "Failed to load sound %s as %s\n", file, name );
-			}
-		}
-	}
-
-	DebugPrintf( "Widget : Loaded UI definitions" );
-}
-//---------------------------------------
-BitmapFont* Widget::GetFontByName( const HashString& name )
-{
-	BitmapFont* fnt = 0;
-	auto itr = sFonts.find( name );
-	if ( itr != sFonts.end() )
-	{
-		fnt = itr->second;
-	}
-	return fnt;
-}
-//---------------------------------------
 // Widget
 //---------------------------------------
-Widget::Widget( const std::string& name, Widget* parent )
-	: mName( name )
-	, mSprite( 0 )
-	, mParent( parent )
-	, mBelow( 0 )
-	, mAbove( 0 )
-	, mToLeftOf( 0 )
-	, mToRightOf( 0 )
-	, mHeight( 0 )
-	, mWidth( 0 )
-	, Visible( true )
-	, DebugLayout( false )
+Widget::Widget( WidgetManager* manager, const HashString& name )
+	: mManager( manager )
+	, mIsInitialized( false )
+	, mNeedsBoundsUpdate( true )
+	, mName( name )
+	, mSprite( nullptr )
+	, mParent( nullptr )
+	, mIsVisible( true )
+	, mDebugLayout( true )
 {
-
+	assertion( manager, "Cannot create Widget without a WidgetManager reference!" );
 }
+//---------------------------------------
+Widget::Widget( const Widget& other )
+	: mManager( other.mManager )
+	, mIsInitialized( false )
+	, mNeedsBoundsUpdate( true )
+	, mName( other.mName )
+	, mSprite( other.mSprite )
+	, mParent( nullptr )
+	, mBelowWidgetName( other.mBelowWidgetName )
+	, mAboveWidgetName( other.mAboveWidgetName )
+	, mToLeftOfWidgetName( other.mToLeftOfWidgetName )
+	, mToRightOfWidgetName( other.mToRightOfWidgetName )
+	, mOffset( other.mOffset )
+	, mSize( other.mSize )
+	, mIsVisible( other.mIsVisible )
+	, mDebugLayout( other.mDebugLayout )
+{ }
 //---------------------------------------
 Widget::~Widget()
 {
+	// Destroy all children.
 	DestroyMapByValue( mChildren );
 }
 //---------------------------------------
-void Widget::LoadFromXML( const XmlReader::XmlReaderIterator& xml )
+Widget* Widget::Clone() const
 {
-	// Load the widget from XML.
-	OnLoadFromXML( xml );
+	// By default, return a new Widget with the same properties as this one.
+	return new Widget( *this );
+}
+//---------------------------------------
+void Widget::Init()
+{
+	assertion( mIsInitialized == false, "Cannot initialize a Widget that has already been initialized!" );
 
 	// Initialize the widget.
+	mIsInitialized = true;
 	OnInit();
 }
 //---------------------------------------
-void Widget::LoadFromDictionary( const Dictionary& dictionary )
+WidgetManager* Widget::GetManager() const
 {
-	// Load the widget from the dictionary.
-	OnLoadFromDictionary( dictionary );
+	return mManager;
+}
+//---------------------------------------
+std::string Widget::GetFullName() const
+{
+	std::string result;
 
-	// Initialize the widget.
-	OnInit();
+	if( mParent )
+	{
+		// Add the parent's full name to the string.
+		result = ( mParent->GetFullName() + "." );
+	}
+
+	// Add this Widget's name to the string.
+	result += mName.GetString();
+
+	return result;
+}
+//---------------------------------------
+void Widget::SetSprite( Sprite* sprite )
+{
+	mSprite = sprite;
+	InvalidateBounds();
+}
+//---------------------------------------
+Sprite* Widget::GetSprite() const
+{
+	return mSprite;
+}
+//---------------------------------------
+bool Widget::HasSprite() const
+{
+	return ( mSprite != nullptr );
+}
+//---------------------------------------
+void Widget::SetFixedSizeSprite( bool isFixedSizeSprite )
+{
+	mIsFixedSizeSprite = isFixedSizeSprite;
+	InvalidateBounds();
+}
+//---------------------------------------
+bool Widget::IsFixedSizeSprite() const
+{
+	return mIsFixedSizeSprite;
 }
 //---------------------------------------
 void Widget::OnLoadFromXML( const XmlReader::XmlReaderIterator& xml )
@@ -254,19 +115,13 @@ void Widget::OnLoadFromXML( const XmlReader::XmlReaderIterator& xml )
 	const char* backgroundAnim = xml.GetAttributeAsCString( "sprite", 0 );
 
 	mMargins = xml.GetAttributeAsVec4f( "margins", Vec4f::ZERO );
-	mPosition = xml.GetAttributeAsVec2f( "position", Vec2f::ZERO );
+	mOffset = xml.GetAttributeAsVec2f( "position", Vec2f::ZERO );
 	mCenterInParent = xml.GetAttributeAsBool( "layout_centerParent", false );
 	mDrawColor = xml.GetAttributeAsColor( "color", Color::WHITE );
-
-	Vec2f size = xml.GetAttributeAsVec2f( "size", Vec2f::ZERO );
+	mSize = xml.GetAttributeAsVec2f( "size", Vec2f::ZERO );
 
 	// If size is non-zero, the Widget is a fixed size and so should the sprite be
-	mFixedSizeSprite = size.LengthSqr() != 0;
-	if ( mFixedSizeSprite )
-	{
-		mWidth = size.x;
-		mHeight = size.y;
-	}
+	mIsFixedSizeSprite = ( mSize.LengthSqr() != 0.0f );
 
 	// Create the background
 	if ( backgroundAnim )
@@ -274,16 +129,11 @@ void Widget::OnLoadFromXML( const XmlReader::XmlReaderIterator& xml )
 		SetSprite( backgroundAnim );
 	}
 
-	DebugPrintf( "Widget : Created '%s' w=%.3f h=%.3f\n", mName.GetString().c_str(), mWidth, mHeight );
-
-	// Layout
-	if ( mParent )
-	{
-		mBelow     = GetLayoutWidget( xml.GetAttributeAsCString( "layout_below", nullptr ) );
-		mAbove     = GetLayoutWidget( xml.GetAttributeAsCString( "layout_above", nullptr ) );
-		mToLeftOf  = GetLayoutWidget( xml.GetAttributeAsCString( "layout_toLeftOf", nullptr ) );
-		mToRightOf = GetLayoutWidget( xml.GetAttributeAsCString( "layout_toRightOf", nullptr ) );
-	}
+	// Load layout dependencies.
+	mBelowWidgetName     = xml.GetAttributeAsCString( "layout_below", "" );
+	mAboveWidgetName     = xml.GetAttributeAsCString( "layout_above", "" );
+	mToLeftOfWidgetName  = xml.GetAttributeAsCString( "layout_toLeftOf", "" );
+	mToRightOfWidgetName = xml.GetAttributeAsCString( "layout_toRightOf", "" );
 }
 //---------------------------------------
 void Widget::OnLoadFromDictionary( const Dictionary& dictionary )
@@ -291,18 +141,18 @@ void Widget::OnLoadFromDictionary( const Dictionary& dictionary )
 	const char* backgroundAnim = dictionary.Get( "sprite", (const char*) 0 );
 
 	mMargins = dictionary.Get( "margins", Vec4f::ZERO );
-	mPosition = dictionary.Get( "position", Vec2f::ZERO );
+	mOffset = dictionary.Get( "position", Vec2f::ZERO );
 	mCenterInParent = dictionary.Get( "layout_centerParent", false );
 	mDrawColor = dictionary.Get( "color", Color::WHITE );
 
 	Vec2f size = dictionary.Get( "size", Vec2f::ZERO );
 
 	// If size is non-zero, the Widget is a fixed size and so should the sprite be
-	mFixedSizeSprite = size.LengthSqr() != 0;
-	if ( mFixedSizeSprite )
+	mIsFixedSizeSprite = size.LengthSqr() != 0;
+
+	if( mIsFixedSizeSprite )
 	{
-		mWidth = size.x;
-		mHeight = size.y;
+		mSize = size;
 	}
 
 	// Create the background
@@ -311,62 +161,86 @@ void Widget::OnLoadFromDictionary( const Dictionary& dictionary )
 		SetSprite( backgroundAnim );
 	}
 
-	DebugPrintf( "Widget : Created '%s' w=%.3f h=%.3f\n", mName.GetString().c_str(), mWidth, mHeight );
+	// Load layout dependencies.
+	mBelowWidgetName     = dictionary.Get< const char* >( "layout_below", "" );
+	mAboveWidgetName     = dictionary.Get< const char* >( "layout_above", "" );
+	mToLeftOfWidgetName  = dictionary.Get< const char* >( "layout_toLeftOf", "" );
+	mToRightOfWidgetName = dictionary.Get< const char* >( "layout_toRightOf", "" );
+}
+//---------------------------------------
+void Widget::OnInit()
+{
+	// Make sure the bounds of the object get recalculated.
+	InvalidateBounds();
+}
+//---------------------------------------
+void Widget::Update( float elapsedTime )
+{
+	// Run the update code.
+	OnUpdate( elapsedTime );
 
-	// Layout
-	if ( mParent )
+	for( auto it = mChildren.begin(); it != mChildren.end(); ++it )
 	{
-		mBelow     = GetLayoutWidget( dictionary.Get< const char* >( "layout_below", nullptr ) );
-		mAbove     = GetLayoutWidget( dictionary.Get< const char* >( "layout_above", nullptr ) );
-		mToLeftOf  = GetLayoutWidget( dictionary.Get< const char* >( "layout_toLeftOf", nullptr ) );
-		mToRightOf = GetLayoutWidget( dictionary.Get< const char* >( "layout_toRightOf", nullptr ) );
+		// Update all children.
+		Widget* child = it->second;
+		child->Update( elapsedTime );
+	}
+
+	// Update the position of the Widget.
+	Vec2f position = FindPosition();
+
+	if( mSprite )
+	{
+		mSprite->Position = position;
 	}
 }
 //---------------------------------------
-void Widget::OnInit() { }
-//---------------------------------------
-void Widget::OnUpdate( float dt )
+void Widget::OnUpdate( float elapsedTime )
 {
-	if ( mSprite )
+	if( mSprite )
 	{
-		mSprite->OnUpdate( dt );
-		// Transform position
-		mSprite->Position = GetPosition();
-	}
-	for ( auto itr = mChildren.begin(); itr != mChildren.end(); ++itr )
-	{
-		itr->second->OnUpdate( dt );
+		// If there is a background sprite, update its animation.
+		mSprite->OnUpdate( elapsedTime );
 	}
 }
 //---------------------------------------
-void Widget::OnDraw( const Camera& camera ) const
+void Widget::Draw( const Camera& camera )
 {
-	// If not visible, do not draw this Widget or its children
-	if ( !Visible )
-		return;
+	// If not visible, do not draw this Widget or its children.
+	if( mIsVisible )
+	{
+		// Draw the Widget.
+		OnDraw( camera );
 
-	// Sprite background
-	if ( mSprite )
+		// Draw debug visual.
+		if( mDebugLayout )
+		{
+			Vec2f position = FindPosition();
+			DrawRectOutline( position.x, position.y, mSize.x, mSize.y, Color::PINK, 1.5f );
+		}
+
+		// Draw all children.
+		for( auto it = mChildren.begin(); it != mChildren.end(); ++it )
+		{
+			Widget* child = it->second;
+			child->Draw( camera );
+		}
+	}
+}
+//---------------------------------------
+void Widget::OnDraw( const Camera& camera )
+{
+	// Draw the background sprite (if any).
+	if( mSprite )
+	{
 		mSprite->OnDraw( camera );
-
-	// Layout debug visual
-	if ( DebugLayout )
-	{
-		Vec2f pos = GetPosition();
-		DrawRectOutline( pos.x, pos.y, mWidth, mHeight, Color::PINK, 1.5f );
-	}
-
-	// Draw children
-	for ( auto itr = mChildren.begin(); itr != mChildren.end(); ++itr )
-	{
-		itr->second->OnDraw( camera );
 	}
 }
 //---------------------------------------
 bool Widget::OnPointerDown( float x, float y )
 {
 	// If not visible, do not process this Widget or its children
-	if ( !Visible )
+	if ( !mIsVisible )
 		return false;
 
 	// Check children from top to bottom
@@ -381,7 +255,7 @@ bool Widget::OnPointerDown( float x, float y )
 bool Widget::OnPointerUp( float x, float y )
 {
 	// If not visible, do not process this Widget or its children
-	if ( !Visible )
+	if ( !mIsVisible )
 		return false;
 
 	// Check children from top to bottom
@@ -393,136 +267,342 @@ bool Widget::OnPointerUp( float x, float y )
 	return false;
 }
 //---------------------------------------
-Widget* Widget::GetChildByName( const HashString& name )
+void Widget::AddChild( Widget* child )
 {
-	Widget* child = 0;
-	Widget* p = mParent ? mParent : this;
-	auto i = p->mChildren.find( name );
-	if ( i != p->mChildren.end() )
+	assertion( child, "Cannot add null child to Widget \"%s\"!", GetName().GetCString() );
+	assertion( child->GetManager() == mManager, "Cannot add child \"%s\" to Widget \"%s\" because it was created by a different WidgetManager!", child->mName.GetCString(), mName.GetCString() );
+
+	HashString parentName = ( child->mParent ? child->mParent->mName : "" );
+
+	assertion( child->mParent == nullptr, "Cannot add child \"%s\" to Widget \"%s\" because it is already a child of Widget \"%s\"!", child->mName.GetCString(), mName.GetCString(), parentName.GetCString() );
+	assertion( !HasChildWithName( child->mName ), "Could not add child \"%s\" to Widget \"%s\" because a child of the same name already exists!", child->mName.GetCString(), mName.GetCString() );
+
+	//DebugPrintf( "Adding child \"%s\" to Widget \"%s\"...", child->GetName().GetCString(), GetName().GetCString() );
+
+	// If a child with the specified name does not already exist, add the new child.
+	mChildren[ child->mName ] = child;
+	child->mParent = this;
+
+	// Invalidate the child's position.
+	child->InvalidateBounds();
+
+	// Update dependent siblings.
+	UpdateSiblingsOf( child );
+}
+//---------------------------------------
+void Widget::RemoveChild( Widget* child )
+{
+	if( HasChild( child ) )
 	{
-		child = i->second;
+		// If this Widget contains the specified child, remove it by name.
+		RemoveChildByName( child->mName );
+	}
+}
+//---------------------------------------
+void Widget::RemoveChildByName( const HashString& name )
+{
+	auto it = mChildren.find( name );
+
+	if( it != mChildren.end() )
+	{
+		Widget* child = it->second;
+
+		// Remove the child with the specified name.
+		mChildren.erase( it );
+
+		// Update dependent siblings.
+		UpdateSiblingsOf( child );
 	}
 	else
 	{
-		WarnInfo( "Widget %s : no such child '%s'\n", mName.GetString().c_str(), name.GetString().c_str() );
+		// If the child wasn't found, post a warning.
+		WarnInfo( "Could not remove child \"%s\" from Widget \"%s\" because no child with that name was found!", name.GetCString(), mName.GetCString() );
 	}
-	return child;
 }
 //---------------------------------------
-Vec2f Widget::GetPosition() const
+bool Widget::HasChildWithName( const HashString& name ) const
 {
-	Vec2f pos = mPosition + Vec2f( mMargins[MARGIN_LEFT], mMargins[MARGIN_TOP] );
-
-	// Parent offset
-	if ( mParent )
-	{
-		pos += mParent->GetPosition();
-	}
-
-	// Layout adjustments
-	if ( mBelow )
-	{
-		pos.y = mBelow->GetPosition().y + mBelow->mHeight + mBelow->mMargins[MARGIN_BOTTOM] + mMargins[MARGIN_TOP];
-	}
-	else if ( mAbove )
-	{
-		pos.y = mAbove->GetPosition().y - mHeight - mAbove->mMargins[MARGIN_TOP] - mMargins[MARGIN_BOTTOM];
-	}
-
-	if ( mToLeftOf )
-	{
-		pos.x = mToLeftOf->GetPosition().x - mWidth - mToLeftOf->mMargins[MARGIN_LEFT] - mMargins[MARGIN_RIGHT];
-	}
-	else if ( mToRightOf )
-	{
-		pos.x = mToRightOf->GetPosition().x + mToRightOf->mWidth + mToRightOf->mMargins[MARGIN_RIGHT] + mMargins[MARGIN_LEFT];
-	}
-
-	return pos;
+	return ( GetChildByName( name ) != nullptr );
 }
 //---------------------------------------
-Widget* Widget::GetLayoutWidget( const char* name )
+bool Widget::HasChild( const Widget* child ) const
 {
-	Widget* result = nullptr;
+	bool result = false;
 
-	if ( name )
+	if( child )
 	{
-		result = GetChildByName( name );
+		// Look for a child with the same name as the child passed.
+		Widget* matchingChild = GetChildByName( child->mName );
+
+		if( matchingChild && matchingChild == child )
+		{
+			// If the child Widget was found, return true.
+			result = true;
+		}
 	}
-	/*else
-	{
-		WarnInfo( "Widget %s : no such param '%s'\n", mName.GetString().c_str(), paramName );
-	}*/
 
 	return result;
 }
 //---------------------------------------
+void Widget::SetOffset( const Vec2f& offset )
+{
+	mOffset = offset;
+	InvalidateBounds();
+}
+//---------------------------------------
+Vec2f Widget::GetOffset() const
+{
+	return mOffset;
+}
+//---------------------------------------
+Vec2f Widget::FindPosition()
+{
+	const RectF& bounds = FindBounds();
+	return Vec2f( bounds.Left, bounds.Top );
+}
+//---------------------------------------
+const RectF& Widget::FindBounds()
+{
+	if( mNeedsBoundsUpdate )
+	{
+		// If the position of this Widget or an ancestor has changed, recalculate the position.
+		RecalculateBounds();
+	}
+
+	return mCalculatedBounds;
+}
+//---------------------------------------
+void Widget::RecalculateBounds()
+{
+	// Calculate the position of the Widget after margins.
+	Vec2f topLeft = mOffset + Vec2f( mMargins[ MARGIN_LEFT ], mMargins[ MARGIN_TOP ] );
+
+	if( mParent )
+	{
+		// Apply parent offset.
+		topLeft += mParent->FindPosition();
+
+		if( mCenterInParent )
+		{
+			topLeft = ( mParent->GetSize() - mSize ) * 0.5f;
+		}
+	}
+
+	// Find all Widgets that this one's position depends on.
+	Widget* below = FindLayoutBelow();
+	Widget* above = FindLayoutAbove();
+	Widget* toLeftOf = FindLayoutToLeftOf();
+	Widget* toRightOf = FindLayoutToRightOf();
+
+	// Apply vertical constraints.
+	if( below )
+	{
+		DebugPrintf( "Widget \"%s\" is below \"%s\"", GetFullName().c_str(), below->GetFullName().c_str() );
+		topLeft.y = below->FindPosition().y + below->GetHeight() + below->mMargins[ MARGIN_BOTTOM ] + mMargins[ MARGIN_TOP ];
+	}
+	else if( above )
+	{
+		DebugPrintf( "Widget \"%s\" is above \"%s\"", GetFullName().c_str(), below->GetFullName().c_str() );
+		topLeft.y = above->FindPosition().y - GetHeight() - above->mMargins[ MARGIN_TOP ] - mMargins[ MARGIN_BOTTOM ];
+	}
+
+	// Apply horizontal constraints.
+	if( toLeftOf )
+	{
+		DebugPrintf( "Widget \"%s\" is to the left of \"%s\"", GetFullName().c_str(), below->GetFullName().c_str() );
+		topLeft.x = toLeftOf->FindPosition().x - GetWidth() - toLeftOf->mMargins[ MARGIN_LEFT ] - mMargins[ MARGIN_RIGHT ];
+	}
+	else if( toRightOf )
+	{
+		DebugPrintf( "Widget \"%s\" is to the right of \"%s\"", GetFullName().c_str(), below->GetFullName().c_str() );
+		topLeft.x = toRightOf->FindPosition().x + toRightOf->GetWidth() + toRightOf->mMargins[ MARGIN_RIGHT ] + mMargins[ MARGIN_LEFT ];
+	}
+
+	// Calculate the final bounds.
+	mCalculatedBounds.Left   = topLeft.x;
+	mCalculatedBounds.Top    = topLeft.y;
+	mCalculatedBounds.Right  = ( topLeft.x + GetWidth() );
+	mCalculatedBounds.Bottom = ( topLeft.y + GetHeight() );
+
+	DebugPrintf( "Recalculated bounds for \"%s\": {Left: %.2f, Top: %.2f, Right: %.2f, Bottom: %.2f}",
+				 GetFullName().c_str(),
+				 mCalculatedBounds.Left,
+				 mCalculatedBounds.Top,
+				 mCalculatedBounds.Right,
+				 mCalculatedBounds.Bottom );
+
+	// Flag the position as updated.
+	mNeedsBoundsUpdate = false;
+}
+//---------------------------------------
+void Widget::UpdateSiblingsOf( Widget* child )
+{
+	assertion( child, "Cannot update siblings of null child Widget!" );
+	assertion( HasChild( child ), "Cannot update siblings of Widget that is not a child!" );
+
+	for( auto it = mChildren.begin(); it != mChildren.end(); ++it )
+	{
+		Widget* sibling = it->second;
+
+		if( sibling != child && sibling->IsRelativeToSiblingWithName( child->mName ) )
+		{
+			// Invalidate the bounds of all siblings that depend on the child.
+			sibling->InvalidateBounds();
+		}
+	}
+}
+//---------------------------------------
+void Widget::InvalidateBounds()
+{
+	if( mNeedsBoundsUpdate == false )
+	{
+		// Flag this object as needing a position update.
+		mNeedsBoundsUpdate = true;
+
+		for( auto it = mChildren.begin(); it != mChildren.end(); ++it )
+		{
+			// Flag each child as needing an update.
+			Widget* child = it->second;
+			child->InvalidateBounds();
+		}
+	}
+}
+//---------------------------------------
+void Widget::SetWidth( float width )
+{
+	mSize.x = width;
+	InvalidateBounds();
+}
+//---------------------------------------
 float Widget::GetWidth() const
 {
-	return mWidth + mMargins[0] + mMargins[2];
+	return mSize.x;
+}
+//---------------------------------------
+void Widget::SetHeight( float height )
+{
+	mSize.y = height;
+	InvalidateBounds();
 }
 //---------------------------------------
 float Widget::GetHeight() const
 {
-	return mHeight + mMargins[1] + mMargins[3];
+	return mSize.y;
+}
+//---------------------------------------
+void Widget::SetSize( float width, float height )
+{
+	mSize.x = width;
+	mSize.y = height;
+	InvalidateBounds();
+}
+//---------------------------------------
+void Widget::SetSize( const Vec2f& size )
+{
+	mSize = size;
+	InvalidateBounds();
+}
+//---------------------------------------
+Vec2f Widget::GetSize() const
+{
+	return mSize;
 }
 //---------------------------------------
 void Widget::SetSprite( const HashString& spriteName )
 {
 	mSprite = SpriteManager::CreateSprite( spriteName, Vec2f::ZERO, "n" );
+
 	if ( mSprite )
 	{
 		// Ignore camera offset
 		mSprite->RelativeToCamera = false;
-		mSprite->FixedSize = mFixedSizeSprite;
+		mSprite->FixedSize = mIsFixedSizeSprite;
 		mSprite->DrawColor = mDrawColor;
 
-		if ( !mFixedSizeSprite )
+		if ( !mIsFixedSizeSprite )
 		{
+			// If this Widget has a fixed-size Sprite, update the Widget dimensions.
 			const RectI& r = mSprite->GetClippingRectForCurrentAnimation();
-			mHeight = r.Height();
-			mWidth = r.Width();
+			SetSize( r.Width(), r.Height() );
 		}
 		else
 		{
-			mSprite->Size.Set( mWidth, mHeight );
+			// If the Sprite should scale with the Widget, set the width and height of the Sprite.
+			mSprite->Size.Set( mSize );
 		}
-
-		// Update the layout offsets
-		UpdateLayout();
 	}
 	else
 	{
 		WarnFail( "Failed to create widget sprite '%s'\n", spriteName.GetString().c_str() );
 	}
-}
-//---------------------------------------
-void Widget::UpdateLayout()
-{
-	if ( mCenterInParent )
-	{
-		if ( mParent )
-		{
-			mPosition.x = ( mParent->mWidth - mWidth ) / 2.0f;
-			mPosition.y = ( mParent->mHeight - mHeight ) / 2.0f;
-		}
-		// TODO should center in screen if no parent
-	}
-}
-//---------------------------------------
-Widget* Widget::GetRootWidget()
-{
-	Widget* root = this;
-	while ( root->mParent )
-		root = root->mParent;
-	return root;
+
+	InvalidateBounds();
 }
 //---------------------------------------
 bool Widget::Contains( float x, float y )
 {
-	Widget* root = GetRootWidget();
-	Vec2f pos = root->GetPosition();
-	RectF r( pos.x, pos.y, pos.x + root->mWidth, pos.y + root->mHeight );
-	return r.Contains( (int) x, (int) y );
+	return FindBounds().Contains( (int) x, (int) y );
 }
 //---------------------------------------
+void Widget::SetLayoutAbove( const HashString& widgetName )
+{
+	mAboveWidgetName = widgetName;
+}
+//---------------------------------------
+void Widget::SetLayoutBelow( const HashString& widgetName )
+{
+	mBelowWidgetName = widgetName;
+}
+//---------------------------------------
+void Widget::SetLayoutToLeftOf( const HashString& widgetName )
+{
+	mToLeftOfWidgetName = widgetName;
+}
+//---------------------------------------
+void Widget::SetLayoutToRightOf( const HashString& widgetName )
+{
+	mToRightOfWidgetName = widgetName;
+}
+//---------------------------------------
+bool Widget::HasSibling( const Widget* sibling ) const
+{
+	// Only return true if both Widgets have the same parent.
+	return ( sibling->mParent == mParent );
+}
+//---------------------------------------
+bool Widget::HasSiblingWithName( const HashString& siblingName ) const
+{
+	// Only return true if this Widget has a parent and that parent has a child with a matching name.
+	return ( mParent && mParent->HasChildWithName( siblingName ) );
+}
+//---------------------------------------
+bool Widget::IsRelativeToSibling( const Widget* sibling ) const
+{
+	bool result = false;
+
+	if( HasSibling( sibling ) )
+	{
+		// Only return true if the Widget is a sibling of this one and this one depends on it.
+		result = IsRelativeToSiblingWithName( sibling->mName );
+	}
+
+	return result;
+}
+//---------------------------------------
+bool Widget::IsRelativeToSiblingWithName( const HashString& siblingName ) const
+{
+	return ( mBelowWidgetName == siblingName ) ||
+		   ( mAboveWidgetName == siblingName ) ||
+		   ( mToLeftOfWidgetName == siblingName ) ||
+		   ( mToRightOfWidgetName == siblingName );
+}
+//---------------------------------------
+void Widget::SetVisible( bool isVisible )
+{
+	mIsVisible = isVisible;
+}
+//---------------------------------------
+bool Widget::IsVisible() const
+{
+	return mIsVisible;
+}

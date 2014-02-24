@@ -16,10 +16,10 @@ namespace mage
 		void Draw();
 		void Exit();
 
-		virtual void OnScreenSizeChanged( int32 w, int32 h ) { };
-		virtual void OnPointerDown( float x, float y, size_t which ) { };
-		virtual void OnPointerUp( float x, float y, size_t which ) { };
-		virtual void OnPointerMotion( float x, float y, float dx, float dy, size_t which ) { };
+		virtual void OnScreenSizeChanged( int32 width, int32 height );
+		virtual bool OnPointerDown( float x, float y, size_t which );
+		virtual bool OnPointerUp( float x, float y, size_t which );
+		virtual bool OnPointerMotion( float x, float y, float dx, float dy, size_t which );
 
 		template< class InputStateSubclass, typename... Parameters >
 		InputStateSubclass* CreateState( Parameters... );
@@ -31,11 +31,12 @@ namespace mage
 		bool IsInitialized() const;
 		bool HasActiveState() const;
 		bool HasPendingStateChange() const;
+		WidgetManager* GetWidgetManager() const;
 
 	protected:
 		virtual void OnEnter( const Dictionary& parameters ) = 0;
-		virtual void OnUpdate( float elapsedTime ) = 0;
-		virtual void OnDraw() = 0;
+		virtual void OnUpdate( float elapsedTime );
+		virtual void OnDraw();
 		virtual void OnExit() = 0;
 
 	private:
@@ -43,6 +44,7 @@ namespace mage
 		InputState* mActiveState;
 		InputState* mPendingState;
 		Dictionary mPendingStateParameters;
+		Camera mDefaultCamera;
 		bool mHasPendingStateChange;
 	};
 

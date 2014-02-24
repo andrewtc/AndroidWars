@@ -44,8 +44,8 @@ void Button::DestroyAllButtonStyles()
 	sButtonStyles.clear();
 }
 //---------------------------------------
-Button::Button( const std::string& name, Widget* parent )
-	: Label( name, parent )
+Button::Button( WidgetManager* manager, const HashString& name )
+	: Label( manager, name )
 	, mEnabled( true )
 {
 }
@@ -79,12 +79,12 @@ void Button::OnInit()
 	ButtonStyle* style = GetButtonStyle( mStyleName );
 	assertion( style, "ButtonStyle \"%s\" not found!", mStyleName.GetCString() );
 
-	mFixedSizeSprite = style->WrapText;
+	SetFixedSizeSprite( style->WrapText );
 
 	if ( mFont && style->WrapText )
 	{
-		mHeight = mFont->GetLineHeight( mTextScale * 1.2f );
-		mWidth = mFont->GetLineWidth( mText.c_str(), mTextScale * 1.2f );
+		SetSize( mFont->GetLineHeight( mTextScale * 1.2f ),
+				 mFont->GetLineWidth( mText.c_str(), mTextScale * 1.2f ) );
 	}
 
 	SetSprite( style->SpriteName );
@@ -104,8 +104,8 @@ void Button::SetText( const char* text )
 	{
 		float w = mFont->GetLineWidth( text, mTextScale );
 		float h = mFont->GetLineHeight( mTextScale );
-		float offsetX = ( mWidth - w ) / 2.0f;
-		float offsetY = ( mHeight - h )/ 2.0f;
+		float offsetX = ( GetWidth() - w ) * 0.5f;
+		float offsetY = ( GetHeight() - h ) * 0.5f;
 		mTextDrawOffset.Set( offsetX, offsetY );
 	}
 }
@@ -113,60 +113,57 @@ void Button::SetText( const char* text )
 bool Button::OnPointerDown( float x, float y )
 {
 	// If not visible, do not process this Widget or its children
-	if ( !Visible || !mEnabled )
+	if ( !IsVisible() || !mEnabled )
 		return false;
 
 	ButtonStyle* style = Button::GetButtonStyle( mStyleName );
 	if ( !Widget::OnPointerDown( x, y ) )
 	{
 		// If event is inside frame, fire event
-		if ( mSprite )
+		if( HasSprite() )
 		{
 			RectI r;
-			Vec2f pos = GetPosition();
+			Vec2f pos = FindPosition();
 			r.Left = pos.x;
 			r.Top = pos.y;
-			r.Right = r.Left + mWidth;
-			r.Bottom = r.Top + mHeight;
+			r.Right = r.Left + GetWidth();
+			r.Bottom = r.Top + GetHeight();
 			if ( r.Contains( (int) x, (int) y ) )
 			{
 
 				// Play pressed anim
-				mSprite->PlayAnimation( style->PressedAnimName );
-				mSprite->DrawColor = mPressedColor;
+				GetSprite()->PlayAnimation( style->PressedAnimName );
+				GetSprite()->DrawColor = mPressedColor;
 				return true;
 			}
 		}
 	}
-	mSprite->PlayAnimation( style->DefaultAnimName );
-	mSprite->DrawColor = mDefaultColor;
+	GetSprite()->PlayAnimation( style->DefaultAnimName );
+	GetSprite()->DrawColor = mDefaultColor;
 	return false;
 }
 //---------------------------------------
 bool Button::OnPointerUp( float x, float y )
 {
 	// If not visible, do not process this Widget or its children
-	if ( !Visible || !mEnabled )
+	if ( !IsVisible() || !mEnabled )
 		return false;
 
 	ButtonStyle* style = Button::GetButtonStyle( mStyleName );
 	if ( !Widget::OnPointerDown( x, y ) )
 	{
 		// If event is inside frame, fire event
-		if ( mSprite )
+		if( HasSprite() )
 		{
-			RectI r;
-			Vec2f pos = GetPosition();
-			r.Left = pos.x;
-			r.Top = pos.y;
-			r.Right = r.Left + mWidth;
-			r.Bottom = r.Top + mHeight;
-			if ( r.Contains( (int) x, (int) y ) )
+			// Get the bounds of the Button.
+			RectF bounds = FindBounds();
+
+			if ( bounds.Contains( (int) x, (int) y ) )
 			{
 				ButtonStyle* style = Button::GetButtonStyle( mStyleName );
 				// Play selected anim
-				mSprite->PlayAnimation( style->SelectedAnimName );
-				mSprite->DrawColor = mDefaultColor;
+				GetSprite()->PlayAnimation( style->SelectedAnimName );
+				GetSprite()->DrawColor = mDefaultColor;
 				// Play SFX
 				if ( style->SelectedSFXName.GetHash() != 0 )
 				{
@@ -180,21 +177,21 @@ bool Button::OnPointerUp( float x, float y )
 			}
 		}
 	}
-	mSprite->PlayAnimation( style->DefaultAnimName );
-	mSprite->DrawColor = mDefaultColor;
+	GetSprite()->PlayAnimation( style->DefaultAnimName );
+	GetSprite()->DrawColor = mDefaultColor;
 	return false;
 }
 //---------------------------------------
 void Button::Disable()
 {
 	ButtonStyle* style = Button::GetButtonStyle( mStyleName );
-	mSprite->DrawColor = style->DisabledColor;
+	GetSprite()->DrawColor = style->DisabledColor;
 	mEnabled = false;
 }
 //---------------------------------------
 void Button::Enable()
 {
-	mSprite->DrawColor = mDefaultColor;
+	GetSprite()->DrawColor = mDefaultColor;
 	mEnabled = true;
 }
 //---------------------------------------

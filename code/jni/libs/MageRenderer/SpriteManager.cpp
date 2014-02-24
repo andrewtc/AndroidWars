@@ -232,20 +232,27 @@ bool LoadSpriteAnimations( const char* filename, bool linearFilter )
 	return true;
 }
 //---------------------------------------
-Sprite* CreateSprite( const HashString& animName, const Vec2f& position,
+Sprite* CreateSprite( const HashString& animSetName, const Vec2f& position,
 	const HashString& initialAnimName )
 {
-	SpriteAnimationSet*& anim = mSpriteAnimationSets[ animName ];
-	if ( !anim )
+	Sprite* sprite = nullptr;
+
+	auto it = mSpriteAnimationSets.find( animSetName );
+
+	if ( it != mSpriteAnimationSets.end() )
 	{
-		WarnFail( "No such sprite animation '%s'. Did you forget to load it first?\n", animName.GetString().c_str() );
-		return 0;
+		// If the animation set was found, create a new Sprite using it.
+		SpriteAnimationSet* animSet = it->second;
+		sprite = new Sprite( *animSet, initialAnimName );
+		sprite->Position = position;
+
+		// Store the sprite.
+		mSprites.push_back( sprite );
 	}
-	Sprite* sprite = new Sprite( *anim, initialAnimName );
-
-	sprite->Position = position;
-
-	mSprites.push_back( sprite );
+	else
+	{
+		WarnFail( "No such sprite animation set '%s'. Did you forget to load it first?\n", animSetName.GetString().c_str() );
+	}
 
 	return sprite;
 }
@@ -271,7 +278,7 @@ void DestroyAllSprites()
 	DestroyVector( mSprites );
 }
 //---------------------------------------
-void DestorySprite( Sprite*& sprite )
+void DestroySprite( Sprite*& sprite )
 {
 	ArrayList< Sprite* >::iterator foundItr = std::find( mSprites.begin(), mSprites.end(), sprite );
 	if ( foundItr != mSprites.end() )

@@ -20,9 +20,9 @@ namespace mage
 		virtual void OnExit();
 
 		virtual void OnScreenSizeChanged( int32 w, int32 h );
-		virtual void OnPointerDown( float x, float y, size_t which );
-		virtual void OnPointerUp( float x, float y, size_t which );
-		virtual void OnPointerMotion( float x, float y, float dx, float dy, size_t which );
+		virtual bool OnPointerDown( float x, float y, size_t which );
+		virtual bool OnPointerUp( float x, float y, size_t which );
+		virtual bool OnPointerMotion( float x, float y, float dx, float dy, size_t which );
 
 		void OnHelloResponse( const OnlineRequestResult& result );
 

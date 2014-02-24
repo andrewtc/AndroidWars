@@ -14,9 +14,9 @@ bool gInit = false;
 BitmapFont* gFont = nullptr;
 
 GameStateManager* gGameStateManager = nullptr;
+WidgetManager* gWidgetManager = nullptr;
 SoundManager* gSoundManager = nullptr;
 OnlineGameClient* gOnlineGameClient = nullptr;
-Camera* gDefaultCamera;
 
 
 void OnDraw()
@@ -30,12 +30,6 @@ void OnDraw()
 		gGameStateManager->Draw();
 	}
 
-	// Draw the UI
-	if( gDefaultCamera )
-	{
-		Widget::DrawAllWidgets( *gDefaultCamera );
-	}
-
 	// Camera debug
 //	DrawRect( gCameraTarget.x - 5, gCameraTarget.y - 5, 10, 10, Color::PINK );
 	FlushRenderer();
@@ -43,9 +37,6 @@ void OnDraw()
 
 void OnUpdate( float dt )
 {
-	// Update the game here...
-	Widget::UpdateAllWidgets( dt );
-
 	// Poll for online request responses.
 	gOnlineGameClient->Update();
 
@@ -89,14 +80,9 @@ void OnWindowShown()
 
 	if ( !gInit )
 	{
-		// TODO: Move this into a GameState class.
-		// Load Widget definitions
-		Widget::LoadDefinitions( "ui/definitions.xml" );
-
-		//gTestWidget = Widget::LoadWidget( "ui/next_turn.xml" );
-
-		// Create camera.
-		gDefaultCamera = new Camera( gWindowWidth, gWindowHeight );
+		// Create the WidgetManager.
+		gWidgetManager = new WidgetManager();
+		gWidgetManager->Init();
 
 		// Create the GameStateManager and create the first state.
 		DebugPrintf( "Creating GameStateManager..." );
@@ -123,23 +109,18 @@ void OnSaveStateRestore( const void* state )
 void OnPointerDown( float x, float y, size_t which )
 {
 	DebugPrintf( "Touch at %f %f\n", x, y );
-	if( !Widget::ProcessOnPointerDown( x, y ) )
+
+	if( gGameStateManager )
 	{
-		if( gGameStateManager )
-		{
-			gGameStateManager->OnPointerDown( x, y, which );
-		}
+		gGameStateManager->OnPointerDown( x, y, which );
 	}
 }
 
 void OnPointerUp( float x, float y, size_t which )
 {
-	if ( !Widget::ProcessOnPointerUp( x, y ) )
+	if( gGameStateManager )
 	{
-		if( gGameStateManager )
-		{
-			gGameStateManager->OnPointerUp( x, y, which );
-		}
+		gGameStateManager->OnPointerUp( x, y, which );
 	}
 }
 
@@ -147,12 +128,10 @@ void OnPointerUp( float x, float y, size_t which )
 void OnPointerMotion( float x, float y, float dx, float dy, size_t which )
 {
 	// DebugPrintf( "Motion (%3.f %.3f) d(%3.f %.3f) ", x, y, dx, dy );
-	if ( !Widget::ProcessOnPointerDown( x, y ) )
+
+	if( gGameStateManager )
 	{
-		if( gGameStateManager )
-		{
-			gGameStateManager->OnPointerMotion( x, y, dx, dy, which );
-		}
+		gGameStateManager->OnPointerMotion( x, y, dx, dy, which );
 	}
 }
 
@@ -212,6 +191,18 @@ void main()
 
 	// Run the application
 	Run();
+
+	if( gGameStateManager )
+	{
+		gGameStateManager->DestroyActiveState();
+		delete gGameStateManager;
+	}
+
+	if( gWidgetManager )
+	{
+		gWidgetManager->Destroy();
+		delete gWidgetManager;
+	}
 
 	Button::DestroyAllButtonStyles();
 	gSoundManager->Stop();

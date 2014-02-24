@@ -58,11 +58,11 @@ Game::Game()
 	mMap.SetNewMapObjectCB( &SpawnObjectFromXml );
 
 	// Create dialogs
-	mMoveDialog     = Widget::LoadWidget( "ui/move_dialog.xml" );
-	mAttackDialog   = Widget::LoadWidget( "ui/attack_dialog.xml" );
-	mCaptureDialog  = Widget::LoadWidget( "ui/capture_dialog.xml" );
-	mGameOverDialog = Widget::LoadWidget( "ui/game_end.xml" );
-	mUnitDialog     = Widget::LoadWidget( "ui/unit_dialog.xml" );
+	mMoveDialog     = gWidgetManager->LoadWidgetFromFile( "ui/move_dialog.xml" );
+	mAttackDialog   = gWidgetManager->LoadWidgetFromFile( "ui/attack_dialog.xml" );
+	mCaptureDialog  = gWidgetManager->LoadWidgetFromFile( "ui/capture_dialog.xml" );
+	mGameOverDialog = gWidgetManager->LoadWidgetFromFile( "ui/game_end.xml" );
+	mUnitDialog     = gWidgetManager->LoadWidgetFromFile( "ui/unit_dialog.xml" );
 
 	// Hide them
 	HideAllDialogs();
@@ -664,7 +664,7 @@ TerrainType* Game::GetTerrainTypeOfTile( int x, int y )
 bool Game::WidgetIsOpen() const
 {
 	// Put all the dialogs that block game input here...
-	return mMoveDialog->Visible || mAttackDialog->Visible || mGameOverDialog->Visible;
+	return mMoveDialog->IsVisible() || mAttackDialog->IsVisible() || mGameOverDialog->IsVisible();
 }
 
 void Game::HideAllDialogs()

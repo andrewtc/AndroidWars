@@ -41,13 +41,13 @@ void MainMenuState::OnEnter( const Dictionary& parameters )
 
 void MainMenuState::OnUpdate( float elapsedTime )
 {
-
+	GameState::OnUpdate( elapsedTime );
 }
 
 
 void MainMenuState::OnDraw()
 {
-
+	GameState::OnDraw();
 }
 
 
@@ -70,15 +70,18 @@ LogInInputState::LogInInputState( GameState* owner ) :
 	RegisterObjectEventFunc( LogInInputState, OnLogInButtonPressed );
 
 	// Create the log in widget.
-	mWidget = Widget::LoadWidget( "ui/main_menu.xml" );
+	mWidget = gWidgetManager->LoadWidgetFromFile( "ui/main_menu.xml" );
 	mWidget->Hide();
+
+	// Attach the Widget to the root Widget.
+	gWidgetManager->GetRootWidget()->AddChild( mWidget );
 }
 
 
 LogInInputState::~LogInInputState()
 {
 	// Destroy the widget.
-	Widget::DestroyWidget( mWidget );
+	gWidgetManager->DestroyWidget( mWidget );
 	mWidget = nullptr;
 
 	// Unregister callbacks.
@@ -142,7 +145,7 @@ DashboardInputState::DashboardInputState( GameState* owner ) :
 	RegisterObjectEventFunc( DashboardInputState, OnNewGameButtonPressed );
 
 	// Create the log in widget.
-	mWidget = Widget::LoadWidget( "ui/dashboard.xml" );
+	mWidget = gWidgetManager->LoadWidgetFromFile( "ui/dashboard.xml" );
 	mWidget->Hide();
 }
 
@@ -150,7 +153,7 @@ DashboardInputState::DashboardInputState( GameState* owner ) :
 DashboardInputState::~DashboardInputState()
 {
 	// Destroy the widget.
-	Widget::DestroyWidget( mWidget );
+	gWidgetManager->DestroyWidget( mWidget );
 	mWidget = nullptr;
 
 	// Unregister callbacks.

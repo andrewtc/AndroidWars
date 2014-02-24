@@ -156,10 +156,13 @@ $(aw_game_path)/GameplayState.cpp \
 $(aw_game_path)/Game.cpp \
 $(aw_game_path)/Player.cpp \
 $(aw_game_path)/Unit.cpp \
+ ui/WidgetManager.cpp \
  ui/Widget.cpp \
- ui/Button.cpp \
  ui/Label.cpp \
+ ui/Graphic.cpp \
+ ui/Button.cpp \
  ui/TextField.cpp \
+ ui/Listbox.cpp \
  sound/SoundManager.cpp \
  online/OnlineGameClient.cpp \
  util/JNI.cpp

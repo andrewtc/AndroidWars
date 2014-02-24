@@ -6,7 +6,8 @@ using namespace mage;
 GameState::GameState() :
 	mManager( nullptr ),
 	mActiveState( nullptr ),
-	mHasPendingStateChange( false )
+	mHasPendingStateChange( false ),
+	mDefaultCamera( gWindowWidth, gWindowHeight )
 { }
 
 
@@ -65,6 +66,13 @@ void GameState::Update( float elapsedTime )
 }
 
 
+void GameState::OnUpdate( float elapsedTime )
+{
+	// Update the WidgetManager.
+	gWidgetManager->Update( elapsedTime );
+}
+
+
 void GameState::Draw()
 {
 	// Run the state draw code.
@@ -75,6 +83,13 @@ void GameState::Draw()
 		// Let the current InputState draw itself.
 		mActiveState->Draw();
 	}
+}
+
+
+void GameState::OnDraw()
+{
+	// By default, draw all Widgets.
+	gWidgetManager->Draw( mDefaultCamera );
 }
 
 
@@ -95,6 +110,55 @@ void GameState::Exit()
 	// Unregister the manager.
 	mManager = nullptr;
 }
+
+
+void GameState::OnScreenSizeChanged( int32 width, int32 height )
+{
+	// TODO
+};
+
+
+bool GameState::OnPointerDown( float x, float y, size_t which )
+{
+	bool wasHandled = false;
+
+	if(  mActiveState )
+	{
+		// Let the current InputState handle the event.
+		wasHandled = mActiveState->OnPointerDown( x, y, which );
+	}
+
+	return wasHandled;
+};
+
+
+bool GameState::OnPointerUp( float x, float y, size_t which )
+{
+	bool wasHandled = false;
+
+	if(  mActiveState )
+	{
+		// Let the current InputState handle the event.
+		wasHandled = mActiveState->OnPointerUp( x, y, which );
+	}
+
+	return wasHandled;
+};
+
+
+bool GameState::OnPointerMotion( float x, float y, float dx, float dy, size_t which )
+{
+	// Let the Widget manager handle the event first.
+	bool wasHandled = false;
+
+	if( mActiveState )
+	{
+		// Let the current InputState handle the event.
+		wasHandled = mActiveState->OnPointerMotion( x, y, dx, dy, which );
+	}
+
+	return wasHandled;
+};
 
 
 void GameState::ChangeState( InputState* inputState, const Dictionary& parameters )

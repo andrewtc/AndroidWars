@@ -8,11 +8,17 @@
     <Label
         name="usernameLabel"
         text="Username:"
-        font="main_menu.fnt"
+        font="main_menu_font.fnt"
         margins="40,220,0,0"
         textColor="#FF000000"
         />
-    <Button
+    <!--Graphic
+        name="testGraphic"
+        animationSet="main_menu_text_field.anim"
+        margins="40,0,0,0"
+        layout_below="usernameLabel"
+        /-->
+    <TextField
         name="usernameField"
         text="andrewtc"
         font="main_menu.fnt"
@@ -22,7 +28,7 @@
         layout_below="usernameLabel"
         color="#FFFFFFFF"
         />
-    <Label
+    <!--Label
         name="passwordLabel"
         text="Password:"
         font="main_menu.fnt"
@@ -49,5 +55,5 @@
         onClickEvent="OnLogInButtonPressed"
         layout_below="passwordField"
         color="#FFFFFFFF"
-        />
+        /-->
 </Widget>

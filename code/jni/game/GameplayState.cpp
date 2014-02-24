@@ -141,13 +141,14 @@ void GameplayState::OnScreenSizeChanged( int32 w, int32 h )
 }
 
 
-void GameplayState::OnPointerDown( float x, float y, size_t which )
+bool GameplayState::OnPointerDown( float x, float y, size_t which )
 {
 	mWasMotion = false;
+	return GameState::OnPointerDown( x, y, which );
 }
 
 
-void GameplayState::OnPointerUp( float x, float y, size_t which )
+bool GameplayState::OnPointerUp( float x, float y, size_t which )
 {
 	if( mGame && !mWasMotion )
 	{
@@ -157,7 +158,7 @@ void GameplayState::OnPointerUp( float x, float y, size_t which )
 }
 
 
-void GameplayState::OnPointerMotion( float x, float y, float dx, float dy, size_t which )
+bool GameplayState::OnPointerMotion( float x, float y, float dx, float dy, size_t which )
 {
 	mCameraVelocity.Set( dx, dy );
 

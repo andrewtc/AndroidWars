@@ -1,8 +1,8 @@
-<UIDefinitions>
+<Theme>
     <!-- Fonts used in UI -->
     <Font name="test.fnt" file="fonts/font.fnt"/>
     <Font name="default_s.fnt" file="fonts/small.fnt"/>
-    <Font name="main_menu.fnt" file="fonts/main_menu.fnt"/>
+    <Font name="main_menu_font.fnt" file="fonts/main_menu_font.fnt"/>
     
     <!-- Sprites used in UI -->
     <Sprite file="ui/background.anim"/>
@@ -40,4 +40,4 @@
         clickSFX=""
         />
         
-</UIDefinitions>
+</Theme>

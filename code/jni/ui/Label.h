@@ -10,15 +10,18 @@
 namespace mage
 {
 
-	class Label
-		: public Widget
+	class Label : public Widget
 	{
-	DECLARE_RTTI;
+		DECLARE_RTTI;
+
 	public:
-		Label( const std::string& name, Widget* parent );
+		Label( WidgetManager* manager, const HashString& name );
 		virtual ~Label();
 
-		virtual void OnDraw( const Camera& camera ) const;
+		virtual void OnDraw( const Camera& camera );
+
+		void SetFont( BitmapFont* font );
+		BitmapFont* GetFont() const;
 
 		void SetText( const std::string& text );
 		virtual void SetText( const char* text );
@@ -30,6 +33,8 @@ namespace mage
 		virtual void OnLoadFromXML( const XmlReader::XmlReaderIterator& xml );
 		virtual void OnLoadFromDictionary( const Dictionary& dictionary );
 		virtual void OnInit();
+
+		void RecalculateSize();
 
 		BitmapFont* mFont;
 		std::string mText;

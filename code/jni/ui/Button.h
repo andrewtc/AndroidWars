@@ -11,12 +11,12 @@
 namespace mage
 {
 
-	class Button
-		: public Label
+	class Button : public Label
 	{
-	DECLARE_RTTI;
+		DECLARE_RTTI;
+
 	public:
-		Button( const std::string& name, Widget* parent );
+		Button( WidgetManager* manager, const HashString& name );
 
 		struct ButtonStyle
 		{

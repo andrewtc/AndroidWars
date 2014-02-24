@@ -2,6 +2,7 @@
 
 namespace mage
 {
+	class WidgetManager;
 	class InputState;
 	class GameState;
 	class GameStateManager;
@@ -14,6 +15,7 @@ namespace mage
 #include <MageTypes.h>
 
 extern mage::GameStateManager* gGameStateManager;
+extern mage::WidgetManager* gWidgetManager;
 extern mage::SoundManager* gSoundManager;
 extern mage::OnlineGameClient* gOnlineGameClient;
 extern mage::int32 gWindowWidth;
@@ -36,8 +38,11 @@ extern mage::int32 gWindowHeight;
 
 #include "ui/Widget.h"
 #include "ui/Label.h"
+#include "ui/Graphic.h"
 #include "ui/Button.h"
 #include "ui/TextField.h"
+#include "ui/Listbox.h"
+#include "ui/WidgetManager.h"
 
 #include "mainmenu/MainMenuState.h"
 

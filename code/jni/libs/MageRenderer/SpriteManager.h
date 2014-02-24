@@ -29,13 +29,13 @@ namespace mage
 		void OnDraw( const Camera& camera );
 
 		// Create a new Sprite using the specified animation resource
-		Sprite* CreateSprite( const HashString& animName, const Vec2f& position,
+		Sprite* CreateSprite( const HashString& animSetName, const Vec2f& position,
 			const HashString& initialAnimName="Idle" );
 
 		// Delete all sprite resources
 		void DestroyAllSprites();
 		// Delete a specific sprite
-		void DestorySprite( Sprite*& sprite );
+		void DestroySprite( Sprite*& sprite );
 
 	//private:
 	//	SpriteComponent* LoadSpriteDefinitionDirectory( SpriteComponent* parent,
