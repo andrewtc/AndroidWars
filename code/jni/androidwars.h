@@ -36,6 +36,7 @@ extern mage::int32 gWindowHeight;
 
 #include "online/OnlineGameClient.h"
 
+#include "ui/WidgetTemplate.h"
 #include "ui/Widget.h"
 #include "ui/Label.h"
 #include "ui/Graphic.h"

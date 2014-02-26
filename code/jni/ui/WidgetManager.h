@@ -38,15 +38,26 @@ namespace mage
 		bool OnPointerDown( float x, float y, size_t which );
 		bool OnPointerUp( float x, float y, size_t which );
 		bool OnPointerMotion( float x, float y, float dx, float dy, size_t which );
+
 		void LoadTheme( const char* file );
+		WidgetTemplate* CreateTemplate( const HashString& name );
+		WidgetTemplate* GetTemplate( const HashString& name ) const;
+		WidgetTemplate* LoadTemplateFromFile( const HashString& name, const std::string& file );
+		WidgetTemplate* LoadTemplateFromXML( const HashString& name, const XmlReader::XmlReaderIterator& xml );
+		void DestroyTemplate( WidgetTemplate* widgetTemplate );
+		void DestroyTemplate( const HashString& name );
+		void DestroyAllTemplates();
 
 		Widget* GetRootWidget() const;
 
 		bool IsInitialized() const;
 
 	private:
+		void LoadWidgetPropertiesFromXML( const XmlReader::XmlReaderIterator& xml, WidgetProperties& properties );
+
 		bool mIsInitialized;
 		Widget* mRootWidget;
+		HashMap< WidgetTemplate* > mTemplatesByName;
 		HashMap< AbstractWidgetFactory* > mFactoriesByClassName;
 		HashMap< BitmapFont* > mFonts;
 	};

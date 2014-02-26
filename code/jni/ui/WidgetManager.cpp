@@ -42,6 +42,9 @@ void WidgetManager::Destroy()
 	// Destroy the manager.
 	mIsInitialized = false;
 
+	// Destroy all Widget templates.
+	DestroyAllTemplates();
+
 	// Destroy all Widget factories.
 	for( auto it = mFactoriesByClassName.begin(); it != mFactoriesByClassName.end(); ++it )
 	{
@@ -158,9 +161,175 @@ void WidgetManager::LoadTheme( const char* file )
 				WarnFail( "Failed to load sound %s as %s\n", file, name );
 			}
 		}
+		else if( itr.ElementNameEquals( "Template" ) )
+		{
+			const char* name = itr.GetAttributeAsCString( "name" );
+			const char* file = itr.GetAttributeAsCString( "file" );
+
+			// Load the template from the XML file.
+			LoadTemplateFromFile( name, file );
+		}
 	}
 
-	DebugPrintf( "Widget : Loaded UI definitions" );
+	DebugPrintf( "Loaded Widget theme \"%s\".", file );
+}
+//---------------------------------------
+WidgetTemplate* WidgetManager::CreateTemplate( const HashString& name )
+{
+	WidgetTemplate* result = nullptr;
+
+	if( !name.GetString().empty() )
+	{
+		if( GetTemplate( name ) == nullptr )
+		{
+			// If there isn't already a template with this name, create it and return it.
+			result = new WidgetTemplate( this, name );
+
+			// Store the template by its name.
+			mTemplatesByName[ name ] = result;
+		}
+		else
+		{
+			WarnFail( "Failed to create Widget template \"%s\" because a template with the same name already exists!", name.GetCString() );
+		}
+	}
+	else
+	{
+		WarnFail( "Cannot create WidgetTemplate without a valid name!" );
+	}
+
+	return result;
+}
+//---------------------------------------
+WidgetTemplate* WidgetManager::GetTemplate( const HashString& name ) const
+{
+	WidgetTemplate* result = nullptr;
+
+	// Look up the template by its name (if it exists).
+	auto it = mTemplatesByName.find( name );
+
+	if( it != mTemplatesByName.end() )
+	{
+		// If the template was found, return it.
+		result = it->second;
+	}
+
+	return result;
+}
+//---------------------------------------
+WidgetTemplate* WidgetManager::LoadTemplateFromFile( const HashString& name, const std::string& file )
+{
+	WidgetTemplate* widgetTemplate = nullptr;
+
+	// Open the XML file.
+	XmlReader reader;
+	reader.LoadFile( file.c_str() );
+
+	// Get the root XML element.
+	XmlReader::XmlReaderIterator xml = reader.ReadRoot();
+
+	if( !reader.Fail() )
+	{
+		if( xml.IsValid() )
+		{
+			// Load the WidgetTemplate from the XML file.
+			widgetTemplate = LoadTemplateFromXML( name, xml );
+			DebugPrintf( "Loaded Widget template \"%s\".", name.GetCString() );
+		}
+		else
+		{
+			WarnFail( "No root XML element found in Widget template file \"%s\"!", file.c_str() );
+		}
+	}
+	else
+	{
+		WarnFail( "Could not open Widget template file \"%s\"!", file.c_str() );
+	}
+
+	return widgetTemplate;
+}
+//---------------------------------------
+WidgetTemplate* WidgetManager::LoadTemplateFromXML( const HashString& name, const XmlReader::XmlReaderIterator& xml )
+{
+	// Create a Widget template with the specified name.
+	WidgetTemplate* widgetTemplate = CreateTemplate( name );
+
+	if( widgetTemplate != nullptr )
+	{
+		// Load the Widget properties from the XML file.
+		LoadWidgetPropertiesFromXML( xml, widgetTemplate->GetRoot() );
+	}
+	else
+	{
+		WarnFail( "Could not create WidgetTemplate \"%s\"!", name.GetCString() );
+	}
+
+	return widgetTemplate;
+}
+//---------------------------------------
+void WidgetManager::DestroyTemplate( WidgetTemplate* widgetTemplate )
+{
+	assertion( widgetTemplate, "Cannot destroy null Widget template!" );
+
+	// Get the name of the Widget to destroy.
+	HashString name = widgetTemplate->GetName();
+
+	assertion( widgetTemplate->GetManager() == this, "Cannot destroy Widget template \"%s\" because it was created by another WidgetManager!", name.GetCString() );
+
+	// Find the template by its name.
+	auto it = mTemplatesByName.find( name );
+
+	if( it != mTemplatesByName.end() )
+	{
+		WidgetTemplate* templateFound = it->second;
+		assertion( templateFound == widgetTemplate, "Cannot destroy Widget template \"%s\" because a different template with the same name was found!" );
+
+		// Remove the template from the list of templates.
+		mTemplatesByName.erase( it );
+
+		// Destroy the template.
+		delete widgetTemplate;
+	}
+	else
+	{
+		WarnFail( "Could not destroy template \"%s\" because no template with that name exists!", name.GetCString() );
+	}
+}
+//---------------------------------------
+void WidgetManager::DestroyTemplate( const HashString& name )
+{
+	// Find the template by its name.
+	auto it = mTemplatesByName.find( name );
+
+	if( it != mTemplatesByName.end() )
+	{
+		WidgetTemplate* widgetTemplate = it->second;
+
+		// Remove the template from the list of templates.
+		mTemplatesByName.erase( it );
+
+		// Destroy the template.
+		delete widgetTemplate;
+	}
+	else
+	{
+		WarnFail( "Could not destroy template \"%s\" because no template with that name exists!", name.GetCString() );
+	}
+}
+//---------------------------------------
+void WidgetManager::DestroyAllTemplates()
+{
+	for( auto it = mTemplatesByName.begin(); it != mTemplatesByName.end(); ++it )
+	{
+		delete it->second;
+	}
+
+	mTemplatesByName.clear();
+}
+//---------------------------------------
+void WidgetManager::LoadWidgetPropertiesFromXML( const XmlReader::XmlReaderIterator& xml, WidgetProperties& properties )
+{
+	// TODO
 }
 //---------------------------------------
 BitmapFont* WidgetManager::GetFontByName( const HashString& name )

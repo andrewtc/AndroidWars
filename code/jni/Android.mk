@@ -157,6 +157,7 @@ $(aw_game_path)/Game.cpp \
 $(aw_game_path)/Player.cpp \
 $(aw_game_path)/Unit.cpp \
  ui/WidgetManager.cpp \
+ ui/WidgetTemplate.cpp \
  ui/Widget.cpp \
  ui/Label.cpp \
  ui/Graphic.cpp \
