@@ -604,6 +604,11 @@ std::string XmlReader::XmlReaderIterator::GetPCDataAsString () const
 	return GetPCDataAsCString();
 }
 //---------------------------------------
+const tinyxml2::XMLElement* XmlReader::XmlReaderIterator::GetCurrentElement() const
+{
+	return mCurrentElement;
+}
+//---------------------------------------
 bool XmlReader::XmlReaderIterator::ValidateXMLAttributes( const char* required,
 	const char* optional ) const
 {

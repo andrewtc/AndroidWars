@@ -44,7 +44,6 @@ namespace mage
 		WidgetTemplate* GetTemplate( const HashString& name ) const;
 		WidgetTemplate* LoadTemplateFromFile( const HashString& name, const std::string& file );
 		WidgetTemplate* LoadTemplateFromXML( const HashString& name, const XmlReader::XmlReaderIterator& xml );
-		void DestroyTemplate( WidgetTemplate* widgetTemplate );
 		void DestroyTemplate( const HashString& name );
 		void DestroyAllTemplates();
 
@@ -53,7 +52,7 @@ namespace mage
 		bool IsInitialized() const;
 
 	private:
-		void LoadWidgetPropertiesFromXML( const XmlReader::XmlReaderIterator& xml, WidgetProperties& properties );
+		void BuildWidgetTemplateFromXML( const XmlReader::XmlReaderIterator& xml, WidgetTemplate& widgetTemplate );
 
 		bool mIsInitialized;
 		Widget* mRootWidget;

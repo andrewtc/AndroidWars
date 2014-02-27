@@ -101,6 +101,8 @@ namespace mage
 		// Query if an attribute is present
 		bool HasAttribute( const char* name, bool caseSensitive=true ) const;
 
+		const tinyxml2::XMLElement* GetCurrentElement() const;
+
 		private:
 			// Util to convert a n-dim vector encoded as "x,y,...n" to vectorN
 			template< typename TVector >

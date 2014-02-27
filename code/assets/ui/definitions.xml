@@ -17,7 +17,7 @@
     
     <!-- Templates -->
     <Template name="TestLabel" file="ui/test_label.xml" />
-    <Template name="TestLabel" file="ui/test_label.xml" />
+    <Template name="TestButton" file="ui/test_button.xml" />
     
     <!-- Button styles -->
     <!--ButtonStyle name="testButtonStyle" sprite="button.anim" wrapText="true" default="d" pressed="p" selected="s" pressedColor="#FFFF7700" clickSFX=""/>

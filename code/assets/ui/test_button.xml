@@ -1,0 +1,5 @@
+<Button>
+    <Graphic name="background"
+        />
+    <Include template="TestLabel" name="label" />
+</Button>

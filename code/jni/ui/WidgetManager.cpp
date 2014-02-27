@@ -1,5 +1,7 @@
 #include "androidwars.h"
 
+#include "tinyxml2.h"
+
 using namespace mage;
 
 
@@ -183,7 +185,7 @@ WidgetTemplate* WidgetManager::CreateTemplate( const HashString& name )
 		if( GetTemplate( name ) == nullptr )
 		{
 			// If there isn't already a template with this name, create it and return it.
-			result = new WidgetTemplate( this, name );
+			result = new WidgetTemplate();
 
 			// Store the template by its name.
 			mTemplatesByName[ name ] = result;
@@ -234,7 +236,15 @@ WidgetTemplate* WidgetManager::LoadTemplateFromFile( const HashString& name, con
 		{
 			// Load the WidgetTemplate from the XML file.
 			widgetTemplate = LoadTemplateFromXML( name, xml );
-			DebugPrintf( "Loaded Widget template \"%s\".", name.GetCString() );
+
+			if( widgetTemplate )
+			{
+				DebugPrintf( "Loaded Widget template \"%s\":\n%s", name.GetCString(), widgetTemplate->ToString().c_str() );
+			}
+			else
+			{
+				WarnFail( "Error loading Widget template from file \"%s\"!", file.c_str() );
+			}
 		}
 		else
 		{
@@ -257,7 +267,7 @@ WidgetTemplate* WidgetManager::LoadTemplateFromXML( const HashString& name, cons
 	if( widgetTemplate != nullptr )
 	{
 		// Load the Widget properties from the XML file.
-		LoadWidgetPropertiesFromXML( xml, widgetTemplate->GetRoot() );
+		BuildWidgetTemplateFromXML( xml, *widgetTemplate );
 	}
 	else
 	{
@@ -265,35 +275,6 @@ WidgetTemplate* WidgetManager::LoadTemplateFromXML( const HashString& name, cons
 	}
 
 	return widgetTemplate;
-}
-//---------------------------------------
-void WidgetManager::DestroyTemplate( WidgetTemplate* widgetTemplate )
-{
-	assertion( widgetTemplate, "Cannot destroy null Widget template!" );
-
-	// Get the name of the Widget to destroy.
-	HashString name = widgetTemplate->GetName();
-
-	assertion( widgetTemplate->GetManager() == this, "Cannot destroy Widget template \"%s\" because it was created by another WidgetManager!", name.GetCString() );
-
-	// Find the template by its name.
-	auto it = mTemplatesByName.find( name );
-
-	if( it != mTemplatesByName.end() )
-	{
-		WidgetTemplate* templateFound = it->second;
-		assertion( templateFound == widgetTemplate, "Cannot destroy Widget template \"%s\" because a different template with the same name was found!" );
-
-		// Remove the template from the list of templates.
-		mTemplatesByName.erase( it );
-
-		// Destroy the template.
-		delete widgetTemplate;
-	}
-	else
-	{
-		WarnFail( "Could not destroy template \"%s\" because no template with that name exists!", name.GetCString() );
-	}
 }
 //---------------------------------------
 void WidgetManager::DestroyTemplate( const HashString& name )
@@ -327,9 +308,36 @@ void WidgetManager::DestroyAllTemplates()
 	mTemplatesByName.clear();
 }
 //---------------------------------------
-void WidgetManager::LoadWidgetPropertiesFromXML( const XmlReader::XmlReaderIterator& xml, WidgetProperties& properties )
+void WidgetManager::BuildWidgetTemplateFromXML( const XmlReader::XmlReaderIterator& xml, WidgetTemplate& widgetTemplate )
 {
-	// TODO
+	// Clear all properties in the result object.
+	widgetTemplate.Clear();
+
+	// Use the name of the element as the proposed type for this Widget template.
+	widgetTemplate.SetProperty( "type", xml.ElementName() );
+
+	// Get the first attribute from the XML element.
+	const tinyxml2::XMLElement* element = xml.GetCurrentElement();
+
+	for( const tinyxml2::XMLAttribute* currentAttribute = element->FirstAttribute();
+		 currentAttribute != nullptr; currentAttribute = currentAttribute->Next() )
+	{
+		// Load each attribute of the root XML element as a string property.
+		widgetTemplate.SetProperty( currentAttribute->Name(), currentAttribute->Value() );
+	}
+
+	for( XmlReader::XmlReaderIterator childXML = xml.NextChild(); childXML.IsValid(); childXML = childXML.NextSibling() )
+	{
+		// Get the name of the child element.
+		HashString childName = childXML.GetAttributeAsCString( "name" );
+
+		// Parse the element as a child template.
+		WidgetTemplate child;
+		BuildWidgetTemplateFromXML( childXML, child );
+
+		// Add the child template to this one.
+		widgetTemplate.SetChild( childName, child );
+	}
 }
 //---------------------------------------
 BitmapFont* WidgetManager::GetFontByName( const HashString& name )
