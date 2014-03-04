@@ -5,6 +5,7 @@
         name="scrollBackground"
         animationSet="main_menu_scroll_bg.anim"
         drawMode="tile"
+        drawOffset="128,128"
         size="1280,800"
         layer="-1"
         />

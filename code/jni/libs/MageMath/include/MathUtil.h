@@ -126,6 +126,28 @@ namespace mage
 		{
 			return a < b ? a : b;
 		}
+		static TReal Wrap( TReal value, TReal min, TReal max )
+		{
+			//assertion( min <= max );
+			TReal range = ( max - min );
+
+			while( value >= max )
+				value -= range;
+			while( value < min )
+				value += range;
+
+			return value;
+		}
+		static void WrapToRange( TReal& value, TReal min, TReal max )
+		{
+			//assertion( min <= max );
+			TReal range = ( max - min );
+
+			while( value >= max )
+				value -= range;
+			while( value < min )
+				value += range;
+		}
 		//---------------------------------------
 
 		//---------------------------------------

@@ -66,6 +66,9 @@ void Graphic::OnLoadFromTemplate( const WidgetTemplate& widgetTemplate )
 	}
 
 	SetDrawMode( drawMode );
+
+	// Set the draw offset.
+	mDrawOffset = widgetTemplate.GetPropertyAsVec2f( "drawOffset", Vec2f::ZERO );
 }
 
 
@@ -115,9 +118,14 @@ void Graphic::OnDraw( const Camera& camera )
 			// Find the bounds of the sprite.
 			RectI animationBounds = mSprite->GetClippingRectForCurrentAnimation();
 
-			for( float top = bounds.Top; top < bounds.Bottom; top += animationBounds.Height() )
+			// Wrap the draw offset to the size of the sprite.
+			Vec2f drawOffset;
+			drawOffset.x = Mathf::Wrap( mDrawOffset.x, 0.0f, animationBounds.Width() );
+			drawOffset.y = Mathf::Wrap( mDrawOffset.y, 0.0f, animationBounds.Height() );
+
+			for( float top = ( bounds.Top - drawOffset.x ); top < bounds.Bottom; top += animationBounds.Height() )
 			{
-				for( float left = bounds.Left; left < bounds.Right; left += animationBounds.Width() )
+				for( float left = ( bounds.Left - drawOffset.y ); left < bounds.Right; left += animationBounds.Width() )
 				{
 					// Draw the sprite, tiling the whole area of the Widget.
 					mSprite->Position = Vec2f( left, top );
@@ -205,6 +213,18 @@ void Graphic::SetDrawMode( DrawMode drawMode )
 Graphic::DrawMode Graphic::GetDrawMode() const
 {
 	return mDrawMode;
+}
+
+
+void Graphic::SetDrawOffset( const Vec2f& drawOffset )
+{
+	mDrawOffset = drawOffset;
+}
+
+
+Vec2f Graphic::GetDrawOffset() const
+{
+	return mDrawOffset;
 }
 
 

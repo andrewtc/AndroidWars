@@ -34,6 +34,9 @@ namespace mage
 		void SetDrawMode( DrawMode drawMode );
 		DrawMode GetDrawMode() const;
 
+		void SetDrawOffset( const Vec2f& drawOffset );
+		Vec2f GetDrawOffset() const;
+
 	protected:
 		virtual void OnLoadFromTemplate( const WidgetTemplate& widgetTemplate );
 
@@ -46,5 +49,6 @@ namespace mage
 		DrawMode mDrawMode;
 		Sprite* mSprite;
 		Color mDrawColor;
+		Vec2f mDrawOffset;
 	};
 }
