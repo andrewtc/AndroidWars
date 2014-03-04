@@ -18,6 +18,8 @@ namespace mage
 		LogInInputState* GetLogInState() const;
 		DashboardInputState* GetDashboardState() const;
 
+		Widget* GetWidget() const;
+
 	private:
 		virtual void OnEnter( const Dictionary& parameters );
 		virtual void OnUpdate( float elapsedTime );
@@ -26,6 +28,7 @@ namespace mage
 
 		LogInInputState* mLogInState;
 		DashboardInputState* mDashboardState;
+		Widget* mWidget;
 	};
 
 
@@ -38,6 +41,12 @@ namespace mage
 	inline DashboardInputState* MainMenuState::GetDashboardState() const
 	{
 		return mDashboardState;
+	}
+
+
+	inline Widget* MainMenuState::GetWidget() const
+	{
+		return mWidget;
 	}
 
 
@@ -55,8 +64,6 @@ namespace mage
 		virtual ~LogInInputState();
 
 		void OnLogInButtonPressed( float x, float y );
-
-		Widget* mWidget;
 
 		friend class GameState;
 	};
@@ -78,8 +85,6 @@ namespace mage
 		void OnLogOutButtonPressed( Dictionary& params );
 		void OnRefreshButtonPressed( Dictionary& params );
 		void OnNewGameButtonPressed( Dictionary& params );
-
-		Widget* mWidget;
 
 		friend class GameState;
 	};

@@ -37,13 +37,7 @@ namespace mage
 		}
 
 		template< typename T >
-		static bool StringToType( const std::string& str, T* type )
-		{
-			std::stringstream ss;
-			ss << str;
-			ss >> *type;
-			return !ss.fail();
-		}
+		static bool StringToType( const std::string& str, T* type );
 
 		template< typename T >
 		static std::string ToString( const T& type )
@@ -88,6 +82,15 @@ namespace mage
 
 	inline const char* BoolToCString( bool b ) { return b ? "True" : "False"; }
 	inline std::string BoolToString( bool b ) { return std::string( BoolToCString( b ) ); }
+
+	template< typename T >
+	bool StringUtil::StringToType( const std::string& str, T* type )
+	{
+		std::stringstream ss;
+		ss << str;
+		ss >> *type;
+		return !ss.fail();
+	}
 
 	// IO util functions
 	template< typename buffer_t >

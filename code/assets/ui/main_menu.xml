@@ -13,6 +13,7 @@
         name="loginScreen"
         position="400,100"
         size="480,640"
+        isVisible="false"
         >
         <Graphic
             name="background"

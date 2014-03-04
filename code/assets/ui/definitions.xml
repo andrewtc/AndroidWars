@@ -22,7 +22,7 @@
     <Template name="TestMenuButton" file="ui/test_menu_button.xml" />
     <Template name="TestWidget"     file="ui/test_widget.xml"      />
     <Template name="TestTextField"  file="ui/test_text_field.xml"  />
-    <Template name="LoginScreen"    file="ui/main_menu.xml"        />
+    <Template name="MainMenu"       file="ui/main_menu.xml"        />
     <Template name="Dashboard"      file="ui/dashboard.xml"        />
 	<Template name="MoveDialog"     file="ui/move_dialog.xml"      />
 	<Template name="AttackDialog"   file="ui/attack_dialog.xml"    />

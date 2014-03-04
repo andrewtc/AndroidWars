@@ -6,7 +6,8 @@ using namespace mage;
 MainMenuState::MainMenuState() :
 	GameState(),
 	mLogInState( nullptr ),
-	mDashboardState( nullptr )
+	mDashboardState( nullptr ),
+	mWidget( nullptr )
 {
 	DebugPrintf( "MainMenuState created!" );
 }
@@ -21,6 +22,16 @@ MainMenuState::~MainMenuState()
 void MainMenuState::OnEnter( const Dictionary& parameters )
 {
 	DebugPrintf( "MainMenuState entered!" );
+
+	// Create the main menu widget.
+	mWidget = gWidgetManager->CreateWidgetFromTemplate( "MainMenu" );
+
+	if( mWidget )
+	{
+		// Show the main menu widget.
+		gWidgetManager->GetRootWidget()->AddChild( mWidget );
+		mWidget->Show();
+	}
 
 	// Create all states.
 	mLogInState = CreateState< LogInInputState >();
@@ -64,10 +75,10 @@ void MainMenuState::OnExit()
 // ========== LogInInputState ==========
 
 LogInInputState::LogInInputState( GameState* owner ) :
-	DerivedInputState( owner ), mWidget( nullptr )
+	DerivedInputState( owner )
 {
+	/*
 	// Create the log in widget.
-	mWidget = gWidgetManager->CreateWidgetFromTemplate( "LoginScreen" );
 	mWidget->Hide();
 
 	// Get Login button.
@@ -84,11 +95,14 @@ LogInInputState::LogInInputState( GameState* owner ) :
 
 	// Attach the Widget to the root Widget.
 	gWidgetManager->GetRootWidget()->AddChild( mWidget );
+	*/
+	// TODO
 }
 
 
 LogInInputState::~LogInInputState()
 {
+	/*
 	// Destroy the widget.
 	gWidgetManager->DestroyWidget( mWidget );
 	mWidget = nullptr;
@@ -101,25 +115,30 @@ LogInInputState::~LogInInputState()
 		// Unregister callbacks.
 		loginButton->ClearOnClickDelegate();
 	}
+	*/
+	// TODO
 }
 
 
 void LogInInputState::OnEnter( const Dictionary& parameters )
 {
 	// Show the widget.
-	mWidget->Show();
+	//mWidget->Show();
+	// TODO
 }
 
 
 void LogInInputState::OnExit()
 {
 	// Hide the widget.
-	mWidget->Hide();
+	//mWidget->Hide();
+	// TODO
 }
 
 
 void LogInInputState::OnLogInButtonPressed( float x, float y )
 {
+	/*
 	DebugPrintf( "Log in button pressed!" );
 
 	// Get the username and password values from the login box.
@@ -146,6 +165,8 @@ void LogInInputState::OnLogInButtonPressed( float x, float y )
 			DebugPrintf( "Login failed!" );
 		}
 	});
+	*/
+	// TODO
 }
 
 
@@ -154,6 +175,7 @@ void LogInInputState::OnLogInButtonPressed( float x, float y )
 DashboardInputState::DashboardInputState( GameState* owner ) :
 	DerivedInputState( owner )
 {
+	/*
 	// Register callbacks.
 	RegisterObjectEventFunc( DashboardInputState, OnLogOutButtonPressed );
 	RegisterObjectEventFunc( DashboardInputState, OnRefreshButtonPressed );
@@ -162,11 +184,13 @@ DashboardInputState::DashboardInputState( GameState* owner ) :
 	// Create the log in widget.
 	mWidget = gWidgetManager->CreateWidgetFromTemplate( "Dashboard" );
 	mWidget->Hide();
+	*/
 }
 
 
 DashboardInputState::~DashboardInputState()
 {
+	/*
 	// Destroy the widget.
 	gWidgetManager->DestroyWidget( mWidget );
 	mWidget = nullptr;
@@ -175,20 +199,25 @@ DashboardInputState::~DashboardInputState()
 	UnregisterObjectEventFunc( DashboardInputState, OnLogOutButtonPressed );
 	UnregisterObjectEventFunc( DashboardInputState, OnRefreshButtonPressed );
 	UnregisterObjectEventFunc( DashboardInputState, OnNewGameButtonPressed );
+	*/
 }
 
 
 void DashboardInputState::OnEnter( const Dictionary& parameters )
 {
+	/*
 	// Show the widget.
 	mWidget->Show();
+	*/
 }
 
 
 void DashboardInputState::OnExit()
 {
+	/*
 	// Hide the widget.
 	mWidget->Hide();
+	*/
 }
 
 

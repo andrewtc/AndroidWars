@@ -16,6 +16,15 @@ namespace mage
 		ConsolePrintf( CONSOLE_WARNING, "Warning: '%s' : %s\n", tag.c_str(), errorMsg );
 		return defaultValue;
 	}
+	//---------------------------------------
+	template<>
+	bool StringUtil::StringToType< bool >( const std::string& str, bool* type )
+	{
+		std::stringstream ss;
+		ss << str;
+		ss >> std::boolalpha >> *type;
+		return !ss.fail();
+	}
 }
 
 using namespace mage;

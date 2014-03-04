@@ -58,6 +58,7 @@ void Widget::OnLoadFromTemplate( const WidgetTemplate& widgetTemplate )
 {
 	// Parse all valid properties.
 	mOffset = widgetTemplate.GetPropertyAsVec2f( "position", Vec2f::ZERO );
+	mIsVisible = widgetTemplate.GetPropertyAsBool( "isVisible", true );
 	SetSize( widgetTemplate.GetPropertyAsVec2f( "size", Vec2f::ZERO ) );
 	SetDrawLayer( widgetTemplate.GetPropertyAsInt( "layer", 0 ) );
 }
