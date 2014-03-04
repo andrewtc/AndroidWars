@@ -11,50 +11,35 @@
 namespace mage
 {
 
-	class Button : public Label
+	class Button : public Widget
 	{
 		DECLARE_RTTI;
 
 	public:
+		typedef Callback< void, float, float > OnClickDelegate;
+
 		Button( WidgetManager* manager, const HashString& name );
-
-		struct ButtonStyle
-		{
-			HashString SpriteName;
-			HashString DefaultAnimName;
-			HashString PressedAnimName;
-			HashString SelectedAnimName;
-			HashString SelectedSFXName;
-			Color PressedColor;
-			Color DisabledColor;
-			bool WrapText;
-		};
-
-		static ButtonStyle* CreateButtonStyle( const HashString& name );
-		static ButtonStyle* GetButtonStyle( const HashString& name );
-		static void DestroyAllButtonStyles();
-
-		virtual void SetText( const char* text );
 
 		void Disable();
 		void Enable();
+
+		void SetOnClickDelegate( OnClickDelegate onClick );
+		void ClearOnClickDelegate();
+		OnClickDelegate GetOnClickDelegate() const;
+		bool HasOnClickDelegate() const;
+
 	protected:
 		virtual ~Button();
 
-		virtual void OnLoadFromXML( const XmlReader::XmlReaderIterator& xml );
-		virtual void OnLoadFromDictionary( const Dictionary& dictionary );
+		virtual void OnLoadFromTemplate( const WidgetTemplate& widgetTemplate );
 		virtual void OnInit();
 
 		virtual bool OnPointerDown( float x, float y );
 		virtual bool OnPointerUp( float x, float y );
 
 	private:
-		HashString mOnClickEvent;
-		HashString mStyleName;
-		Color mDefaultColor;
-		Color mPressedColor;
-		bool mEnabled;
-
-		static HashMap< ButtonStyle* > sButtonStyles;
+		bool mIsEnabled;
+		bool mIsPressed;
+		OnClickDelegate mOnClick;
 	};
 }

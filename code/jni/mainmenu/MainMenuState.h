@@ -54,7 +54,7 @@ namespace mage
 		LogInInputState( GameState* owner );
 		virtual ~LogInInputState();
 
-		void OnLogInButtonPressed( Dictionary& params );
+		void OnLogInButtonPressed( float x, float y );
 
 		Widget* mWidget;
 

@@ -8,36 +8,23 @@ MAGE_IMPLEMENT_RTTI( Widget, Label );
 Label::Label( WidgetManager* manager, const HashString& name )
 	: Widget( manager, name )
 	, mTextScale( 1.0f )
-	, TextColor( Color::WHITE )
+	, mTextColor( Color::BLACK )
 	, mMaxLineLength( -1 )
 	, mFont( nullptr )
 { }
 //---------------------------------------
-void Label::OnLoadFromXML( const XmlReader::XmlReaderIterator& xml )
+void Label::OnLoadFromTemplate( const WidgetTemplate& widgetTemplate )
 {
-	Widget::OnLoadFromXML( xml );
+	Widget::OnLoadFromTemplate( widgetTemplate );
 
-	TextColor = xml.GetAttributeAsColor( "textColor", Color::WHITE );
+	mTextColor = widgetTemplate.GetPropertyAsColor( "textColor", Color::BLACK );
 
 	// Look up the font by its name.
-	const char* fontName = xml.GetAttributeAsCString( "font", "" );
+	std::string fontName = widgetTemplate.GetProperty( "font", "", true );
 	SetFont( GetManager()->GetFontByName( fontName ) );
 
 	// Set the text of the label.
-	SetText( xml.GetAttributeAsCString( "text", "" ) );
-}
-//---------------------------------------
-void Label::OnLoadFromDictionary( const Dictionary& dictionary )
-{
-	Widget::OnLoadFromDictionary( dictionary );
-
-	// Look up the font by its name.
-	TextColor = dictionary.Get( "textColor", Color::WHITE );
-	const char* fontName = dictionary.Get< const char* >( "font", "" );
-	SetFont( GetManager()->GetFontByName( fontName ) );
-
-	// Set the text of the label.
-	SetText( dictionary.Get( "text", "" ) );
+	SetText( widgetTemplate.GetProperty( "text" ) );
 }
 //---------------------------------------
 void Label::OnInit()
@@ -58,8 +45,8 @@ void Label::OnDraw( const Camera& camera )
 
 	if( mFont )
 	{
-		Vec2f pos = FindPosition() + mTextDrawOffset;
-		DrawText( pos.x, pos.y, mFont, TextColor, mTextScale, mMaxLineLength, mText.c_str() );
+		Vec2f pos = CalculatePosition() + mTextDrawOffset;
+		DrawText( pos.x, pos.y, mFont, mTextColor, mTextScale, mMaxLineLength, mText.c_str() );
 	}
 }
 //---------------------------------------
@@ -97,14 +84,29 @@ void Label::SetText( const char* text )
 	RecalculateSize();
 }
 //---------------------------------------
+void Label::SetTextColor( const Color& textColor )
+{
+	mTextColor = textColor;
+}
+//---------------------------------------
+Color Label::GetTextColor() const
+{
+	return mTextColor;
+}
+//---------------------------------------
 void Label::RecalculateSize()
 {
-	DebugPrintf( "Recalculating size..." );
+	DebugPrintf( "Recalculating Label size..." );
 	if( mFont )
 	{
 		// Resize the label to hold all the text.
 		SetSize( mFont->GetLineWidth( mText.c_str(), mTextScale ),
 				 mFont->GetLineHeight( mTextScale ) );
+		DebugPrintf( "Label size is now (%f, %f).", GetWidth(), GetHeight() );
+	}
+	else
+	{
+		WarnFail( "Could not recalculate Label size because no Font was found!" );
 	}
 }
 //---------------------------------------

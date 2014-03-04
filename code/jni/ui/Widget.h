@@ -11,6 +11,7 @@ namespace mage
 {
 	class Widget;
 	class WidgetManager;
+	class WidgetTemplate;
 
 
 	class AbstractWidgetFactory
@@ -39,8 +40,7 @@ namespace mage
 		DECLARE_RTTI;
 
 	protected:
-		virtual void OnLoadFromXML( const XmlReader::XmlReaderIterator& xml );
-		virtual void OnLoadFromDictionary( const Dictionary& dictionary );
+		virtual void OnLoadFromTemplate( const WidgetTemplate& widgetTemplate );
 		virtual void OnInit();
 
 		virtual void OnUpdate( float elapsedTime );
@@ -54,18 +54,15 @@ namespace mage
 		virtual Widget* Clone() const;
 		virtual ~Widget();
 
+		void LoadFromTemplate( const WidgetTemplate& widgetTemplate );
 		void Init();
 
 		void Update( float elapsedTime );
 		void Draw( const Camera& camera );
+		bool PointerDown( float x, float y );
+		bool PointerUp( float x, float y );
 
 		WidgetManager* GetManager() const;
-
-		void SetSprite( Sprite* sprite );
-		Sprite* GetSprite() const;
-		bool HasSprite() const;
-
-		bool IsFixedSizeSprite() const;
 
 		void SetWidth( float width );
 		float GetWidth() const;
@@ -95,68 +92,61 @@ namespace mage
 		void RemoveChildByName( const HashString& name );
 		template< class WidgetSubclass = Widget >
 		WidgetSubclass* GetChildByName( const HashString& name ) const;
+		template< class WidgetSubclass = Widget >
+		void FindChildren( std::vector< WidgetSubclass* >& results );
+		template< class WidgetSubclass = Widget >
+		void FindDescendants( std::vector< WidgetSubclass* >& results );
+		template< class WidgetSubclass = Widget >
+		void FindChildrenMatching( Callback< bool, WidgetSubclass* > test, std::vector< WidgetSubclass* >& results );
+		template< class WidgetSubclass = Widget >
+		void FindDescendantsMatching( Callback< bool, WidgetSubclass* > test, std::vector< WidgetSubclass* >& results );
+		template< class WidgetSubclass = Widget >
+		void FindChildrenAt( float x, float y, std::vector< WidgetSubclass* >& results );
+		template< class WidgetSubclass = Widget >
+		void FindDescendantsAt( float x, float y, std::vector< WidgetSubclass* >& results );
 		bool HasChild( const Widget* child ) const;
 		bool HasChildWithName( const HashString& name ) const;
-
-		void SetLayoutAbove( const HashString& widgetName );
-		void SetLayoutBelow( const HashString& widgetName );
-		void SetLayoutToLeftOf( const HashString& widgetName );
-		void SetLayoutToRightOf( const HashString& widgetName );
 
 		template< class WidgetSubclass = Widget >
 		WidgetSubclass* FindSiblingByName( const HashString& name ) const;
 		bool HasSibling( const Widget* sibling ) const;
 		bool HasSiblingWithName( const HashString& siblingName ) const;
 
-		template< class WidgetSubclass = Widget >
-		WidgetSubclass* FindLayoutAbove() const;
-		template< class WidgetSubclass = Widget >
-		WidgetSubclass* FindLayoutBelow() const;
-		template< class WidgetSubclass = Widget >
-		WidgetSubclass* FindLayoutToLeftOf() const;
-		template< class WidgetSubclass = Widget >
-		WidgetSubclass* FindLayoutToRightOf() const;
-		bool IsRelativeToSibling( const Widget* sibling ) const;
-		bool IsRelativeToSiblingWithName( const HashString& siblingName ) const;
-
 		bool IsInitialized() const;
 
 		void SetOffset( const Vec2f& offset );
 		Vec2f GetOffset() const;
-		Vec2f FindPosition();
-		const RectF& FindBounds();
+		Vec2f CalculatePosition();
+		RectF CalculateBounds();
+		RectF GetBoundsInParent() const;
 
 		void SetVisible( bool isVisible );
 		bool IsVisible() const;
 
+		void SetDrawLayer( int drawLayer );
+		int GetDrawLayer() const;
+
 	private:
 		bool mIsInitialized;
-		bool mNeedsBoundsUpdate;
-		bool mIsFixedSizeSprite;
-		bool mCenterInParent;
 		bool mIsVisible;
+		bool mPositionNeedsUpdate;
+		bool mDrawOrderNeedsUpdate;
 		bool mDebugLayout;
+		int mDrawLayer;
 		WidgetManager* mManager;
 		Widget* mParent;
-		Sprite* mSprite;
-		RectF mCalculatedBounds;
+		Vec2f mCalculatedPosition;
 		Vec2f mSize;
 		Vec2f mOffset;
-		Vec4f mMargins;
 		HashString mName;
-		HashString mBelowWidgetName;
-		HashString mAboveWidgetName;
-		HashString mToLeftOfWidgetName;
-		HashString mToRightOfWidgetName;
+		std::map< int, std::vector< Widget* > > mChildrenByDrawLayer;
 
 	protected:
-		void InvalidateBounds();
-		void RecalculateBounds();
-		void UpdateSiblingsOf( Widget* child );
-		void SetSprite( const HashString& spriteName );
-		void SetFixedSizeSprite( bool isFixedSizeSprite );
+		void InvalidatePosition();
+		void UpdatePosition();
+		void InvalidateDrawOrder();
+		void UpdateDrawOrder();
 
-		Color mDrawColor;
 		HashMap< Widget* > mChildren;
 
 		enum Margin
@@ -216,6 +206,109 @@ namespace mage
 	}
 	//---------------------------------------
 	template< class WidgetSubclass >
+	void Widget::FindChildren( std::vector< WidgetSubclass* >& results )
+	{
+		// Find all children in draw order.
+		FindChildrenMatching< WidgetSubclass >( []( WidgetSubclass* ) -> bool
+		{
+			return true;
+		},
+		results );
+	}
+	//---------------------------------------
+	template< class WidgetSubclass >
+	void Widget::FindDescendants( std::vector< WidgetSubclass* >& results )
+	{
+		// Find all descendants in draw order.
+		FindDescendantsMatching< WidgetSubclass >( []( WidgetSubclass* ) -> bool
+		{
+			return true;
+		},
+		results );
+	}
+	//---------------------------------------
+	template< class WidgetSubclass >
+	void Widget::FindChildrenMatching( Callback< bool, WidgetSubclass* > test, std::vector< WidgetSubclass* >& results )
+	{
+		assertion( test.IsValid(), "Cannot query children of Widget \"%s\" because no valid callback function was supplied!", mName.GetCString() );
+
+		// Determine the draw order of all children.
+		UpdateDrawOrder();
+
+		for( auto layerIt = mChildrenByDrawLayer.begin(); layerIt != mChildrenByDrawLayer.end(); ++layerIt )
+		{
+			// Process layers in order (i.e. from bottom to top).
+			const std::vector< Widget* >& children = layerIt->second;
+
+			for( auto childIt = children.begin(); childIt != children.end(); ++childIt )
+			{
+				// Check children from bottom to top and find any that match the class being queried.
+				WidgetSubclass* derived = dynamic_cast< WidgetSubclass* >( *childIt );
+
+				if( derived != nullptr && test.Invoke( derived ) )
+				{
+					// If the child is of the right type, add it to the list of results.
+					results.push_back( derived );
+				}
+			}
+		}
+	}
+	//---------------------------------------
+	template< class WidgetSubclass >
+	void Widget::FindDescendantsMatching( Callback< bool, WidgetSubclass* > test, std::vector< WidgetSubclass* >& results )
+	{
+		assertion( test.IsValid(), "Cannot query descendants of Widget \"%s\" because no valid callback function was supplied!", mName.GetCString() );
+
+		// Determine the draw order of all children.
+		UpdateDrawOrder();
+
+		for( auto layerIt = mChildrenByDrawLayer.begin(); layerIt != mChildrenByDrawLayer.end(); ++layerIt )
+		{
+			// Process layers in order (i.e. from bottom to top).
+			const std::vector< Widget* >& children = layerIt->second;
+
+			for( auto childIt = children.begin(); childIt != children.end(); ++childIt )
+			{
+				// Check children in draw order and find any that match the class being queried.
+				Widget* child = ( *childIt );
+
+				WidgetSubclass* derivedChild = dynamic_cast< WidgetSubclass* >( child );
+
+				if( derivedChild != nullptr && test.Invoke( derivedChild ) )
+				{
+					// If the child is of the right type, add it to the list of results.
+					results.push_back( derivedChild );
+				}
+
+				// Let the child add its own children to the list in draw order.
+				child->FindDescendantsMatching< WidgetSubclass >( test, results );
+			}
+		}
+	}
+	//---------------------------------------
+	template< class WidgetSubclass >
+	void Widget::FindChildrenAt( float x, float y, std::vector< WidgetSubclass* >& results )
+	{
+		// Find all children whose bounds contain the point.
+		FindChildrenMatching< WidgetSubclass >( [ x, y ]( WidgetSubclass* widget ) -> bool
+		{
+			return widget->CalculateBounds().contains( x, y );
+		},
+		results );
+	}
+	//---------------------------------------
+	template< class WidgetSubclass >
+	void Widget::FindDescendantsAt( float x, float y, std::vector< WidgetSubclass* >& results )
+	{
+		// Find all children whose bounds contain the point.
+		FindDescendantsMatching< WidgetSubclass >( [ x, y ]( WidgetSubclass* widget ) -> bool
+		{
+			return widget->CalculateBounds().Contains( x, y );
+		},
+		results );
+	}
+	//---------------------------------------
+	template< class WidgetSubclass >
 	WidgetSubclass* Widget::FindSiblingByName( const HashString& name ) const
 	{
 		WidgetSubclass* result = nullptr;
@@ -227,30 +320,6 @@ namespace mage
 		}
 
 		return result;
-	}
-	//---------------------------------------
-	template< class WidgetSubclass >
-	WidgetSubclass* Widget::FindLayoutAbove() const
-	{
-		return FindSiblingByName< WidgetSubclass >( mAboveWidgetName );
-	}
-	//---------------------------------------
-	template< class WidgetSubclass >
-	WidgetSubclass* Widget::FindLayoutBelow() const
-	{
-		return FindSiblingByName< WidgetSubclass >( mBelowWidgetName );
-	}
-	//---------------------------------------
-	template< class WidgetSubclass >
-	WidgetSubclass* Widget::FindLayoutToLeftOf() const
-	{
-		return FindSiblingByName< WidgetSubclass >( mToLeftOfWidgetName );
-	}
-	//---------------------------------------
-	template< class WidgetSubclass >
-	WidgetSubclass* Widget::FindLayoutToRightOf() const
-	{
-		return FindSiblingByName< WidgetSubclass >( mToRightOfWidgetName );
 	}
 	//---------------------------------------
 	inline bool Widget::IsInitialized() const

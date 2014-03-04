@@ -66,12 +66,21 @@ void MainMenuState::OnExit()
 LogInInputState::LogInInputState( GameState* owner ) :
 	DerivedInputState( owner ), mWidget( nullptr )
 {
-	// Register callbacks.
-	RegisterObjectEventFunc( LogInInputState, OnLogInButtonPressed );
-
 	// Create the log in widget.
-	mWidget = gWidgetManager->LoadWidgetFromFile( "ui/main_menu.xml" );
+	mWidget = gWidgetManager->CreateWidgetFromTemplate( "LoginScreen" );
 	mWidget->Hide();
+
+	// Get Login button.
+	Button* loginButton = mWidget->GetChildByName< Button >( "loginButton" );
+
+	if( loginButton )
+	{
+		// Register callbacks.
+		loginButton->SetOnClickDelegate( [this]( float x, float y )
+		{
+			OnLogInButtonPressed( x, y );
+		});
+	}
 
 	// Attach the Widget to the root Widget.
 	gWidgetManager->GetRootWidget()->AddChild( mWidget );
@@ -84,8 +93,14 @@ LogInInputState::~LogInInputState()
 	gWidgetManager->DestroyWidget( mWidget );
 	mWidget = nullptr;
 
-	// Unregister callbacks.
-	UnregisterObjectEventFunc( LogInInputState, OnLogInButtonPressed );
+	// Get Login button.
+	Button* loginButton = mWidget->GetChildByName< Button >( "loginButton" );
+
+	if( loginButton )
+	{
+		// Unregister callbacks.
+		loginButton->ClearOnClickDelegate();
+	}
 }
 
 
@@ -103,13 +118,13 @@ void LogInInputState::OnExit()
 }
 
 
-ObjectEventFunc( LogInInputState, OnLogInButtonPressed )
+void LogInInputState::OnLogInButtonPressed( float x, float y )
 {
 	DebugPrintf( "Log in button pressed!" );
 
 	// Get the username and password values from the login box.
-	Button* usernameField = (Button*) mWidget->GetChildByName( "usernameField" );
-	Button* passwordField = (Button*) mWidget->GetChildByName( "passwordField" );
+	TextField* usernameField = mWidget->GetChildByName< TextField >( "usernameField" );
+	TextField* passwordField = mWidget->GetChildByName< TextField >( "passwordField" );
 
 	std::string username = usernameField->GetText();
 	std::string password = passwordField->GetText();
@@ -145,7 +160,7 @@ DashboardInputState::DashboardInputState( GameState* owner ) :
 	RegisterObjectEventFunc( DashboardInputState, OnNewGameButtonPressed );
 
 	// Create the log in widget.
-	mWidget = gWidgetManager->LoadWidgetFromFile( "ui/dashboard.xml" );
+	mWidget = gWidgetManager->CreateWidgetFromTemplate( "Dashboard" );
 	mWidget->Hide();
 }
 

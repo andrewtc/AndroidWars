@@ -1,5 +1,4 @@
 #include <MageApp.h>
-#include "ui/Widget.h"
 
 #include "androidwars.h"
 
@@ -204,6 +203,5 @@ void main()
 		delete gWidgetManager;
 	}
 
-	Button::DestroyAllButtonStyles();
 	gSoundManager->Stop();
 }

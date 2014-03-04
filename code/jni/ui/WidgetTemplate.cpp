@@ -5,6 +5,17 @@ using namespace mage;
 //---------------------------------------
 // WidgetTemplate
 //---------------------------------------
+const HashString WidgetTemplate::TYPE_INCLUDE( "Include" );
+const HashString WidgetTemplate::TYPE_OVERRIDE( "Override" );
+//---------------------------------------
+const HashString WidgetTemplate::PROPERTY_TYPE( "type" );
+const HashString WidgetTemplate::PROPERTY_NAME( "name" );
+const HashString WidgetTemplate::PROPERTY_TEMPLATE( "template" );
+//---------------------------------------
+const HashString WidgetTemplate::MERGE_CHILDREN_REPLACE( "replace" );
+const HashString WidgetTemplate::MERGE_CHILDREN_SHALLOW( "shallow" );
+const HashString WidgetTemplate::MERGE_CHILDREN_DEEP( "deep" );
+//---------------------------------------
 WidgetTemplate::WidgetTemplate() { }
 //---------------------------------------
 WidgetTemplate::WidgetTemplate( const WidgetTemplate& other ) :
@@ -29,8 +40,9 @@ void WidgetTemplate::CopyProperties( const WidgetTemplate& other )
 {
 	if( &other != this )
 	{
-		// Copy all properties from the other object.
-		mProperties = other.mProperties;
+		// Clear all properties in this object and then merge.
+		ClearAllProperties();
+		MergeProperties( other );
 	}
 }
 //---------------------------------------
@@ -39,6 +51,7 @@ void WidgetTemplate::MergeProperty( const HashString& name, const WidgetTemplate
 	if( &other != this && other.HasProperty( name ) )
 	{
 		// If the other object has the requested property, overwrite it in this object.
+		//DebugPrintf( "\"%s\": \"%s\" <= \"%s\"", name.GetCString(), GetProperty( name ).c_str(), other.GetProperty( name ).c_str() );
 		SetProperty( name, other.GetProperty( name ) );
 	}
 }
@@ -55,7 +68,7 @@ void WidgetTemplate::MergeProperties( const WidgetTemplate& other )
 	}
 }
 //---------------------------------------
-std::string WidgetTemplate::GetProperty( const HashString& name ) const
+std::string WidgetTemplate::GetProperty( const HashString& name, const std::string& defaultValue, bool isRequired ) const
 {
 	std::string result;
 
@@ -69,7 +82,13 @@ std::string WidgetTemplate::GetProperty( const HashString& name ) const
 	}
 	else
 	{
-		WarnFail( "WidgetTemplate property \"%s\" is undefined!", name.GetCString() );
+		// Otherwise, return the default value.
+		result = defaultValue;
+
+		if( isRequired )
+		{
+			WarnFail( "WidgetTemplate property \"%s\" is undefined!", name.GetCString() );
+		}
 	}
 
 	return result;
@@ -123,6 +142,51 @@ void WidgetTemplate::ClearAllProperties()
 	mProperties.clear();
 }
 //---------------------------------------
+#define MAGE_IMPLEMENT_PROPERTY_CONVERTER( type, typeName ) \
+type WidgetTemplate::GetPropertyAs ## typeName( const HashString& name, const type& defaultValue, bool isRequired ) const \
+{ \
+	type result; \
+	bool success = false; \
+	\
+	if( HasProperty( name ) ) \
+	{ \
+		/* If the property was found, parse the value. */ \
+		std::string value = GetProperty( name ); \
+		success = StringUtil::Parse ## typeName( value, defaultValue, result ); \
+		\
+		if( !success ) \
+		{ \
+			WarnFail( "The value of WidgetTemplate property \"%s\" (\"%s\") could not be converted to " #type "!", name.GetCString(), value.c_str() ); \
+			\
+			if( isRequired ) \
+			{ \
+				WarnFail( "Required property \"%s\" was set to an invalid value!", name.GetCString() ); \
+			} \
+		} \
+	} \
+	else if( isRequired ) \
+	{ \
+		WarnFail( "Required property \"%s\" was not found!", name.GetCString() ); \
+	} \
+	\
+	if( !success ) \
+	{ \
+		/* If the property was NOT found (or failed to parse), return the default value. */ \
+		result = defaultValue; \
+	} \
+	\
+	return result; \
+}
+//---------------------------------------
+MAGE_IMPLEMENT_PROPERTY_CONVERTER( int, Int )
+MAGE_IMPLEMENT_PROPERTY_CONVERTER( unsigned int, UInt )
+MAGE_IMPLEMENT_PROPERTY_CONVERTER( float, Float )
+MAGE_IMPLEMENT_PROPERTY_CONVERTER( bool, Bool )
+MAGE_IMPLEMENT_PROPERTY_CONVERTER( Vec2f, Vec2f )
+MAGE_IMPLEMENT_PROPERTY_CONVERTER( Vec3f, Vec3f )
+MAGE_IMPLEMENT_PROPERTY_CONVERTER( Vec4f, Vec4f )
+MAGE_IMPLEMENT_PROPERTY_CONVERTER( Color, Color )
+//---------------------------------------
 void WidgetTemplate::SetChild( const HashString& name, const WidgetTemplate& child )
 {
 	// Set the child properties with the given name, overwriting any existing data.
@@ -133,8 +197,14 @@ void WidgetTemplate::CopyChildren( const WidgetTemplate& other )
 {
 	if( &other != this )
 	{
-		// Copy all children from the other object.
-		mChildren = other.mChildren;
+		mChildren.clear();
+
+		for( auto it = other.mChildren.begin(); it != other.mChildren.end(); ++it )
+		{
+			// Copy all children from the other object.
+			mChildren[ it->first ] = it->second;
+		}
+		//mChildren = other.mChildren;
 	}
 }
 //---------------------------------------
@@ -163,7 +233,7 @@ void WidgetTemplate::MergeChildren( const WidgetTemplate& other )
 		for( auto it = other.mChildren.begin(); it != other.mChildren.end(); ++it )
 		{
 			// Merge each child of the other object into this one.
-			SetChild( it->first, it->second );
+			MergeChild( it->first, it->second );
 		}
 	}
 }
@@ -175,6 +245,7 @@ void WidgetTemplate::DeepMergeChildren( const WidgetTemplate& other )
 		for( auto it = other.mChildren.begin(); it != other.mChildren.end(); ++it )
 		{
 			// Deep merge each child of the other object into this one.
+			DebugPrintf( "Deep merging \"%s\" <= \"%s\"", it->first.GetCString(), it->second.GetProperty( "name" ).c_str() );
 			mChildren[ it->first ].DeepMerge( it->second );
 		}
 	}
@@ -192,6 +263,19 @@ const WidgetTemplate& WidgetTemplate::GetChild( const HashString& name ) const
 
 	auto it = mChildren.find( name );
 	return it->second;
+}
+//---------------------------------------
+WidgetTemplate::TemplateList WidgetTemplate::GetChildren() const
+{
+	TemplateList result;
+
+	for( auto it = mChildren.begin(); it != mChildren.end(); ++it )
+	{
+		// Build a list of all children in the object.
+		result.push_back( *it );
+	}
+
+	return result;
 }
 //---------------------------------------
 bool WidgetTemplate::HasChild( const HashString& name ) const
@@ -229,14 +313,29 @@ void WidgetTemplate::ClearAllChildren()
 	mChildren.clear();
 }
 //---------------------------------------
+void WidgetTemplate::Replace( const WidgetTemplate& other )
+{
+	DebugPrintf( "Replacing \"%s\" <= \"%s\"", GetProperty( "name" ).c_str(), other.GetProperty( "name" ).c_str() );
+
+	// Clear all properties and children.
+	MergeProperties( other );
+	CopyChildren( other );
+}
+//---------------------------------------
 void WidgetTemplate::Merge( const WidgetTemplate& other )
 {
+	DebugPrintf( "Merging \"%s\" <= \"%s\"", GetProperty( "name" ).c_str(), other.GetProperty( "name" ).c_str() );
+
+	// Clear all properties and children.
 	MergeProperties( other );
 	MergeChildren( other );
 }
 //---------------------------------------
 void WidgetTemplate::DeepMerge( const WidgetTemplate& other )
 {
+	DebugPrintf( "Deep merging \"%s\" <= \"%s\"", GetProperty( "name" ).c_str(), other.GetProperty( "name" ).c_str() );
+
+	// Clear all properties and children.
 	MergeProperties( other );
 	DeepMergeChildren( other );
 }
@@ -246,6 +345,81 @@ void WidgetTemplate::Clear()
 	// Clear all properties and children.
 	ClearAllProperties();
 	ClearAllChildren();
+}
+//---------------------------------------
+void WidgetTemplate::ResolveIncludes( WidgetManager* manager )
+{
+	if( HasProperty( PROPERTY_TYPE ) )
+	{
+		// Get the type of the current template.
+		HashString type = GetProperty( PROPERTY_TYPE );
+
+		if( type == TYPE_INCLUDE )
+		{
+			if( HasProperty( PROPERTY_TEMPLATE ) )
+			{
+				// Copy only the properties and children to override.
+				WidgetTemplate overrides = ( *this );
+				overrides.ClearProperty( PROPERTY_TYPE );
+
+				// If this is an include, get the name of the template to load.
+				HashString includedTemplateName = GetProperty( PROPERTY_TEMPLATE );
+				DebugPrintf( "Including template \"%s\"...", includedTemplateName.GetCString() );
+
+				// Load the properties of the template.
+				const WidgetTemplate* includedTemplate = manager->GetTemplate( includedTemplateName );
+
+				if( includedTemplate != nullptr )
+				{
+					// Replace the include with the included template.
+					( *this ) = ( *includedTemplate );
+
+					// Determine how to merge the include.
+					HashString mergeChildren = GetProperty( "mergeChildren", MERGE_CHILDREN_SHALLOW.GetString() );
+					//DebugPrintf( "Merge: \"%s\"", mergeChildren.GetCString() );
+
+					if( mergeChildren == MERGE_CHILDREN_DEEP )
+					{
+						// Deep merge overridden properties and children into the template.
+						DeepMerge( overrides );
+					}
+					else if( mergeChildren == MERGE_CHILDREN_SHALLOW )
+					{
+						// Merge overridden properties and children into the template.
+						Merge( overrides );
+					}
+					else
+					{
+						// Merge overridden properties and but replace children.
+						Replace( overrides );
+
+						if( mergeChildren != MERGE_CHILDREN_REPLACE )
+						{
+							WarnFail( "Invalid value \"%s\" specified for \"mergeChildren\" property in included template.", mergeChildren.GetCString() );
+						}
+					}
+				}
+				else
+				{
+					WarnFail( "Could not resolve template include because the template \"%s\" was not found!", includedTemplateName.GetCString() );
+				}
+			}
+			else
+			{
+				WarnFail( "Could not resolve includes for WidgetTemplate because no \"%s\" parameter was found!", PROPERTY_TEMPLATE.GetCString() );
+			}
+		}
+
+		for( auto it = mChildren.begin(); it != mChildren.end(); ++it )
+		{
+			// Resolve includes for all children.
+			it->second.ResolveIncludes( manager );
+		}
+	}
+	else
+	{
+		WarnFail( "Could not resolve includes for WidgetTemplate because no \"%s\" parameter was found!", PROPERTY_TYPE.GetCString() );
+	}
 }
 //---------------------------------------
 std::string WidgetTemplate::ToString( size_t indentLevel ) const

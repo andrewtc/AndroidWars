@@ -154,3 +154,90 @@ std::string StringUtil::Strip( const std::string& str, const std::string pattern
 	return RStrip( LStrip( str, pattern ), pattern );
 }
 //---------------------------------------
+#define AutoParseType( type ) \
+	ParseType< type >( string, defaultValue, result, #type )
+//---------------------------------------
+
+#define AutoParseVector( vectorType, size ) \
+	ParseVector< vectorType >( string, size, defaultValue, result, #vectorType )
+//---------------------------------------
+bool StringUtil::ParseInt( const std::string& string, const int& defaultValue, int& result )
+{
+	return AutoParseType( int );
+}
+//---------------------------------------
+bool StringUtil::ParseUInt( const std::string& string, const unsigned& defaultValue, unsigned& result )
+{
+	return AutoParseType( unsigned );
+}
+//---------------------------------------
+bool StringUtil::ParseFloat( const std::string& string, const float& defaultValue, float& result )
+{
+	return AutoParseType( float );
+}
+//---------------------------------------
+bool StringUtil::ParseBool( const std::string& string, const bool& defaultValue, bool& result )
+{
+	return AutoParseType( bool );
+}
+//---------------------------------------
+bool StringUtil::ParseVec2f( const std::string& string, const Vec2f& defaultValue, Vec2f& result )
+{
+	return AutoParseVector( Vec2f, 2 );
+}
+//---------------------------------------
+bool StringUtil::ParseVec3f( const std::string& string, const Vec3f& defaultValue, Vec3f& result )
+{
+	return AutoParseVector( Vec3f, 3 );
+}
+//---------------------------------------
+bool StringUtil::ParseVec4f( const std::string& string, const Vec4f& defaultValue, Vec4f& result )
+{
+	return AutoParseVector( Vec4f, 4 );
+}
+//---------------------------------------
+bool StringUtil::ParseColor( const std::string& string, const Color& defaultValue, Color& result )
+{
+	bool success = true;
+
+	if ( string[0] == '#' )
+	{
+		char* res;
+		uint32_t hex = (uint32_t) std::strtoul( &string[0]+1, &res, 16 );
+
+		if ( *res == nullptr )
+		{
+			result = Color( hex );
+		}
+		else
+		{
+			success = false;
+			WarnFail( "StringUtil : Could not parse Color: Not a valid hexadecimal number (\"%s\").", string.c_str() );
+		}
+	}
+	else
+	{
+		success = false;
+		WarnFail( "StringUtil : Could not parse Color: Missing '#' at the beginning of color value (\"%s\").", string.c_str() );
+	}
+
+	if( !success )
+	{
+		result = defaultValue;
+	}
+
+	return success;
+}
+//---------------------------------------
+bool StringUtil::ParseIntRange( const std::string& string, const IntRange& defaultValue, IntRange& result )
+{
+	// TODO
+	return false;
+}
+//---------------------------------------
+bool StringUtil::ParseFloatRange( const std::string& string, const FloatRange& defaultValue, FloatRange& result )
+{
+	// TODO
+	return false;
+}
+//---------------------------------------

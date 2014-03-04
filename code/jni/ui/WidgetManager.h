@@ -18,26 +18,28 @@ namespace mage
 		BitmapFont* GetFontByName( const HashString& name );
 
 		template< class WidgetSubclass >
-		void RegisterFactory( const HashString& className );
-		AbstractWidgetFactory* GetFactory( const HashString& className ) const;
+		void RegisterFactory( const HashString& type );
+		AbstractWidgetFactory* GetFactory( const HashString& type ) const;
 
 		template< class WidgetSubclass = Widget >
-		WidgetSubclass* CreateWidgetByClassName( const HashString& className, const HashString& name );
+		WidgetSubclass* CreateWidgetByType( const HashString& type, const HashString& name );
 		template< class WidgetSubclass = Widget >
-		WidgetSubclass* CreateWidgetFromDictionary( const HashString& name, const Dictionary& dictionary );
+		WidgetSubclass* CreateWidgetFromTemplate( const HashString& templateName );
+		template< class WidgetSubclass = Widget >
+		WidgetSubclass* CreateWidgetFromTemplate( const HashString& templateName, const HashString& name );
+		template< class WidgetSubclass = Widget >
+		WidgetSubclass* CreateWidgetFromTemplate( const WidgetTemplate& widgetTemplate, const HashString& name = "" );
 
 		template< class WidgetSubclass = Widget >
-		WidgetSubclass* LoadWidgetFromFile( const char* file );
-		template< class WidgetSubclass = Widget >
-		WidgetSubclass* LoadWidgetFromXML( const XmlReader::XmlReaderIterator& xml );
+		WidgetSubclass* FindWidgetUnderPointer( float x, float y ) const;
 
 		void DestroyWidget( Widget* widget );
 
 		void Update( float elapsedTime );
 		void Draw( const Camera& camera );
-		bool OnPointerDown( float x, float y, size_t which );
-		bool OnPointerUp( float x, float y, size_t which );
-		bool OnPointerMotion( float x, float y, float dx, float dy, size_t which );
+		bool PointerDown( float x, float y, size_t which );
+		bool PointerUp( float x, float y, size_t which );
+		bool PointerMotion( float x, float y, float dx, float dy, size_t which );
 
 		void LoadTheme( const char* file );
 		WidgetTemplate* CreateTemplate( const HashString& name );
@@ -57,26 +59,26 @@ namespace mage
 		bool mIsInitialized;
 		Widget* mRootWidget;
 		HashMap< WidgetTemplate* > mTemplatesByName;
-		HashMap< AbstractWidgetFactory* > mFactoriesByClassName;
+		HashMap< AbstractWidgetFactory* > mFactoriesByType;
 		HashMap< BitmapFont* > mFonts;
 	};
 	//---------------------------------------
 	template< typename WidgetSubclass >
-	void WidgetManager::RegisterFactory( const HashString& className )
+	void WidgetManager::RegisterFactory( const HashString& type )
 	{
 		assertion( IsInitialized(), "Cannot register factory for WidgetManager that is not initialized!" );
-		assertion( !className.GetString().empty(), "Cannot register factory with empty class name!" );
+		assertion( !type.GetString().empty(), "Cannot register factory with empty class name!" );
 
 		// Make sure there isn't already a factory with the passed name.
-		assertion( GetFactory( className ) == nullptr, "A Widget factory with the class name \"%s\" already exists!", className.GetCString() );
+		assertion( GetFactory( type ) == nullptr, "A Widget factory with the class name \"%s\" already exists!", type.GetCString() );
 
 		// Create a new factory that services Widgets of the specified type.
-		mFactoriesByClassName[ className ] = new WidgetFactory< WidgetSubclass >();
-		DebugPrintf( "Registered Widget factory: \"%s\" = %s", className.GetCString(), WidgetSubclass::TYPE.GetName() );
+		mFactoriesByType[ type ] = new WidgetFactory< WidgetSubclass >();
+		DebugPrintf( "Registered Widget factory: \"%s\" = %s", type.GetCString(), WidgetSubclass::TYPE.GetName() );
 	}
 	//---------------------------------------
 	template< typename WidgetSubclass >
-	WidgetSubclass* WidgetManager::CreateWidgetByClassName( const HashString& className, const HashString& name )
+	WidgetSubclass* WidgetManager::CreateWidgetByType( const HashString& type, const HashString& name )
 	{
 		assertion( IsInitialized(), "Cannot create Widget for WidgetManager that is not initialized!" );
 
@@ -84,7 +86,7 @@ namespace mage
 		WidgetSubclass* derived = nullptr;
 
 		// Look up the factory by its class name.
-		AbstractWidgetFactory* factory = GetFactory( className );
+		AbstractWidgetFactory* factory = GetFactory( type );
 
 		if( factory )
 		{
@@ -106,7 +108,7 @@ namespace mage
 		else
 		{
 			// If no factory was found, return nullptr and post a warning.
-			WarnFail( "Cannot instantiate unknown widget type \"%s\"\n", className.GetCString() );
+			WarnFail( "Cannot instantiate unknown widget type \"%s\"\n", type.GetCString() );
 		}
 
 		// Return the new Widget.
@@ -114,91 +116,123 @@ namespace mage
 	}
 	//---------------------------------------
 	template< class WidgetSubclass >
-	WidgetSubclass* WidgetManager::CreateWidgetFromDictionary( const HashString& name, const Dictionary& dictionary )
+	WidgetSubclass* WidgetManager::CreateWidgetFromTemplate( const HashString& templateName )
 	{
-		assertion( IsInitialized(), "Cannot create Widget for WidgetManager that is not initialized!" );
+		return WidgetManager::CreateWidgetFromTemplate( templateName, HashString() );
+	}
+	//---------------------------------------
+	template< class WidgetSubclass >
+	WidgetSubclass* WidgetManager::CreateWidgetFromTemplate( const HashString& templateName, const HashString& name )
+	{
+		assertion( IsInitialized(), "Cannot create Widget from template for WidgetManager that is not initialized!" );
 
 		WidgetSubclass* widget = nullptr;
 
-		// Determine if a base class was specified in the Dictionary.
-		const char* baseClass = "";
-		dictionary.Get( "baseClass", baseClass );
+		// Look up the template.
+		const WidgetTemplate* widgetTemplate = GetTemplate( templateName );
 
-		HashString baseClassHash( baseClass );
-
-		if( baseClassHash.GetString().empty() )
+		if( widgetTemplate != nullptr )
 		{
-			// If no base class was specified, create a new Widget of the specified class.
-			widget = new WidgetSubclass( this, name );
+			DebugPrintf( "Resolving includes for template \"%s\"...", templateName.GetCString() );
+
+			// Copy the template and resolve all includes.
+			WidgetTemplate resolvedTemplate( *widgetTemplate );
+			resolvedTemplate.ResolveIncludes( this );
+
+			// Create the Widget using the resolved template.
+			widget = CreateWidgetFromTemplate< WidgetSubclass >( resolvedTemplate, name );
 		}
 		else
 		{
-			// Otherwise, create a new Widget with the specified class name.
-			widget = CreateWidgetByClassName< WidgetSubclass >( baseClassHash, name );
-		}
-
-		if( widget )
-		{
-			// Load the widget from the dictionary.
-			widget->OnLoadFromDictionary( dictionary );
+			WarnFail( "Could not create Widget from template because the template \"%s\" was not found!", name.GetCString() );
 		}
 
 		return widget;
 	}
 	//---------------------------------------
 	template< class WidgetSubclass >
-	WidgetSubclass* WidgetManager::LoadWidgetFromFile( const char* file )
+	WidgetSubclass* WidgetManager::CreateWidgetFromTemplate( const WidgetTemplate& widgetTemplate, const HashString& name )
 	{
-		assertion( IsInitialized(), "Cannot load Widget for WidgetManager that is not initialized!" );
+		assertion( IsInitialized(), "Cannot create Widget from template for WidgetManager that is not initialized!" );
 
 		WidgetSubclass* widget = nullptr;
 
-		// Open the file as an XML document.
-		XmlReader reader( file );
+		// Use the name provided by the template (if possible).
+		HashString widgetName = name;
 
-		if ( !reader.Fail() )
+		if( widgetName.GetString().empty() && widgetTemplate.HasProperty( WidgetTemplate::PROPERTY_NAME ) )
 		{
-			// If the file was opened successfully, parse the Widget subclass from XML.
-			XmlReader::XmlReaderIterator itr = reader.ReadRoot();
-			widget = LoadWidgetFromXML< WidgetSubclass >( itr );
+			// If no widget name was specified, use the one from the template (if any).
+			widgetName = widgetTemplate.GetProperty( WidgetTemplate::PROPERTY_NAME );
 		}
 
-		return widget;
-	}
-	//---------------------------------------
-	template< class WidgetSubclass >
-	WidgetSubclass* WidgetManager::LoadWidgetFromXML( const XmlReader::XmlReaderIterator& xml )
-	{
-		assertion( IsInitialized(), "Cannot load Widget for WidgetManager that is not initialized!" );
-
-		WidgetSubclass* widget = nullptr;
-
-		// Get the class name and name of the Widget to create.
-		HashString className = xml.ElementName();
-		std::string name = xml.GetAttributeAsString( "name", "Widget" );
-
-		// Create a new Widget with the specified class and name and load it from XML.
-		widget = CreateWidgetByClassName< WidgetSubclass >( className, name );
-
-		if( widget )
+		if( widgetTemplate.HasProperty( WidgetTemplate::PROPERTY_TYPE ) )
 		{
-			// Load the widget from XML.
-			widget->OnLoadFromXML( xml );
+			// Get the type and name of the Widget to create.
+			HashString type = widgetTemplate.GetProperty( WidgetTemplate::PROPERTY_TYPE );
 
-			for( XmlReader::XmlReaderIterator childXML = xml.NextChild(); childXML.IsValid(); childXML = childXML.NextSibling() )
+			if( !widgetName.GetString().empty() )
 			{
-				// Load all children.
-				Widget* child = LoadWidgetFromXML( childXML );
+				// Create a new Widget with the specified class and name and load it from XML.
+				widget = CreateWidgetByType< WidgetSubclass >( type, widgetName );
 
-				if( child )
+				if( widget )
 				{
-					// If the child was loaded successfully, add it to its parent.
-					widget->AddChild( child );
+					// Let the Widget load itself from properties.
+					widget->LoadFromTemplate( widgetTemplate );
+					widget->Init();
+
+					// Copy the list of child properties.
+					const WidgetTemplate::TemplateList children = widgetTemplate.GetChildren();
+
+					for( auto it = children.begin(); it != children.end(); ++it )
+					{
+						// Load all children.
+						Widget* child = CreateWidgetFromTemplate( it->second );
+
+						if( child )
+						{
+							// If the child was loaded successfully, add it to its parent.
+							widget->AddChild( child );
+						}
+					}
 				}
+			}
+			else
+			{
+				WarnFail( "Cannot create Widget from template because no \"%s\" property was specified!", WidgetTemplate::PROPERTY_NAME.GetCString() );
+			}
+		}
+		else
+		{
+			WarnFail( "Cannot create Widget from template because no \"%s\" property was found!", WidgetTemplate::PROPERTY_TYPE.GetCString() );
+		}
+
+		return widget;
+	}
+	//---------------------------------------
+	template< class WidgetSubclass >
+	WidgetSubclass* WidgetManager::FindWidgetUnderPointer( float x, float y ) const
+	{
+		Widget* result = nullptr;
+
+		// Find all children underneath the pointer (in draw order).
+		std::vector< WidgetSubclass* > widgetsUnderPointer;
+		mRootWidget->FindDescendantsAt< WidgetSubclass >( x, y, widgetsUnderPointer );
+
+		for( auto it = widgetsUnderPointer.rbegin(); it != widgetsUnderPointer.rend(); ++it )
+		{
+			Widget* widget = ( *it );
+
+			if( widget->IsVisible() )
+			{
+				// Find the topmost visible widget under the mouse cursor.
+				result = widget;
+				break;
 			}
 		}
 
-		return widget;
+		return result;
 	}
 	//---------------------------------------
 	inline bool WidgetManager::IsInitialized() const

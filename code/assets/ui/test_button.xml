@@ -1,5 +1,8 @@
 <Button>
     <Graphic name="background"
+        animationSet="main_menu_button.anim"
         />
-    <Include template="TestLabel" name="label" />
+    <Include template="TestLabel" name="label"
+        position="20,20"
+        />
 </Button>

@@ -5,11 +5,6 @@ using namespace mage;
 IMPLEMENT_RTTI( mage, Widget, TextField );
 
 
-const HashString TextField::BACKGROUND_ELEMENT_NAME = "background";
-const HashString TextField::TEXT_ELEMENT_NAME = "text";
-const HashString TextField::DEFAULT_ANIMATION_NAME = "default";
-
-
 TextField::TextField( WidgetManager* manager, const HashString& name ) :
 	Widget( manager, name )
 { }
@@ -18,31 +13,18 @@ TextField::TextField( WidgetManager* manager, const HashString& name ) :
 TextField::~TextField() { }
 
 
-void TextField::OnLoadFromXML( const XmlReader::XmlReaderIterator& xml )
+void TextField::OnLoadFromTemplate( const WidgetTemplate& widgetTemplate )
 {
-	Widget::OnLoadFromXML( xml );
+	Widget::OnLoadFromTemplate( widgetTemplate );
 
-	// Get the name of the background sprite.
-	HashString animationSetName = xml.GetAttributeAsCString( "background", "" );
+	// Get the text element name.
+	mTextElementName = widgetTemplate.GetProperty( "textElement" );
 
-	// Create the background element.
-	Graphic* backgroundElement = new Graphic( GetManager(), BACKGROUND_ELEMENT_NAME );
-	backgroundElement->SetSprite( animationSetName, DEFAULT_ANIMATION_NAME );
-	AddChild( backgroundElement );
-
-	// Get the default text.
-	std::string text = xml.GetAttributeAsCString( "text", "" );
-
-	// Create the text element.
-	Label* textElement = new Label( GetManager(), TEXT_ELEMENT_NAME );
-	textElement->SetText( text );
-	AddChild( textElement );
-}
-
-
-void TextField::OnLoadFromDictionary( const Dictionary& dictionary )
-{
-	Widget::OnLoadFromDictionary( dictionary );
+	if( widgetTemplate.HasProperty( "text" ) )
+	{
+		// Set the text of the label.
+		SetText( widgetTemplate.GetProperty( "text" ) );
+	}
 }
 
 
@@ -55,4 +37,51 @@ void TextField::OnInit()
 void TextField::OnDraw( const Camera& camera )
 {
 	Widget::OnDraw( camera );
+}
+
+
+Label* TextField::GetTextElement() const
+{
+	return GetChildByName< Label >( mTextElementName );
+}
+
+
+void TextField::SetText( const std::string& text )
+{
+	SetText( text.c_str() );
+}
+
+
+void TextField::SetText( const char* text )
+{
+	Label* textElement = GetTextElement();
+
+	if( textElement )
+	{
+		// If the text element was found, set its text property.
+		textElement->SetText( text );
+	}
+	else
+	{
+		WarnFail( "Could not set text for Label \"%s\": No text element found!", GetName().GetCString() );
+	}
+}
+
+
+std::string TextField::GetText() const
+{
+	std::string result;
+	Label* textElement = GetTextElement();
+
+	if( textElement )
+	{
+		// If the text element was found, return its text property.
+		result = textElement->GetText();
+	}
+	else
+	{
+		WarnFail( "Could not get text for Label \"%s\": No text element found!", GetName().GetCString() );
+	}
+
+	return textElement->GetText();
 }

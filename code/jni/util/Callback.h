@@ -61,7 +61,7 @@ namespace mage
 		/**
 		 * Copy constructor that clones another Callback.
 		 */
-		Callback( const Callback& other ) :
+		Callback( const Callback< ReturnType, ParameterTypes... >& other ) :
 			mWrapper( other.IsValid() ? other.mWrapper->Clone() : nullptr )
 		{
 			//DebugPrintf( "Cloned Callback wrapping 0x%x! (Clone wraps 0x%x.)", other.mWrapper, mWrapper );
@@ -82,21 +82,42 @@ namespace mage
 		 */
 		~Callback()
 		{
+			Clear();
+		}
+
+		/**
+		 * Clears the internal function pointer (i.e. sets it to null).
+		 */
+		void Clear()
+		{
 			if( mWrapper )
 			{
 				// Delete the internal function wrapper.
 				//DebugPrintf( "Deleting wrapper 0x%x...", mWrapper );
 				delete mWrapper;
 			}
+
+			// Make the internal function pointer null.
+			mWrapper = nullptr;
 		}
 
 		/**
 		 * Assignment operator that clones another Callback.
 		 */
-		void operator=( const Callback& other )
+		void operator=( const Callback< ReturnType, ParameterTypes... >& other )
 		{
-			// Clone the internal function wrapper of the other object.
-			mWrapper = other.mWrapper->Clone();
+			if( &other != this )
+			{
+				// Clear the function pointer.
+				Clear();
+
+				if( other.IsValid() )
+				{
+					// If the other callback wraps a valid function, clone the internal function wrapper of the other object.
+					mWrapper = other.mWrapper->Clone();
+				}
+			}
+
 			//DebugPrintf( "Cloned Callback wrapping 0x%x! (Clone wraps 0x%x.)", other.mWrapper, mWrapper );
 		}
 
@@ -114,6 +135,7 @@ namespace mage
 		ReturnType Invoke( ParameterTypes... parameters ) const
 		{
 			assertion( IsValid(), "Cannot call Callback because the internal function pointer is invalid!" );
+			//DebugPrintf( "Invoking callback..." );
 			return mWrapper->Invoke( parameters... );
 		}
 	};

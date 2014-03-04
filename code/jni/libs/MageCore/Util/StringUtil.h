@@ -65,6 +65,25 @@ namespace mage
 			}
 			return csv;
 		}
+
+		static bool ParseInt        ( const std::string& string, const int& defaultValue,        int& result );
+		static bool ParseUInt       ( const std::string& string, const unsigned& defaultValue,   unsigned& result );
+		static bool ParseFloat      ( const std::string& string, const float& defaultValue,      float& result );
+		static bool ParseBool       ( const std::string& string, const bool& defaultValue,       bool& result );
+		static bool ParseVec2f      ( const std::string& string, const Vec2f& defaultValue,      Vec2f& result );
+		static bool ParseVec3f      ( const std::string& string, const Vec3f& defaultValue,      Vec3f& result );
+		static bool ParseVec4f      ( const std::string& string, const Vec4f& defaultValue,      Vec4f& result );
+		static bool ParseColor      ( const std::string& string, const Color& defaultValue,      Color& result );
+		static bool ParseIntRange   ( const std::string& string, const IntRange& defaultValue,   IntRange& result );
+		static bool ParseFloatRange ( const std::string& string, const FloatRange& defaultValue, FloatRange& result );
+
+	private:
+		template< typename T >
+		static bool ParseType( const std::string& string, const T& defaultValue, T& result, const char* typeName );
+
+		// Util to convert a n-dim vector encoded as "x,y,...n" to vectorN
+		template< typename TVector >
+		static bool ParseVector( const std::string& string, unsigned size, const TVector& defaultValue, TVector& result, const char* typeName );
 	};
 
 	inline const char* BoolToCString( bool b ) { return b ? "True" : "False"; }
@@ -204,4 +223,59 @@ namespace mage
 		const std::string& tag,
 		const char* errorMsg,
 		int defaultValue=0 );
+
+
+	template< typename T >
+	bool StringUtil::ParseType( const std::string& string, const T& defaultValue, T& result, const char* typeName )
+	{
+		// Try to parse the value.
+		bool success = StringToType< T >( string, &result );
+
+		if( !success )
+		{
+			// If the value could not be parsed, use the default value.
+			result = defaultValue;
+			WarnFail( "StringUtil : Could not parse %s value from string \"%s\"!", typeName, string.c_str() );
+		}
+
+		return success;
+	}
+
+
+	template< typename TVector >
+	bool StringUtil::ParseVector( const std::string& string, unsigned size, const TVector& defaultValue, TVector& result, const char* typeName )
+	{
+		bool success = true;
+
+		std::vector< std::string > tokens;
+		Tokenize( string, tokens, "," );
+
+		if ( tokens.size() != size )
+		{
+			success = false;
+			WarnFail( "StringUtil : Could not parse vector: %s", tokens.size() < size ? "Too few elements." : "Too many elements." );
+		}
+		else
+		{
+			for ( unsigned i = 0; i < size; ++i )
+			{
+				// Parse each element of the vector.
+				if ( !StringUtil::StringToType( tokens[i], &result[i] ) )
+				{
+					success = false;
+					WarnFail( "StringUtil : Could not parse vector: Element %d (\"%s\") could not be converted to a float.",
+						i+1, tokens[i].c_str() );
+					break;
+				}
+			}
+		}
+
+		if( !success )
+		{
+			// If the value failed to parse, use the default value.
+			result = defaultValue;
+		}
+
+		return success;
+	}
 }

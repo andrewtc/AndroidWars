@@ -2,12 +2,13 @@
     <!-- Fonts used in UI -->
     <Font name="test.fnt" file="fonts/font.fnt"/>
     <Font name="default_s.fnt" file="fonts/small.fnt"/>
-    <Font name="main_menu_font.fnt" file="fonts/main_menu_font.fnt"/>
+    <Font name="MainMenuFont" file="fonts/main_menu_font.fnt"/>
     
     <!-- Sprites used in UI -->
     <Sprite file="ui/background.anim"/>
     <Sprite file="ui/button.anim"/>
     <Sprite file="ui/main_menu_bg.anim"/>
+    <Sprite file="ui/main_menu_scroll_bg.anim"/>
     <Sprite file="ui/main_menu_button.anim"/>
     <Sprite file="ui/main_menu_text_field.anim"/>
     <Sprite file="ui/dashboard.anim"/>
@@ -16,32 +17,17 @@
     <Sound file="sfx/super_mario_jump.wav" name="click.sfx"/>
     
     <!-- Templates -->
-    <Template name="TestLabel" file="ui/test_label.xml" />
-    <Template name="TestButton" file="ui/test_button.xml" />
-    
-    <!-- Button styles -->
-    <!--ButtonStyle name="testButtonStyle" sprite="button.anim" wrapText="true" default="d" pressed="p" selected="s" pressedColor="#FFFF7700" clickSFX=""/>
-    
-    <ButtonStyle
-        name="mainMenuButtonStyle"
-        sprite="main_menu_button.anim"
-        wrapText="false"
-        default="up"
-        pressed="down"
-        selected="up"
-        pressedColor="#FFFFFFFF"
-        clickSFX=""
-        />
-        
-    <ButtonStyle
-        name="mainMenuTextFieldStyle"
-        sprite="main_menu_text_field.anim"
-        wrapText="false"
-        default="default"
-        pressed="default"
-        selected="default"
-        pressedColor="#FFFFFFFF"
-        clickSFX=""
-        /-->
+    <Template name="TestLabel"      file="ui/test_label.xml"       />
+    <Template name="TestButton"     file="ui/test_button.xml"      />
+    <Template name="TestMenuButton" file="ui/test_menu_button.xml" />
+    <Template name="TestWidget"     file="ui/test_widget.xml"      />
+    <Template name="TestTextField"  file="ui/test_text_field.xml"  />
+    <Template name="LoginScreen"    file="ui/main_menu.xml"        />
+    <Template name="Dashboard"      file="ui/dashboard.xml"        />
+	<Template name="MoveDialog"     file="ui/move_dialog.xml"      />
+	<Template name="AttackDialog"   file="ui/attack_dialog.xml"    />
+	<Template name="CaptureDialog"  file="ui/capture_dialog.xml"   />
+	<Template name="GameOverSplash" file="ui/game_end.xml"         />
+	<Template name="UnitDialog"     file="ui/unit_dialog.xml"      />
         
 </Theme>

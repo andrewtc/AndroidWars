@@ -48,21 +48,21 @@ void WidgetManager::Destroy()
 	DestroyAllTemplates();
 
 	// Destroy all Widget factories.
-	for( auto it = mFactoriesByClassName.begin(); it != mFactoriesByClassName.end(); ++it )
+	for( auto it = mFactoriesByType.begin(); it != mFactoriesByType.end(); ++it )
 	{
 		delete it->second;
 	}
 
-	mFactoriesByClassName.clear();
+	mFactoriesByType.clear();
 }
 //---------------------------------------
-AbstractWidgetFactory* WidgetManager::GetFactory( const HashString& className ) const
+AbstractWidgetFactory* WidgetManager::GetFactory( const HashString& type ) const
 {
 	AbstractWidgetFactory* factory = nullptr;
 
-	auto it = mFactoriesByClassName.find( className );
+	auto it = mFactoriesByType.find( type );
 
-	if( it != mFactoriesByClassName.end() )
+	if( it != mFactoriesByType.end() )
 	{
 		factory = it->second;
 	}
@@ -99,19 +99,43 @@ void WidgetManager::Draw( const Camera& camera )
 	mRootWidget->Draw( camera );
 }
 //---------------------------------------
-bool WidgetManager::OnPointerDown( float x, float y, size_t which )
+bool WidgetManager::PointerDown( float x, float y, size_t which )
 {
-	return mRootWidget->OnPointerDown( x, y );
+	bool wasHandled = false;
+
+	for( Widget* widget = FindWidgetUnderPointer( x, y );
+		 widget != nullptr && widget != mRootWidget && wasHandled == false;
+		 widget = widget->GetParent() )
+	{
+		// If a widget was found under the pointer, let the topmost widget process the event.
+		// If the widget didn't handle the event, let each ancestor process the event until
+		// the event is handled or the last ancestor is reached.
+		wasHandled = widget->PointerDown( x, y );
+	}
+
+	return wasHandled;
 }
 //---------------------------------------
-bool WidgetManager::OnPointerUp( float x, float y, size_t which )
+bool WidgetManager::PointerUp( float x, float y, size_t which )
 {
-	return mRootWidget->OnPointerUp( x, y );
+	bool wasHandled = false;
+
+	for( Widget* widget = FindWidgetUnderPointer( x, y );
+		 widget != nullptr && widget != mRootWidget && wasHandled == false;
+		 widget = widget->GetParent() )
+	{
+		// If a widget was found under the pointer, let the topmost widget process the event.
+		// If the widget didn't handle the event, let each ancestor process the event until
+		// the event is handled or the last ancestor is reached.
+		wasHandled = widget->PointerUp( x, y );
+	}
+
+	return wasHandled;
 }
 //---------------------------------------
-bool WidgetManager::OnPointerMotion( float x, float y, float dx, float dy, size_t which )
+bool WidgetManager::PointerMotion( float x, float y, float dx, float dy, size_t which )
 {
-	//return mRootWidget->OnPointerMotion( x, y, dx, dy );
+	//TODO return mRootWidget->OnPointerMotion( x, y, dx, dy );
 	return false;
 }
 //---------------------------------------
@@ -136,21 +160,6 @@ void WidgetManager::LoadTheme( const char* file )
 		{
 			const char* file = itr.GetAttributeAsCString( "file" );
 			SpriteManager::LoadSpriteAnimations( file, false );
-		}
-		// Button styles
-		else if( itr.ElementNameEquals( "ButtonStyle" ) )
-		{
-			HashString name = itr.GetAttributeAsString( "name" );
-			Button::ButtonStyle* style = Button::CreateButtonStyle( name );
-
-			style->SpriteName      = itr.GetAttributeAsString( "sprite" );
-			style->DefaultAnimName = itr.GetAttributeAsString( "default", "d" );
-			style->PressedAnimName = itr.GetAttributeAsString( "pressed", "p" );
-			style->SelectedAnimName= itr.GetAttributeAsString( "selected", "s" );
-			style->WrapText        = itr.GetAttributeAsBool( "wrapText", true );
-			style->PressedColor    = itr.GetAttributeAsColor( "pressedColor", Color::WHITE );
-			style->SelectedSFXName = itr.GetAttributeAsString( "clickSFX", "" );
-			style->DisabledColor   = itr.GetAttributeAsColor( "disabledColor", Color::GREY );
 		}
 		// Sounds
 		else if( itr.ElementNameEquals( "Sound" ) )
@@ -239,7 +248,7 @@ WidgetTemplate* WidgetManager::LoadTemplateFromFile( const HashString& name, con
 
 			if( widgetTemplate )
 			{
-				DebugPrintf( "Loaded Widget template \"%s\":\n%s", name.GetCString(), widgetTemplate->ToString().c_str() );
+				//DebugPrintf( "Loaded Widget template \"%s\":\n%s", name.GetCString(), widgetTemplate->ToString().c_str() );
 			}
 			else
 			{
@@ -314,7 +323,7 @@ void WidgetManager::BuildWidgetTemplateFromXML( const XmlReader::XmlReaderIterat
 	widgetTemplate.Clear();
 
 	// Use the name of the element as the proposed type for this Widget template.
-	widgetTemplate.SetProperty( "type", xml.ElementName() );
+	widgetTemplate.SetProperty( WidgetTemplate::PROPERTY_TYPE, xml.ElementName() );
 
 	// Get the first attribute from the XML element.
 	const tinyxml2::XMLElement* element = xml.GetCurrentElement();

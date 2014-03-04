@@ -27,11 +27,11 @@ namespace mage
 		virtual void SetText( const char* text );
 		std::string GetText() const;
 
-		Color TextColor;
+		void SetTextColor( const Color& textColor );
+		Color GetTextColor() const;
 
 	protected:
-		virtual void OnLoadFromXML( const XmlReader::XmlReaderIterator& xml );
-		virtual void OnLoadFromDictionary( const Dictionary& dictionary );
+		virtual void OnLoadFromTemplate( const WidgetTemplate& widgetTemplate );
 		virtual void OnInit();
 
 		void RecalculateSize();
@@ -41,6 +41,7 @@ namespace mage
 		float mTextScale;
 		int mMaxLineLength;
 		Vec2f mTextDrawOffset;
+		Color mTextColor;
 	};
 
 

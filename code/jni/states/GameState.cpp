@@ -122,7 +122,7 @@ bool GameState::OnPointerDown( float x, float y, size_t which )
 {
 	bool wasHandled = false;
 
-	if(  mActiveState )
+	if( !gWidgetManager->PointerDown( x, y, which ) && mActiveState )
 	{
 		// Let the current InputState handle the event.
 		wasHandled = mActiveState->OnPointerDown( x, y, which );
@@ -136,7 +136,7 @@ bool GameState::OnPointerUp( float x, float y, size_t which )
 {
 	bool wasHandled = false;
 
-	if(  mActiveState )
+	if( !gWidgetManager->PointerUp( x, y, which ) && mActiveState )
 	{
 		// Let the current InputState handle the event.
 		wasHandled = mActiveState->OnPointerUp( x, y, which );

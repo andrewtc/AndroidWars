@@ -6,9 +6,16 @@ using namespace mage;
 IMPLEMENT_RTTI( mage, Widget, Graphic );
 
 
+const HashString Graphic::DRAW_MODE_CLIP_STRING  = "clip";
+const HashString Graphic::DRAW_MODE_SCALE_STRING = "scale";
+const HashString Graphic::DRAW_MODE_TILE_STRING  = "tile";
+
+
 Graphic::Graphic( WidgetManager* manager, const HashString& name ) :
 	Widget( manager, name ),
-	mSprite( nullptr )
+	mSprite( nullptr ),
+	mDrawColor( Color::WHITE ),
+	mDrawMode( DRAW_MODE_CLIP )
 { }
 
 
@@ -19,29 +26,46 @@ Graphic::~Graphic()
 }
 
 
-void Graphic::OnLoadFromXML( const XmlReader::XmlReaderIterator& xml )
+void Graphic::OnLoadFromTemplate( const WidgetTemplate& widgetTemplate )
 {
-	Widget::OnLoadFromXML( xml );
+	Widget::OnLoadFromTemplate( widgetTemplate );
 
 	// Get the name of the sprite to use.
-	HashString animationSetName = xml.GetAttributeAsCString( "animationSet", "" );
-	HashString initialAnimationName = xml.GetAttributeAsCString( "initialAnimation", "default" );
+	HashString animationSetName = widgetTemplate.GetProperty( "animationSet", "", true );
+	HashString initialAnimationName = widgetTemplate.GetProperty( "initialAnimation", "default" );
 
 	// Set the Sprite.
 	SetSprite( animationSetName, initialAnimationName );
-}
 
+	if( mSprite && !widgetTemplate.HasProperty( "size" ) )
+	{
+		// If no size was specified, use the size of the current sprite frame.
+		RectI animationBounds = mSprite->GetClippingRectForCurrentAnimation();
+		SetSize( (float) animationBounds.Width(), (float) animationBounds.Height() );
+	}
 
-void Graphic::OnLoadFromDictionary( const Dictionary& dictionary )
-{
-	Widget::OnLoadFromDictionary( dictionary );
+	// Set the draw mode.
+	HashString drawModeString = widgetTemplate.GetProperty( "drawMode", DRAW_MODE_SCALE_STRING.GetCString() );
+	DrawMode drawMode = DRAW_MODE_CLIP;
 
-	// Get the name of the sprite to use.
-	HashString animationSetName = dictionary.Get( "animationSet", "" );
-	HashString initialAnimationName = dictionary.Get( "initialAnimation", "default" );
+	if( drawModeString == DRAW_MODE_CLIP_STRING )
+	{
+		drawMode = DRAW_MODE_CLIP;
+	}
+	else if( drawModeString == DRAW_MODE_SCALE_STRING )
+	{
+		drawMode = DRAW_MODE_SCALE;
+	}
+	else if( drawModeString == DRAW_MODE_TILE_STRING )
+	{
+		drawMode = DRAW_MODE_TILE;
+	}
+	else
+	{
+		WarnFail( "Invalid drawMode \"%s\" specified for Graphic \"%s\"!", drawModeString.GetCString(), GetName().GetCString() );
+	}
 
-	// Set the Sprite.
-	SetSprite( animationSetName, initialAnimationName );
+	SetDrawMode( drawMode );
 }
 
 
@@ -63,11 +87,52 @@ void Graphic::OnDraw( const Camera& camera )
 
 	if( mSprite )
 	{
-		// Make sure the sprite is in the right position.
-		mSprite->Position = FindPosition();
+		// Make sure the sprite is in the right position and is the right size.
+		mSprite->Position = CalculatePosition();
 
-		// Draw the sprite.
-		mSprite->OnDraw( camera );
+		if( mDrawMode == DRAW_MODE_SCALE )
+		{
+			// If the sprite should scale to fit the Graphic, scale it.
+			mSprite->Size.Set( GetSize() );
+		}
+		else
+		{
+			// Get the bounds for the current animation.
+			RectI animationBounds = mSprite->GetClippingRectForCurrentAnimation();
+
+			// Set the size of the sprite to the size of the current animation.
+			mSprite->Size.Set( (float) animationBounds.Width(), (float) animationBounds.Height() );
+		}
+
+		if( mDrawMode == DRAW_MODE_TILE )
+		{
+			// Save the previous position of the Sprite.
+			Vec2f previousPosition = mSprite->Position;
+
+			// Find the bounds of the Widget.
+			RectF bounds = CalculateBounds();
+
+			// Find the bounds of the sprite.
+			RectI animationBounds = mSprite->GetClippingRectForCurrentAnimation();
+
+			for( float top = bounds.Top; top < bounds.Bottom; top += animationBounds.Height() )
+			{
+				for( float left = bounds.Left; left < bounds.Right; left += animationBounds.Width() )
+				{
+					// Draw the sprite, tiling the whole area of the Widget.
+					mSprite->Position = Vec2f( left, top );
+					mSprite->OnDraw( camera );
+				}
+			}
+
+			// Restore the previous position.
+			mSprite->Position = previousPosition;
+		}
+		else
+		{
+			// Draw the sprite once.
+			mSprite->OnDraw( camera );
+		}
 	}
 }
 
@@ -87,13 +152,11 @@ void Graphic::SetSprite( const HashString& animationSetName, const HashString& i
 
 		if( mSprite )
 		{
-			// Ignore camera offset
+			// Ignore the camera offset.
 			mSprite->RelativeToCamera = false;
-			mSprite->FixedSize = IsFixedSizeSprite();
-			mSprite->DrawColor = mDrawColor;
 
-			// Recalculate the size of the Graphic.
-			RecalculateSize();
+			// Update the Sprite draw options.
+			UpdateSprite();
 		}
 	}
 	else
@@ -113,17 +176,45 @@ void Graphic::ClearSprite()
 }
 
 
-void Graphic::RecalculateSize()
+Sprite* Graphic::GetSprite() const
 {
-	if ( !IsFixedSizeSprite() )
-	{
-		// If this Graphic has a fixed-size Sprite, update the Widget dimensions.
-		const RectI& bounds = mSprite->GetClippingRectForCurrentAnimation();
-		SetSize( bounds.Width(), bounds.Height() );
-	}
-	else
-	{
-		// If the Sprite should scale with the Widget, set the width and height of the Sprite.
-		mSprite->Size.Set( GetSize() );
-	}
+	return mSprite;
+}
+
+
+void Graphic::SetDrawColor( const Color& color )
+{
+	mDrawColor = color;
+	UpdateSprite();
+}
+
+
+Color Graphic::GetDrawColor() const
+{
+	return mDrawColor;
+}
+
+
+void Graphic::SetDrawMode( DrawMode drawMode )
+{
+	mDrawMode = drawMode;
+	UpdateSprite();
+}
+
+
+Graphic::DrawMode Graphic::GetDrawMode() const
+{
+	return mDrawMode;
+}
+
+
+void Graphic::UpdateSprite()
+{
+	assertion( mSprite, "Cannot update Sprite for Graphic \"%s\" because it does not have a valid Sprite!", GetName().GetCString() );
+
+	// If the sprite should scale to fit, set the fixed size property.
+	mSprite->FixedSize = ( mDrawMode == DRAW_MODE_SCALE );
+
+	// Set the draw color of the Sprite.
+	mSprite->DrawColor = mDrawColor;
 }

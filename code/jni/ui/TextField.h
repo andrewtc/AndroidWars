@@ -7,33 +7,21 @@ namespace mage
 		DECLARE_RTTI;
 
 	public:
-		static const HashString BACKGROUND_ELEMENT_NAME;
-		static const HashString TEXT_ELEMENT_NAME;
-		static const HashString DEFAULT_ANIMATION_NAME;
-
 		TextField( WidgetManager* manager, const HashString& name );
 		virtual ~TextField();
 
 		virtual void OnDraw( const Camera& camera );
 
-		Graphic* GetBackgroundElement() const;
 		Label* GetTextElement() const;
 
+		void SetText( const std::string& text );
+		void SetText( const char* text );
+		std::string GetText() const;
+
 	protected:
-		virtual void OnLoadFromXML( const XmlReader::XmlReaderIterator& xml );
-		virtual void OnLoadFromDictionary( const Dictionary& dictionary );
+		virtual void OnLoadFromTemplate( const WidgetTemplate& widgetTemplate );
 		virtual void OnInit();
+
+		HashString mTextElementName;
 	};
-
-
-	inline Graphic* TextField::GetBackgroundElement() const
-	{
-		return GetChildByName< Graphic >( BACKGROUND_ELEMENT_NAME );
-	}
-
-
-	inline Label* TextField::GetTextElement() const
-	{
-		return GetChildByName< Label >( TEXT_ELEMENT_NAME );
-	}
 }

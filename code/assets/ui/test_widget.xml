@@ -1,0 +1,6 @@
+<Widget>
+    <Include name="okButton" template="TestButton"
+        margins="40,40,0,0"
+        />
+    <Include name="cancelButton" template="TestMenuButton" />
+</Widget>

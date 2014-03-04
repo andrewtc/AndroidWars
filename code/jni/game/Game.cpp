@@ -58,11 +58,11 @@ Game::Game()
 	mMap.SetNewMapObjectCB( &SpawnObjectFromXml );
 
 	// Create dialogs
-	mMoveDialog     = gWidgetManager->LoadWidgetFromFile( "ui/move_dialog.xml" );
-	mAttackDialog   = gWidgetManager->LoadWidgetFromFile( "ui/attack_dialog.xml" );
-	mCaptureDialog  = gWidgetManager->LoadWidgetFromFile( "ui/capture_dialog.xml" );
-	mGameOverDialog = gWidgetManager->LoadWidgetFromFile( "ui/game_end.xml" );
-	mUnitDialog     = gWidgetManager->LoadWidgetFromFile( "ui/unit_dialog.xml" );
+	mMoveDialog     = gWidgetManager->CreateWidgetFromTemplate( "MoveDialog" );
+	mAttackDialog   = gWidgetManager->CreateWidgetFromTemplate( "AttackDialog" );
+	mCaptureDialog  = gWidgetManager->CreateWidgetFromTemplate( "CaptureDialog" );
+	mGameOverDialog = gWidgetManager->CreateWidgetFromTemplate( "GameOverSplash" );
+	mUnitDialog     = gWidgetManager->CreateWidgetFromTemplate( "UnitDialog" );
 
 	// Hide them
 	HideAllDialogs();
@@ -575,13 +575,13 @@ void Game::OnGameOver()
 	if ( mPlayers[0]->HasLost() )
 	{
 		winnerText->SetText( "BLUE wins!" );
-		winnerText->TextColor = Color::BLUE;
+		winnerText->SetTextColor( Color::BLUE );
 		PostMessage( "BLUE wins!", Color::BLUE );
 	}
 	else if ( mPlayers[1]->HasLost() )
 	{
 		winnerText->SetText( "RED wins!" );
-		winnerText->TextColor = Color::RED;
+		winnerText->SetTextColor( Color::RED );
 		PostMessage( "RED wins!", Color::RED );
 	}
 	mGameOverDialog->Show();
@@ -859,17 +859,17 @@ void Game::ShowCaptureDialog() const
 		if ( tileId == CITY_N_ID )
 		{
 			ownerText->SetText( "None" );
-			ownerText->TextColor = Color::GREY;
+			ownerText->SetTextColor( Color::GREY );
 		}
 		else if ( tileId == CITY_R_ID )
 		{
 			ownerText->SetText( "Red" );
-			ownerText->TextColor = Color::RED;
+			ownerText->SetTextColor( Color::RED );
 		}
 		else if ( tileId == CITY_B_ID )
 		{
 			ownerText->SetText( "Blue" );
-			ownerText->TextColor = Color::BLUE;
+			ownerText->SetTextColor( Color::BLUE );
 		}
 	}
 	mCaptureDialog->Show();
@@ -890,7 +890,7 @@ void Game::ShowUnitDialog() const
 			((Button*)mUnitDialog->GetChildByName( "button" ))->Enable();
 
 		nameText->SetText( mSelectedUnit->ToString() );
-		nameText->TextColor = player->GetPlayerColor();
+		nameText->SetTextColor( player->GetPlayerColor() );
 		hpText->SetText( std::string( "HP: " ) + StringUtil::ToString( mSelectedUnit->GetHP() ) + "/" + StringUtil::ToString( mSelectedUnit->GetTotalHP() ) );
 		apText->SetText( std::string( "AP: " ) + StringUtil::ToString( mSelectedUnit->GetRemainingAP() ) + "/" + StringUtil::ToString( mSelectedUnit->GetTotalAP() ) );
 	}
