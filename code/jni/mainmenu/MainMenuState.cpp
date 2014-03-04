@@ -3,6 +3,9 @@
 using namespace mage;
 
 
+const Vec2f MainMenuState::BACKGROUND_SCROLL_VELOCITY( -100.0f, 50.0f );
+
+
 MainMenuState::MainMenuState() :
 	GameState(),
 	mLogInState( nullptr ),
@@ -53,6 +56,19 @@ void MainMenuState::OnEnter( const Dictionary& parameters )
 void MainMenuState::OnUpdate( float elapsedTime )
 {
 	GameState::OnUpdate( elapsedTime );
+
+	if( mWidget )
+	{
+		// Get the scrolling background.
+		Graphic* scrollBackground = mWidget->GetChildByName< Graphic >( "scrollBackground" );
+
+		if( scrollBackground )
+		{
+			// Update the scroll of the scrolling background.
+			Vec2f scrollDistance( scrollBackground->GetDrawOffset() + BACKGROUND_SCROLL_VELOCITY * elapsedTime );
+			scrollBackground->SetDrawOffset( scrollDistance );
+		}
+	}
 }
 
 
@@ -77,62 +93,64 @@ void MainMenuState::OnExit()
 LogInInputState::LogInInputState( GameState* owner ) :
 	DerivedInputState( owner )
 {
-	/*
-	// Create the log in widget.
-	mWidget->Hide();
+	Widget* loginScreen = GetLoginScreen();
 
-	// Get Login button.
-	Button* loginButton = mWidget->GetChildByName< Button >( "loginButton" );
-
-	if( loginButton )
+	if( loginScreen )
 	{
-		// Register callbacks.
-		loginButton->SetOnClickDelegate( [this]( float x, float y )
-		{
-			OnLogInButtonPressed( x, y );
-		});
-	}
+		// Get Login button.
+		Button* loginButton = loginScreen->GetChildByName< Button >( "loginButton" );
 
-	// Attach the Widget to the root Widget.
-	gWidgetManager->GetRootWidget()->AddChild( mWidget );
-	*/
-	// TODO
+		if( loginButton )
+		{
+			// Register callbacks.
+			loginButton->SetOnClickDelegate( [this]( float x, float y )
+			{
+				OnLogInButtonPressed( x, y );
+			});
+		}
+	}
 }
 
 
 LogInInputState::~LogInInputState()
 {
-	/*
-	// Destroy the widget.
-	gWidgetManager->DestroyWidget( mWidget );
-	mWidget = nullptr;
+	Widget* loginScreen = GetLoginScreen();
 
-	// Get Login button.
-	Button* loginButton = mWidget->GetChildByName< Button >( "loginButton" );
-
-	if( loginButton )
+	if( loginScreen )
 	{
-		// Unregister callbacks.
-		loginButton->ClearOnClickDelegate();
+		// Get Login button.
+		Button* loginButton = loginScreen->GetChildByName< Button >( "loginButton" );
+
+		if( loginButton )
+		{
+			// Unregister callbacks.
+			loginButton->ClearOnClickDelegate();
+		}
 	}
-	*/
-	// TODO
 }
 
 
 void LogInInputState::OnEnter( const Dictionary& parameters )
 {
-	// Show the widget.
-	//mWidget->Show();
-	// TODO
+	Widget* loginScreen = GetLoginScreen();
+
+	if( loginScreen )
+	{
+		// Show the login screen.
+		loginScreen->Show();
+	}
 }
 
 
 void LogInInputState::OnExit()
 {
-	// Hide the widget.
-	//mWidget->Hide();
-	// TODO
+	Widget* loginScreen = GetLoginScreen();
+
+	if( loginScreen )
+	{
+		// Hide the login screen.
+		loginScreen->Hide();
+	}
 }
 
 

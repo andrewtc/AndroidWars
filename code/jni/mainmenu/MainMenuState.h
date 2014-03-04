@@ -12,6 +12,8 @@ namespace mage
 	class MainMenuState : public GameState
 	{
 	public:
+		static const Vec2f BACKGROUND_SCROLL_VELOCITY;
+
 		MainMenuState();
 		virtual ~MainMenuState();
 
@@ -65,8 +67,26 @@ namespace mage
 
 		void OnLogInButtonPressed( float x, float y );
 
+		Widget* GetLoginScreen() const;
+
 		friend class GameState;
 	};
+
+
+	inline Widget* LogInInputState::GetLoginScreen() const
+	{
+		Widget* loginScreen = nullptr;
+
+		// Get the login widget.
+		Widget* mainMenu = GetOwnerDerived()->GetWidget();
+
+		if( mainMenu )
+		{
+			loginScreen = mainMenu->GetChildByName( "loginScreen" );
+		}
+
+		return loginScreen;
+	}
 
 
 	/**
