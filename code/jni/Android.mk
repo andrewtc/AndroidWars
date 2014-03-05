@@ -141,6 +141,8 @@ aw_states_path := states
 LOCAL_MODULE    := androidwars
 LOCAL_SRC_FILES := androidwars.cpp \
 $(aw_states_path)/InputState.cpp \
+$(aw_states_path)/DialogInputState.cpp \
+$(aw_states_path)/ProgressInputState.cpp \
 $(aw_states_path)/GameState.cpp \
 $(aw_states_path)/GameStateManager.cpp \
 $(aw_mainmenu_path)/MainMenuState.cpp \

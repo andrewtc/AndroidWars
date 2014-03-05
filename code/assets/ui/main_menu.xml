@@ -1,6 +1,8 @@
 <Widget
     name="main_menu"
     >
+    
+    <!-- Background -->
     <Graphic
         name="scrollBackground"
         animationSet="main_menu_scroll_bg.anim"
@@ -9,46 +11,11 @@
         size="1280,800"
         layer="-1"
         />
-    <Widget
-        name="loginScreen"
-        position="400,100"
-        size="480,640"
-        isVisible="false"
-        >
-        <Graphic
-            name="background"
-            animationSet="main_menu_bg.anim"
-            layer="-1"
-            />
-        <Include
-            name="usernameLabel"
-            template="TestLabel"
-            text="Username:"
-            position="40,220"
-            />
-        <Include
-            name="usernameField"
-            template="TestTextField"
-            position="40,280"
-            text="andrewtc"
-            />
-        <Include
-            name="passwordLabel"
-            template="TestLabel"
-            text="Password:"
-            position="40,380"
-            />
-        <Include
-            name="passwordField"
-            template="TestTextField"
-            position="40,440"
-            text="test"
-            />
-        <Include
-            name="loginButton"
-            template="TestButton"
-            position="40,540"
-            text="Log In"
-            />
-    </Widget>
+        
+    <!-- Login Screen -->
+    <Include name="loginScreen" template="Login" isVisible="false" />
+    
+    <!-- Dashboard Screen -->
+    <Include name="dashboardScreen" template="Dashboard" isVisible="false" />
+    
 </Widget>

@@ -1,0 +1,16 @@
+<Widget>
+    <Graphic name="background"
+        animationSet="box.anim"
+        layer="-1"
+        />
+    <Graphic name="wheel"
+        position="60,60"
+        animationSet="wheel.anim"
+        />
+    <Include name="title"
+        template="TestLabel"
+        position="32,32"
+        text="Title"
+        layer="1"
+        />
+</Widget>

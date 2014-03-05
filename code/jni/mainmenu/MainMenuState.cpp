@@ -88,11 +88,41 @@ void MainMenuState::OnExit()
 }
 
 
+LogInInputState* MainMenuState::GetLogInState() const
+{
+	return mLogInState;
+}
+
+
+DashboardInputState* MainMenuState::GetDashboardState() const
+{
+	return mDashboardState;
+}
+
+
+Widget* MainMenuState::GetWidget() const
+{
+	return mWidget;
+}
+
+
 // ========== LogInInputState ==========
 
 LogInInputState::LogInInputState( GameState* owner ) :
-	DerivedInputState( owner )
+	DerivedInputState( owner ),
+	mProgressDialog( nullptr )
+{ }
+
+
+LogInInputState::~LogInInputState()
 {
+}
+
+
+void LogInInputState::OnEnter( const Dictionary& parameters )
+{
+	DebugPrintf( "Entering LogInInputState" );
+
 	Widget* loginScreen = GetLoginScreen();
 
 	if( loginScreen )
@@ -108,36 +138,7 @@ LogInInputState::LogInInputState( GameState* owner ) :
 				OnLogInButtonPressed( x, y );
 			});
 		}
-	}
-}
 
-
-LogInInputState::~LogInInputState()
-{
-	Widget* loginScreen = GetLoginScreen();
-
-	if( loginScreen )
-	{
-		// Get Login button.
-		Button* loginButton = loginScreen->GetChildByName< Button >( "loginButton" );
-
-		if( loginButton )
-		{
-			// Unregister callbacks.
-			loginButton->ClearOnClickDelegate();
-		}
-	}
-}
-
-
-void LogInInputState::OnEnter( const Dictionary& parameters )
-{
-	DebugPrintf( "Entering LogInInputState" );
-
-	Widget* loginScreen = GetLoginScreen();
-
-	if( loginScreen )
-	{
 		// Show the login screen.
 		loginScreen->Show();
 	}
@@ -152,6 +153,15 @@ void LogInInputState::OnExit()
 
 	if( loginScreen )
 	{
+		// Get Login button.
+		Button* loginButton = loginScreen->GetChildByName< Button >( "loginButton" );
+
+		if( loginButton )
+		{
+			// Unregister callbacks.
+			loginButton->ClearOnClickDelegate();
+		}
+
 		// Hide the login screen.
 		loginScreen->Hide();
 	}
@@ -162,6 +172,7 @@ void LogInInputState::OnLogInButtonPressed( float x, float y )
 {
 	DebugPrintf( "Log in button pressed!" );
 
+	MainMenuState* owner = GetOwnerDerived();
 	Widget* loginScreen = GetLoginScreen();
 
 	if( loginScreen )
@@ -175,21 +186,45 @@ void LogInInputState::OnLogInButtonPressed( float x, float y )
 			std::string username = usernameField->GetText();
 			std::string password = passwordField->GetText();
 
+			// Create a progress dialog.
+			mProgressDialog = owner->CreateState< ProgressInputState >();
+
+			if( mProgressDialog )
+			{
+				// Specify parameters for progress dialog.
+				Dictionary parameters;
+				parameters.Set( "widgetName", std::string( "progressDialog" ) );
+				parameters.Set( "template", std::string( "Progress" ) );
+
+				// Show the progress dialog.
+				owner->PushState( mProgressDialog, parameters );
+			}
+			else
+			{
+				WarnFail( "Could not create progress dialog!" );
+			}
+
 			// Fire off the login request to the server.
 			gOnlineGameClient->LogIn( username, password, [this]( bool success )
 			{
+				MainMenuState* owner = GetOwnerDerived();
+
 				if( success )
 				{
 					DebugPrintf( "Login successful!" );
 
 					// If the login was successful, go to the dashboard.
-					MainMenuState* owner = GetOwnerDerived();
 					owner->ChangeState( owner->GetDashboardState() );
 				}
 				else
 				{
 					// TODO: If the login failed, give the user feedback.
 					DebugPrintf( "Login failed!" );
+
+					if( mProgressDialog )
+					{
+						// Notify the dialog that it should close.
+					}
 				}
 			});
 		}
@@ -197,56 +232,61 @@ void LogInInputState::OnLogInButtonPressed( float x, float y )
 }
 
 
+Widget* LogInInputState::GetLoginScreen() const
+{
+	Widget* loginScreen = nullptr;
+
+	// Get the login widget.
+	Widget* mainMenu = GetOwnerDerived()->GetWidget();
+
+	if( mainMenu )
+	{
+		loginScreen = mainMenu->GetChildByName( "loginScreen" );
+	}
+
+	return loginScreen;
+}
+
+
 // ========== DashboardInputState ==========
 
 DashboardInputState::DashboardInputState( GameState* owner ) :
 	DerivedInputState( owner )
-{
-	/*
-	// Register callbacks.
-	RegisterObjectEventFunc( DashboardInputState, OnLogOutButtonPressed );
-	RegisterObjectEventFunc( DashboardInputState, OnRefreshButtonPressed );
-	RegisterObjectEventFunc( DashboardInputState, OnNewGameButtonPressed );
-
-	// Create the log in widget.
-	mWidget = gWidgetManager->CreateWidgetFromTemplate( "Dashboard" );
-	mWidget->Hide();
-	*/
-}
+{ }
 
 
-DashboardInputState::~DashboardInputState()
-{
-	/*
-	// Destroy the widget.
-	gWidgetManager->DestroyWidget( mWidget );
-	mWidget = nullptr;
-
-	// Unregister callbacks.
-	UnregisterObjectEventFunc( DashboardInputState, OnLogOutButtonPressed );
-	UnregisterObjectEventFunc( DashboardInputState, OnRefreshButtonPressed );
-	UnregisterObjectEventFunc( DashboardInputState, OnNewGameButtonPressed );
-	*/
-}
+DashboardInputState::~DashboardInputState() { }
 
 
 void DashboardInputState::OnEnter( const Dictionary& parameters )
 {
 	DebugPrintf( "Entering DashboardInputState" );
-	/*
-	// Show the widget.
-	mWidget->Show();
-	*/
+
+	Widget* dashboardScreen = GetDashboardScreen();
+
+	if( dashboardScreen )
+	{
+		// TODO: Register callbacks.
+
+		// Show the widget.
+		dashboardScreen->Show();
+	}
 }
 
 
 void DashboardInputState::OnExit()
 {
 	DebugPrintf( "Exiting DashboardInputState" );
-	/*
-	// Hide the widget.
-	mWidget->Hide();
-	*/
+
+	Widget* dashboardScreen = GetDashboardScreen();
+
+	if( dashboardScreen )
+	{
+		// TODO: Register callbacks.
+
+		// Hide the widget.
+		dashboardScreen->Hide();
+	}
 }
 
 
@@ -284,5 +324,21 @@ ObjectEventFunc( DashboardInputState, OnNewGameButtonPressed )
 
 	// Request a new game.
 	gOnlineGameClient->CallCloudFunction( "requestMatchmakingGame", "{}" );
+}
+
+
+Widget* DashboardInputState::GetDashboardScreen() const
+{
+	Widget* dashboardScreen = nullptr;
+
+	// Get the login widget.
+	Widget* mainMenu = GetOwnerDerived()->GetWidget();
+
+	if( mainMenu )
+	{
+		dashboardScreen = mainMenu->GetChildByName( "dashboardScreen" );
+	}
+
+	return dashboardScreen;
 }
 

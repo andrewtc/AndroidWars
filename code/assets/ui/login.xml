@@ -1,0 +1,40 @@
+<Widget
+    position="400,100"
+    size="480,640"
+    >
+    <Graphic
+        name="background"
+        animationSet="main_menu_bg.anim"
+        layer="-1"
+        />
+    <Include
+        name="usernameLabel"
+        template="TestLabel"
+        text="Username:"
+        position="40,220"
+        />
+    <Include
+        name="usernameField"
+        template="TestTextField"
+        position="40,280"
+        text="andrewtc"
+        />
+    <Include
+        name="passwordLabel"
+        template="TestLabel"
+        text="Password:"
+        position="40,380"
+        />
+    <Include
+        name="passwordField"
+        template="TestTextField"
+        position="40,440"
+        text="test"
+        />
+    <Include
+        name="loginButton"
+        template="TestButton"
+        position="40,540"
+        label="Log In"
+        />
+</Widget>

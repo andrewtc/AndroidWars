@@ -8,6 +8,13 @@ const RTTI Widget::TYPE( "mage.Widget", 0 );
 //---------------------------------------
 // Widget
 //---------------------------------------
+const HashString Widget::HORIZONTAL_ALIGN_LEFT_NAME   = "left";
+const HashString Widget::HORIZONTAL_ALIGN_CENTER_NAME = "center";
+const HashString Widget::HORIZONTAL_ALIGN_RIGHT_NAME  = "right";
+const HashString Widget::VERTICAL_ALIGN_TOP_NAME      = "top";
+const HashString Widget::VERTICAL_ALIGN_CENTER_NAME   = "center";
+const HashString Widget::VERTICAL_ALIGN_BOTTOM_NAME   = "bottom";
+//---------------------------------------
 Widget::Widget( WidgetManager* manager, const HashString& name )
 	: mManager( manager )
 	, mIsInitialized( false )
@@ -18,6 +25,8 @@ Widget::Widget( WidgetManager* manager, const HashString& name )
 	, mIsVisible( true )
 	, mDebugLayout( true )
 	, mDrawLayer( 0 )
+	, mHorizontalAlignment( HORIZONTAL_ALIGN_LEFT )
+	, mVerticalAlignment( VERTICAL_ALIGN_TOP )
 {
 	assertion( manager, "Cannot create Widget without a WidgetManager reference!" );
 }
@@ -61,6 +70,16 @@ void Widget::OnLoadFromTemplate( const WidgetTemplate& widgetTemplate )
 	mIsVisible = widgetTemplate.GetPropertyAsBool( "isVisible", true );
 	SetSize( widgetTemplate.GetPropertyAsVec2f( "size", Vec2f::ZERO ) );
 	SetDrawLayer( widgetTemplate.GetPropertyAsInt( "layer", 0 ) );
+
+	if( widgetTemplate.HasProperty( "horizontalAlign" ) )
+	{
+		SetHorizontalAlignment( GetHorizontalAlignmentByName( widgetTemplate.GetProperty( "horizontalAlign" ) ) );
+	}
+
+	if( widgetTemplate.HasProperty( "verticalAlign" ) )
+	{
+		SetVerticalAlignment( GetVerticalAlignmentByName( widgetTemplate.GetProperty( "verticalAlign" ) ) );
+	}
 }
 //---------------------------------------
 void Widget::Init()
@@ -271,6 +290,30 @@ void Widget::UpdatePosition()
 		{
 			// If this Widget has a parent, add its calculated position as an offset.
 			mCalculatedPosition += mParent->CalculatePosition();
+
+			// Apply an offset for the horizontal alignment.
+			switch( mHorizontalAlignment )
+			{
+			case HORIZONTAL_ALIGN_CENTER:
+				mCalculatedPosition.x -= ( GetWidth() * 0.5f );
+				break;
+
+			case HORIZONTAL_ALIGN_RIGHT:
+				mCalculatedPosition.x -= GetWidth();
+				break;
+			}
+
+			// Apply an offset for the vertical alignment.
+			switch( mVerticalAlignment )
+			{
+			case VERTICAL_ALIGN_CENTER:
+				mCalculatedPosition.y -= ( GetHeight() * 0.5f );
+				break;
+
+			case VERTICAL_ALIGN_BOTTOM:
+				mCalculatedPosition.y -= GetHeight();
+				break;
+			}
 		}
 
 		// Mark that the position is up-to-date.
@@ -306,6 +349,76 @@ RectF Widget::GetBoundsInParent() const
 				  mOffset.y,
 				  mOffset.x + mSize.x,
 				  mOffset.y + mSize.y );
+}
+//---------------------------------------
+Widget::HorizontalAlignment Widget::GetHorizontalAlignmentByName( const HashString& name )
+{
+	HorizontalAlignment result = HORIZONTAL_ALIGN_LEFT;
+
+	if( name == HORIZONTAL_ALIGN_LEFT_NAME )
+	{
+		result = HORIZONTAL_ALIGN_LEFT;
+	}
+	else if( name == HORIZONTAL_ALIGN_CENTER_NAME )
+	{
+		result = HORIZONTAL_ALIGN_CENTER;
+	}
+	else if( name == HORIZONTAL_ALIGN_RIGHT_NAME )
+	{
+		result = HORIZONTAL_ALIGN_RIGHT;
+	}
+	else
+	{
+		WarnFail( "HorizontalAlignment setting \"%s\" is invalid!", name.GetCString() );
+	}
+
+	return result;
+}
+//---------------------------------------
+Widget::VerticalAlignment Widget::GetVerticalAlignmentByName( const HashString& name )
+{
+	VerticalAlignment result = VERTICAL_ALIGN_TOP;
+
+	if( name == VERTICAL_ALIGN_TOP_NAME )
+	{
+		result = VERTICAL_ALIGN_TOP;
+	}
+	else if( name == VERTICAL_ALIGN_CENTER_NAME )
+	{
+		result = VERTICAL_ALIGN_CENTER;
+	}
+	else if( name == VERTICAL_ALIGN_BOTTOM_NAME )
+	{
+		result = VERTICAL_ALIGN_BOTTOM;
+	}
+	else
+	{
+		WarnFail( "VerticalAlignment setting \"%s\" is invalid!", name.GetCString() );
+	}
+
+	return result;
+}
+//---------------------------------------
+void Widget::SetHorizontalAlignment( HorizontalAlignment alignment )
+{
+	mHorizontalAlignment = alignment;
+	InvalidatePosition();
+}
+//---------------------------------------
+Widget::HorizontalAlignment Widget::GetHorizontalAlignment() const
+{
+	return mHorizontalAlignment;
+}
+//---------------------------------------
+void Widget::SetVerticalAlignment( VerticalAlignment alignment )
+{
+	mVerticalAlignment = alignment;
+	InvalidatePosition();
+}
+//---------------------------------------
+Widget::VerticalAlignment Widget::GetVerticalAlignment() const
+{
+	return mVerticalAlignment;
 }
 //---------------------------------------
 void Widget::SetWidth( float width )
@@ -364,14 +477,24 @@ bool Widget::HasSiblingWithName( const HashString& siblingName ) const
 	return ( mParent && mParent->HasChildWithName( siblingName ) );
 }
 //---------------------------------------
-void Widget::SetVisible( bool isVisible )
+void Widget::SetVisibility( bool isVisible )
 {
 	mIsVisible = isVisible;
 }
 //---------------------------------------
-bool Widget::IsVisible() const
+void Widget::ToggleVisibility()
+{
+	mIsVisible = !mIsVisible;
+}
+//---------------------------------------
+bool Widget::GetVisibility() const
 {
 	return mIsVisible;
+}
+//---------------------------------------
+bool Widget::IsVisible() const
+{
+	return ( mIsVisible && ( mParent ? mParent->IsVisible() : true ) );
 }
 //---------------------------------------
 void Widget::SetDrawLayer( int drawLayer )

@@ -28,6 +28,14 @@ namespace mage
 		OnClickDelegate GetOnClickDelegate() const;
 		bool HasOnClickDelegate() const;
 
+		void SetLabelElementName( const HashString& name );
+		HashString GetLabelElementName() const;
+		Label* GetLabelElement() const;
+		bool HasLabelElement() const;
+
+		void SetLabel( const std::string& text );
+		std::string GetLabel() const;
+
 	protected:
 		virtual ~Button();
 
@@ -41,5 +49,6 @@ namespace mage
 		bool mIsEnabled;
 		bool mIsPressed;
 		OnClickDelegate mOnClick;
+		HashString mLabelElementName;
 	};
 }

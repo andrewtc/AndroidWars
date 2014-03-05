@@ -7,6 +7,8 @@
     <!-- Sprites used in UI -->
     <Sprite file="ui/background.anim"/>
     <Sprite file="ui/button.anim"/>
+    <Sprite file="ui/box.anim" />
+    <Sprite file="ui/wheel.anim" />
     <Sprite file="ui/main_menu_bg.anim"/>
     <Sprite file="ui/main_menu_scroll_bg.anim"/>
     <Sprite file="ui/main_menu_button.anim"/>
@@ -23,6 +25,8 @@
     <Template name="TestWidget"     file="ui/test_widget.xml"      />
     <Template name="TestTextField"  file="ui/test_text_field.xml"  />
     <Template name="MainMenu"       file="ui/main_menu.xml"        />
+    <Template name="Login"          file="ui/login.xml"            />
+    <Template name="Progress"       file="ui/progress.xml"         />
     <Template name="Dashboard"      file="ui/dashboard.xml"        />
 	<Template name="MoveDialog"     file="ui/move_dialog.xml"      />
 	<Template name="AttackDialog"   file="ui/attack_dialog.xml"    />

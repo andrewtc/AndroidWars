@@ -1,4 +1,6 @@
-<Button>
+<Button
+    labelElement="label"
+    >
     <Graphic name="background"
         animationSet="main_menu_button.anim"
         />

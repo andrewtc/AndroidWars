@@ -39,7 +39,7 @@ void WidgetManager::Init()
 //---------------------------------------
 void WidgetManager::Destroy()
 {
-	assertion( !IsInitialized(), "Cannot destroy WidgetManager that hasn't been initialized!" );
+	assertion( IsInitialized(), "Cannot destroy WidgetManager that hasn't been initialized!" );
 
 	// Destroy the manager.
 	mIsInitialized = false;

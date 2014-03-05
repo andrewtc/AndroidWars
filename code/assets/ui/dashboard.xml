@@ -1,45 +1,36 @@
 <Widget
     name="dashboard"
-    sprite="dashboard.anim"
     position="128,72"
     size="1024,640"
     color="#FFFFFFFF"
     >
-    <Label
+    <Graphic
+        name="background"
+        animationSet="dashboard.anim"
+        layer="-1"
+        />
+    <Include
         name="greetingLabel"
+        template="TestLabel"
         text="Hello, World!"
-        font="main_menu.fnt"
-        margins="32,144,0,0"
-        textColor="#FF000000"
+        position="32,144"
         />
-    <Button
+    <Include
         name="logOutButton"
-        text="Log Out"
-        font="main_menu.fnt"
-        margins="32,16,0,0"
-        style="mainMenuButtonStyle"
-        onClickEvent="OnLogOutButtonPressed"
-        layout_below="greetingLabel"
-        color="#FFFFFFFF"
+        template="TestButton"
+        label="Log Out"
+        position="32,244"
         />
-    <Button
+    <Include
         name="newGameButton"
-        text="Start New Game"
-        font="main_menu.fnt"
-        margins="32,16,0,0"
-        style="mainMenuButtonStyle"
-        onClickEvent="OnNewGameButtonPressed"
-        layout_below="logOutButton"
-        color="#FFFFFFFF"
+        template="TestButton"
+        label="Start New Game"
+        position="32,344"
         />
-    <Button
+    <Include
         name="refreshButton"
-        text="Refresh"
-        font="main_menu.fnt"
-        margins="32,16,0,0"
-        style="mainMenuButtonStyle"
-        onClickEvent="OnRefreshButtonPressed"
-        layout_below="newGameButton"
-        color="#FFFFFFFF"
+        template="TestButton"
+        label="Refresh"
+        position="32,444"
         />
 </Widget>

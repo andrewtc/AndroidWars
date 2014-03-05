@@ -34,24 +34,6 @@ namespace mage
 	};
 
 
-	inline LogInInputState* MainMenuState::GetLogInState() const
-	{
-		return mLogInState;
-	}
-
-
-	inline DashboardInputState* MainMenuState::GetDashboardState() const
-	{
-		return mDashboardState;
-	}
-
-
-	inline Widget* MainMenuState::GetWidget() const
-	{
-		return mWidget;
-	}
-
-
 	/**
 	 * Input state that allows user to log in.
 	 */
@@ -69,24 +51,10 @@ namespace mage
 
 		Widget* GetLoginScreen() const;
 
+		ProgressInputState* mProgressDialog;
+
 		friend class GameState;
 	};
-
-
-	inline Widget* LogInInputState::GetLoginScreen() const
-	{
-		Widget* loginScreen = nullptr;
-
-		// Get the login widget.
-		Widget* mainMenu = GetOwnerDerived()->GetWidget();
-
-		if( mainMenu )
-		{
-			loginScreen = mainMenu->GetChildByName( "loginScreen" );
-		}
-
-		return loginScreen;
-	}
 
 
 	/**
@@ -97,6 +65,8 @@ namespace mage
 	protected:
 		void OnEnter( const Dictionary& parameters );
 		void OnExit();
+
+		Widget* GetDashboardScreen() const;
 
 	private:
 		DashboardInputState( GameState* owner );

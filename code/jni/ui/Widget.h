@@ -49,6 +49,27 @@ namespace mage
 		virtual bool OnPointerUp( float x, float y );
 
 	public:
+		static const HashString HORIZONTAL_ALIGN_LEFT_NAME;
+		static const HashString HORIZONTAL_ALIGN_CENTER_NAME;
+		static const HashString HORIZONTAL_ALIGN_RIGHT_NAME;
+		static const HashString VERTICAL_ALIGN_TOP_NAME;
+		static const HashString VERTICAL_ALIGN_CENTER_NAME;
+		static const HashString VERTICAL_ALIGN_BOTTOM_NAME;
+
+		enum HorizontalAlignment
+		{
+			HORIZONTAL_ALIGN_LEFT,
+			HORIZONTAL_ALIGN_CENTER,
+			HORIZONTAL_ALIGN_RIGHT
+		};
+
+		enum VerticalAlignment
+		{
+			VERTICAL_ALIGN_TOP,
+			VERTICAL_ALIGN_CENTER,
+			VERTICAL_ALIGN_BOTTOM
+		};
+
 		Widget( WidgetManager* manager, const HashString& name );
 		Widget( const Widget& other );
 		virtual Widget* Clone() const;
@@ -120,7 +141,16 @@ namespace mage
 		RectF CalculateBounds();
 		RectF GetBoundsInParent() const;
 
-		void SetVisible( bool isVisible );
+		static HorizontalAlignment GetHorizontalAlignmentByName( const HashString& name );
+		static VerticalAlignment GetVerticalAlignmentByName( const HashString& name );
+		void SetHorizontalAlignment( HorizontalAlignment alignment );
+		HorizontalAlignment GetHorizontalAlignment() const;
+		void SetVerticalAlignment( VerticalAlignment alignment );
+		VerticalAlignment GetVerticalAlignment() const;
+
+		void SetVisibility( bool isVisible );
+		void ToggleVisibility();
+		bool GetVisibility() const;
 		bool IsVisible() const;
 
 		void SetDrawLayer( int drawLayer );
@@ -133,6 +163,8 @@ namespace mage
 		bool mDrawOrderNeedsUpdate;
 		bool mDebugLayout;
 		int mDrawLayer;
+		HorizontalAlignment mHorizontalAlignment;
+		VerticalAlignment mVerticalAlignment;
 		WidgetManager* mManager;
 		Widget* mParent;
 		Vec2f mCalculatedPosition;
@@ -148,14 +180,6 @@ namespace mage
 		void UpdateDrawOrder();
 
 		HashMap< Widget* > mChildren;
-
-		enum Margin
-		{
-			MARGIN_LEFT,
-			MARGIN_TOP,
-			MARGIN_RIGHT,
-			MARGIN_BOTTOM,
-		};
 
 		friend class WidgetManager;
 	};

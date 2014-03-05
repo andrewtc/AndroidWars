@@ -1,6 +1,6 @@
 <Label
     margins="0,0,0,0"
-    text="Hello, World!"
+    text="<Default>"
     font="MainMenuFont"
     textColor="#FF000000"
     />

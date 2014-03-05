@@ -2,6 +2,7 @@
 
 namespace mage
 {
+	class Widget;
 	class WidgetManager;
 	class InputState;
 	class GameState;
@@ -30,6 +31,8 @@ extern mage::int32 gWindowHeight;
 #include "rapidjson/document.h"
 
 #include "states/InputState.h"
+#include "states/DialogInputState.h"
+#include "states/ProgressInputState.h"
 #include "states/GameState.h"
 #include "states/GameStateManager.h"
 
