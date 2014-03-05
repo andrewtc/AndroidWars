@@ -23,15 +23,18 @@ namespace mage
 
 		template< class InputStateSubclass, typename... Parameters >
 		InputStateSubclass* CreateState( Parameters... );
+		void PushState( InputState* inputState, const Dictionary& parameters = Dictionary() );
 		void ChangeState( InputState* inputState, const Dictionary& parameters = Dictionary() );
+		void PopState();
+		void PopAllStates();
 		void CancelStateChange();
 		void DestroyState( InputState* inputState );
 
 		GameStateManager* GetManager() const;
 		bool IsInitialized() const;
+		InputState* GetActiveState() const;
 		bool HasActiveState() const;
 		bool HasPendingStateChange() const;
-		WidgetManager* GetWidgetManager() const;
 
 	protected:
 		virtual void OnEnter( const Dictionary& parameters ) = 0;
@@ -40,12 +43,13 @@ namespace mage
 		virtual void OnExit() = 0;
 
 	private:
+		bool mHasPendingStateChange;
+		bool mIsPoppingAllStates;
 		GameStateManager* mManager;
-		InputState* mActiveState;
 		InputState* mPendingState;
 		Dictionary mPendingStateParameters;
 		Camera mDefaultCamera;
-		bool mHasPendingStateChange;
+		std::vector< InputState* > mInputStates;
 	};
 
 
@@ -58,9 +62,22 @@ namespace mage
 	}
 
 
+	inline InputState* GameState::GetActiveState() const
+	{
+		InputState* activeState = nullptr;
+
+		if( mInputStates.size() > 0 )
+		{
+			activeState = mInputStates.back();
+		}
+
+		return activeState;
+	}
+
+
 	inline bool GameState::HasActiveState() const
 	{
-		return ( mActiveState != nullptr );
+		return ( GetActiveState() != nullptr );
 	}
 
 

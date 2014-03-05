@@ -30,6 +30,7 @@
             name="usernameField"
             template="TestTextField"
             position="40,280"
+            text="andrewtc"
             />
         <Include
             name="passwordLabel"
@@ -41,6 +42,7 @@
             name="passwordField"
             template="TestTextField"
             position="40,440"
+            text="test"
             />
         <Include
             name="loginButton"

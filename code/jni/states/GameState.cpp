@@ -5,8 +5,8 @@ using namespace mage;
 
 GameState::GameState() :
 	mManager( nullptr ),
-	mActiveState( nullptr ),
 	mHasPendingStateChange( false ),
+	mIsPoppingAllStates( false ),
 	mDefaultCamera( gWindowWidth, gWindowHeight )
 { }
 
@@ -33,35 +33,43 @@ void GameState::Enter( GameStateManager* manager, const Dictionary& parameters )
 
 void GameState::Update( float elapsedTime )
 {
+	// Get the new active state.
+	InputState* activeState = GetActiveState();
+
 	if( HasPendingStateChange() )
 	{
-		if( mActiveState != nullptr )
+		if( mIsPoppingAllStates || ( mPendingState && mPendingState->IsInitialized() ) )
 		{
-			// If there is a pending state change and an active InputState,
-			// exit the current InputState (if any).
-			mActiveState->Exit();
-			mActiveState = nullptr;
+			for( ; activeState && activeState != mPendingState; activeState = GetActiveState() )
+			{
+				// If clearing all states or the state is already on the stack, exit and pop
+				// all states until we reach the desired state.
+				activeState->Exit();
+				mInputStates.pop_back();
+			}
 		}
 
-		// Switch in the pending state.
-		mActiveState = mPendingState;
+		if( mPendingState && mPendingState != activeState )
+		{
+			// If there is a state to enter, enter and push the new state.
+			mPendingState->Enter( mPendingStateParameters );
+			mInputStates.push_back( mPendingState );
+			activeState = mPendingState;
+		}
+
+		// Clear the state change.
 		mPendingState = nullptr;
 		mHasPendingStateChange = false;
-
-		if( mActiveState != nullptr )
-		{
-			// Enter the active InputState.
-			mActiveState->Enter( mPendingStateParameters );
-		}
+		mIsPoppingAllStates = false;
 	}
 
 	// Run the state update code.
 	OnUpdate( elapsedTime );
 
-	if( mActiveState )
+	if( activeState )
 	{
 		// Let the current InputState update itself.
-		mActiveState->Update( elapsedTime );
+		activeState->Update( elapsedTime );
 	}
 }
 
@@ -75,13 +83,16 @@ void GameState::OnUpdate( float elapsedTime )
 
 void GameState::Draw()
 {
+	// Get the new active state.
+	InputState* activeState = GetActiveState();
+
 	// Run the state draw code.
 	OnDraw();
 
-	if( mActiveState )
+	if( activeState )
 	{
 		// Let the current InputState draw itself.
-		mActiveState->Draw();
+		activeState->Draw();
 	}
 }
 
@@ -97,11 +108,11 @@ void GameState::Exit()
 {
 	assertion( IsInitialized(), "Cannot exit GameState because it is not currently initialized!" );
 
-	if( mActiveState )
+	for( InputState* activeState = GetActiveState(); activeState != nullptr; activeState = GetActiveState() )
 	{
-		// If there is an active InputState, switch it out and let it clean itself up.
-		mActiveState->Exit();
-		mActiveState = nullptr;
+		// Exit and pop all states.
+		activeState->Exit();
+		mInputStates.pop_back();
 	}
 
 	// Run the exit code.
@@ -122,10 +133,12 @@ bool GameState::OnPointerDown( float x, float y, size_t which )
 {
 	bool wasHandled = false;
 
-	if( !gWidgetManager->PointerDown( x, y, which ) && mActiveState )
+	InputState* activeState = GetActiveState();
+
+	if( !gWidgetManager->PointerDown( x, y, which ) && activeState )
 	{
 		// Let the current InputState handle the event.
-		wasHandled = mActiveState->OnPointerDown( x, y, which );
+		wasHandled = activeState->OnPointerDown( x, y, which );
 	}
 
 	return wasHandled;
@@ -136,10 +149,12 @@ bool GameState::OnPointerUp( float x, float y, size_t which )
 {
 	bool wasHandled = false;
 
-	if( !gWidgetManager->PointerUp( x, y, which ) && mActiveState )
+	InputState* activeState = GetActiveState();
+
+	if( !gWidgetManager->PointerUp( x, y, which ) && activeState )
 	{
 		// Let the current InputState handle the event.
-		wasHandled = mActiveState->OnPointerUp( x, y, which );
+		wasHandled = activeState->OnPointerUp( x, y, which );
 	}
 
 	return wasHandled;
@@ -151,30 +166,81 @@ bool GameState::OnPointerMotion( float x, float y, float dx, float dy, size_t wh
 	// Let the Widget manager handle the event first.
 	bool wasHandled = false;
 
-	if( mActiveState )
+	InputState* activeState = GetActiveState();
+
+	if( activeState )
 	{
 		// Let the current InputState handle the event.
-		wasHandled = mActiveState->OnPointerMotion( x, y, dx, dy, which );
+		wasHandled = activeState->OnPointerMotion( x, y, dx, dy, which );
 	}
 
 	return wasHandled;
 };
 
 
+void GameState::PushState( InputState* inputState, const Dictionary& parameters )
+{
+	assertion( inputState, "Cannot push null state!" );
+	assertion( inputState->GetOwner() == this, "Cannot push InputState that was not created by the current GameState!" );
+	assertion( !inputState->IsInitialized(), "Cannot push InputState that is already initialized!" );
+
+	// Cancel any pending state change.
+	CancelStateChange();
+
+	// Keep track of the new InputState as the pending state.
+	mPendingState = inputState;
+	mPendingStateParameters = parameters;
+	mHasPendingStateChange = true;
+}
+
+
 void GameState::ChangeState( InputState* inputState, const Dictionary& parameters )
+{
+	assertion( inputState, "Cannot change to null state!" );
+	assertion( inputState->GetOwner() == this, "Cannot change to InputState that was not created by the current GameState!" );
+
+	// Cancel any pending state change.
+	CancelStateChange();
+
+	// Keep track of the new InputState as the pending state.
+	mPendingState = inputState;
+	mPendingStateParameters = parameters;
+	mHasPendingStateChange = true;
+
+	// If the state is not yet initalized, pop all states.
+	mIsPoppingAllStates = !( inputState->IsInitialized() );
+}
+
+
+void GameState::PopState()
+{
+	assertion( mInputStates.size() > 0, "Cannot pop InputState because no state is currently active for this GameState!" );
+
+	// Cancel any pending state change.
+	CancelStateChange();
+
+	if( mInputStates.size() > 1 )
+	{
+		// Schedule a change to the previous InputState.
+		InputState* previousState = *( mInputStates.rbegin() + 1 );
+		ChangeState( previousState );
+	}
+	else
+	{
+		// Pop all states.
+		PopAllStates();
+	}
+}
+
+
+void GameState::PopAllStates()
 {
 	// Cancel any pending state change.
 	CancelStateChange();
 
-	if( inputState )
-	{
-		assertion( inputState->GetOwner() == this, "Cannot change to InputState that was not created by the current GameState!" );
-
-		// Keep track of the new InputState as the pending state.
-		mPendingState = inputState;
-		mPendingStateParameters = parameters;
-		mHasPendingStateChange = true;
-	}
+	// Clear all states.
+	mHasPendingStateChange = true;
+	mIsPoppingAllStates = true;
 }
 
 

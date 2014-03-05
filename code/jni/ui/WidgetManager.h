@@ -178,10 +178,6 @@ namespace mage
 
 				if( widget )
 				{
-					// Let the Widget load itself from properties.
-					widget->LoadFromTemplate( widgetTemplate );
-					widget->Init();
-
 					// Copy the list of child properties.
 					const WidgetTemplate::TemplateList children = widgetTemplate.GetChildren();
 
@@ -196,6 +192,10 @@ namespace mage
 							widget->AddChild( child );
 						}
 					}
+
+					// Let the Widget load itself from properties.
+					widget->LoadFromTemplate( widgetTemplate );
+					widget->Init();
 				}
 			}
 			else

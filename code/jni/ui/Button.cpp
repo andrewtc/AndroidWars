@@ -31,12 +31,9 @@ bool Button::OnPointerDown( float x, float y )
 
 	if( mIsEnabled )
 	{
-		// Get the bounds of the button.
-		RectF bounds = CalculateBounds();
-
 		// Press the button.
 		mIsPressed = true;
-		return true;
+		wasHandled = true;
 	}
 
 	return wasHandled;
@@ -44,32 +41,24 @@ bool Button::OnPointerDown( float x, float y )
 //---------------------------------------
 bool Button::OnPointerUp( float x, float y )
 {
-	// TODO
-	/*
-	// If not visible, do not process this Widget or its children
-	if ( !IsVisible() || !mIsEnabled )
-		return false;
+	bool wasHandled = false;
+	Widget::OnPointerUp( x, y );
 
-	if ( !Widget::OnPointerUp( x, y ) )
+	if( mIsPressed )
 	{
-		// Get the bounds of the Button.
-		RectF bounds = CalculateBounds();
+		wasHandled = true;
 
-		if( bounds.Contains( x, y ) && mIsPressed )
+		// Unpress the button.
+		mIsPressed = false;
+
+		if( mOnClick.IsValid() )
 		{
-			if( mOnClick.IsValid() )
-			{
-				// Fire click callback.
-				mOnClick.Invoke( x, y );
-			}
-
-			// Unpress the button.
-			mIsPressed = false;
-			return true;
+			// Fire the click callback.
+			mOnClick.Invoke( x, y );
 		}
-	}*/
+	}
 
-	return false;
+	return wasHandled;
 }
 //---------------------------------------
 void Button::Disable()

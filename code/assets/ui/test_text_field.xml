@@ -1,8 +1,9 @@
-<TextField textElement="label">
+<TextField textElement="text">
     <Graphic name="background"
         animationSet="main_menu_text_field.anim"
+        layer="-1"
         />
-    <Include name="label" template="TestLabel"
+    <Include name="text" template="TestLabel"
         position="20,20"
         />
 </TextField>

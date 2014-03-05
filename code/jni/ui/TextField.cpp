@@ -18,7 +18,7 @@ void TextField::OnLoadFromTemplate( const WidgetTemplate& widgetTemplate )
 	Widget::OnLoadFromTemplate( widgetTemplate );
 
 	// Get the text element name.
-	mTextElementName = widgetTemplate.GetProperty( "textElement" );
+	mTextElementName = widgetTemplate.GetProperty( "textElement", "", true );
 
 	if( widgetTemplate.HasProperty( "text" ) )
 	{
@@ -63,7 +63,7 @@ void TextField::SetText( const char* text )
 	}
 	else
 	{
-		WarnFail( "Could not set text for Label \"%s\": No text element found!", GetName().GetCString() );
+		WarnFail( "Could not set text for Label \"%s\": No text element \"%s\" was found!", GetName().GetCString(), mTextElementName.GetCString() );
 	}
 }
 
@@ -80,7 +80,7 @@ std::string TextField::GetText() const
 	}
 	else
 	{
-		WarnFail( "Could not get text for Label \"%s\": No text element found!", GetName().GetCString() );
+		WarnFail( "Could not get text for Label \"%s\": No text element \"%s\" was found!", GetName().GetCString(), mTextElementName.GetCString() );
 	}
 
 	return textElement->GetText();

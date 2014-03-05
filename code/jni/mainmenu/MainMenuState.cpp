@@ -132,6 +132,8 @@ LogInInputState::~LogInInputState()
 
 void LogInInputState::OnEnter( const Dictionary& parameters )
 {
+	DebugPrintf( "Entering LogInInputState" );
+
 	Widget* loginScreen = GetLoginScreen();
 
 	if( loginScreen )
@@ -144,6 +146,8 @@ void LogInInputState::OnEnter( const Dictionary& parameters )
 
 void LogInInputState::OnExit()
 {
+	DebugPrintf( "Exiting LogInInputState" );
+
 	Widget* loginScreen = GetLoginScreen();
 
 	if( loginScreen )
@@ -156,35 +160,40 @@ void LogInInputState::OnExit()
 
 void LogInInputState::OnLogInButtonPressed( float x, float y )
 {
-	/*
 	DebugPrintf( "Log in button pressed!" );
 
-	// Get the username and password values from the login box.
-	TextField* usernameField = mWidget->GetChildByName< TextField >( "usernameField" );
-	TextField* passwordField = mWidget->GetChildByName< TextField >( "passwordField" );
+	Widget* loginScreen = GetLoginScreen();
 
-	std::string username = usernameField->GetText();
-	std::string password = passwordField->GetText();
-
-	// Fire off the login request to the server.
-	gOnlineGameClient->LogIn( username, password, [this]( bool success )
+	if( loginScreen )
 	{
-		if( success )
-		{
-			DebugPrintf( "Login successful!" );
+		// Get the username and password values from the login box.
+		TextField* usernameField = loginScreen->GetChildByName< TextField >( "usernameField" );
+		TextField* passwordField = loginScreen->GetChildByName< TextField >( "passwordField" );
 
-			// If the login was successful, go to the dashboard.
-			MainMenuState* owner = GetOwnerDerived();
-			owner->ChangeState( owner->GetDashboardState() );
-		}
-		else
+		if( usernameField && passwordField )
 		{
-			// TODO: If the login failed, give the user feedback.
-			DebugPrintf( "Login failed!" );
+			std::string username = usernameField->GetText();
+			std::string password = passwordField->GetText();
+
+			// Fire off the login request to the server.
+			gOnlineGameClient->LogIn( username, password, [this]( bool success )
+			{
+				if( success )
+				{
+					DebugPrintf( "Login successful!" );
+
+					// If the login was successful, go to the dashboard.
+					MainMenuState* owner = GetOwnerDerived();
+					owner->ChangeState( owner->GetDashboardState() );
+				}
+				else
+				{
+					// TODO: If the login failed, give the user feedback.
+					DebugPrintf( "Login failed!" );
+				}
+			});
 		}
-	});
-	*/
-	// TODO
+	}
 }
 
 
@@ -223,6 +232,7 @@ DashboardInputState::~DashboardInputState()
 
 void DashboardInputState::OnEnter( const Dictionary& parameters )
 {
+	DebugPrintf( "Entering DashboardInputState" );
 	/*
 	// Show the widget.
 	mWidget->Show();
@@ -232,6 +242,7 @@ void DashboardInputState::OnEnter( const Dictionary& parameters )
 
 void DashboardInputState::OnExit()
 {
+	DebugPrintf( "Exiting DashboardInputState" );
 	/*
 	// Hide the widget.
 	mWidget->Hide();
