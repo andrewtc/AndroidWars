@@ -135,7 +135,7 @@ void LogInInputState::OnEnter( const Dictionary& parameters )
 			// Register callbacks.
 			loginButton->SetOnClickDelegate( [this]( float x, float y )
 			{
-				OnLogInButtonPressed( x, y );
+				OnLogInButtonPressed();
 			});
 		}
 
@@ -168,7 +168,7 @@ void LogInInputState::OnExit()
 }
 
 
-void LogInInputState::OnLogInButtonPressed( float x, float y )
+void LogInInputState::OnLogInButtonPressed()
 {
 	DebugPrintf( "Log in button pressed!" );
 
@@ -266,7 +266,34 @@ void DashboardInputState::OnEnter( const Dictionary& parameters )
 
 	if( dashboardScreen )
 	{
-		// TODO: Register callbacks.
+		// Register callbacks.
+		Button* logOutButton = dashboardScreen->GetChildByName< Button >( "logOutButton" );
+		Button* refreshButton = dashboardScreen->GetChildByName< Button >( "refreshButton" );
+		Button* newGameButton = dashboardScreen->GetChildByName< Button >( "newGameButton" );
+
+		if( logOutButton )
+		{
+			logOutButton->SetOnClickDelegate( [this]( float x, float y )
+			{
+				OnLogOutButtonPressed();
+			});
+		}
+
+		if( refreshButton )
+		{
+			refreshButton->SetOnClickDelegate( [this]( float x, float y )
+			{
+				OnRefreshButtonPressed();
+			});
+		}
+
+		if( newGameButton )
+		{
+			newGameButton->SetOnClickDelegate( [this]( float x, float y )
+			{
+				OnNewGameButtonPressed();
+			});
+		}
 
 		// Show the widget.
 		dashboardScreen->Show();
@@ -282,7 +309,25 @@ void DashboardInputState::OnExit()
 
 	if( dashboardScreen )
 	{
-		// TODO: Register callbacks.
+		// Register callbacks.
+		Button* logOutButton = dashboardScreen->GetChildByName< Button >( "logOutButton" );
+		Button* refreshButton = dashboardScreen->GetChildByName< Button >( "refreshButton" );
+		Button* newGameButton = dashboardScreen->GetChildByName< Button >( "newGameButton" );
+
+		if( logOutButton )
+		{
+			logOutButton->ClearOnClickDelegate();
+		}
+
+		if( refreshButton )
+		{
+			refreshButton->ClearOnClickDelegate();
+		}
+
+		if( newGameButton )
+		{
+			newGameButton->ClearOnClickDelegate();
+		}
 
 		// Hide the widget.
 		dashboardScreen->Hide();
@@ -290,20 +335,20 @@ void DashboardInputState::OnExit()
 }
 
 
-ObjectEventFunc( DashboardInputState, OnLogOutButtonPressed )
+void DashboardInputState::OnLogOutButtonPressed()
 {
 	DebugPrintf( "Log out button pressed!" );
 
 	// Log the current user out.
 	gOnlineGameClient->LogOut();
 
-	// If the login was successful, go to the login screen.
+	// Go to the login screen.
 	MainMenuState* owner = GetOwnerDerived();
 	owner->ChangeState( owner->GetLogInState() );
 }
 
 
-ObjectEventFunc( DashboardInputState, OnRefreshButtonPressed )
+void DashboardInputState::OnRefreshButtonPressed()
 {
 	DebugPrintf( "Refresh button pressed!" );
 
@@ -318,7 +363,7 @@ ObjectEventFunc( DashboardInputState, OnRefreshButtonPressed )
 }
 
 
-ObjectEventFunc( DashboardInputState, OnNewGameButtonPressed )
+void DashboardInputState::OnNewGameButtonPressed()
 {
 	DebugPrintf( "New game button pressed!" );
 

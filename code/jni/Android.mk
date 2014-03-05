@@ -165,7 +165,7 @@ $(aw_game_path)/Unit.cpp \
  ui/Graphic.cpp \
  ui/Button.cpp \
  ui/TextField.cpp \
- ui/Listbox.cpp \
+ ui/ListLayout.cpp \
  sound/SoundManager.cpp \
  online/OnlineGameClient.cpp \
  util/JNI.cpp

@@ -47,7 +47,7 @@ namespace mage
 		LogInInputState( GameState* owner );
 		virtual ~LogInInputState();
 
-		void OnLogInButtonPressed( float x, float y );
+		void OnLogInButtonPressed();
 
 		Widget* GetLoginScreen() const;
 
@@ -72,9 +72,9 @@ namespace mage
 		DashboardInputState( GameState* owner );
 		virtual ~DashboardInputState();
 
-		void OnLogOutButtonPressed( Dictionary& params );
-		void OnRefreshButtonPressed( Dictionary& params );
-		void OnNewGameButtonPressed( Dictionary& params );
+		void OnLogOutButtonPressed();
+		void OnRefreshButtonPressed();
+		void OnNewGameButtonPressed();
 
 		friend class GameState;
 	};

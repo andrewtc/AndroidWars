@@ -30,7 +30,7 @@ void WidgetManager::Init()
 	RegisterFactory< Graphic >( "Graphic" );
 	RegisterFactory< Button >( "Button" );
 	RegisterFactory< TextField >( "TextField" );
-	RegisterFactory< Listbox >( "Listbox" );
+	RegisterFactory< ListLayout >( "ListLayout" );
 
 	// Create the root Widget.
 	mRootWidget = new Widget( this, "root" );
