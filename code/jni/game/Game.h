@@ -67,6 +67,7 @@ namespace mage
 		void LoadState( const rapidjson::Document& state );
 		void SaveState( rapidjson::Document& result );
 		void PostTurn();
+		void FetchTurn();
 
 		Database* GetDatabase() const;
 

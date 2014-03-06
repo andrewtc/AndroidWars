@@ -97,23 +97,14 @@ void MainMenuState::OnExit()
 
 void MainMenuState::LoadGame( const std::string& gameID )
 {
-	gOnlineGameClient->RequestGameData( gameID, [ this, gameID ]( bool success, OnlineGameData gameData )
-	{
-		if( success )
-		{
-			Dictionary parameters;
-			std::string copy = gameID;
-			parameters.Set( "gameID", copy );
-			DebugPrintf( "Game ID is \"%s\".", copy.c_str() );
+	// Pass the game ID to the gameplay state.
+	Dictionary parameters;
+	std::string copy = gameID;
+	parameters.Set( "gameID", copy );
+	DebugPrintf( "Game ID is \"%s\".", copy.c_str() );
 
-			// Go to the gameplay state.
-			GetManager()->ChangeState< GameplayState >( parameters );
-		}
-		else
-		{
-			WarnFail( "Error requesting Game data!" );
-		}
-	});
+	// Go to the gameplay state.
+	GetManager()->ChangeState< GameplayState >( parameters );
 }
 
 

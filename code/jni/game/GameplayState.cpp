@@ -40,6 +40,23 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 
 	mGame->SetCamera( mCamera );
 	mGame->Start();
+
+	gOnlineGameClient->RequestGameData( gameID, [ this ]( bool success, OnlineGameData gameData )
+	{
+		if( success )
+		{
+			// Parse out the state.
+			rapidjson::Document gameState;
+			gameState.Parse< 0 >( gameData.gameState.c_str() );
+
+			// Load the game from the state.
+			mGame->LoadState( gameState );
+		}
+		else
+		{
+			WarnFail( "Error requesting Game data!" );
+		}
+	});
 }
 
 

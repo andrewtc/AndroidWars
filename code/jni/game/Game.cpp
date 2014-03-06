@@ -217,7 +217,7 @@ void Game::Start()
 	// tODO: Remove this.
 	//LoadState( gameState );
 	//SpawnUnit( mDatabase->UnitTypes.FindByName( "MediumTank" ), GetPlayer( 0 ), 0, 0 );
-	PostTurn();
+	//PostTurn();
 }
 
 
@@ -349,6 +349,12 @@ void Game::PostTurn()
 
 	// Create a new turn on the service.
 	gOnlineGameClient->PostTurn( ConvertJSONToString( gameState ) );
+}
+
+
+void Game::FetchTurn()
+{
+
 }
 
 

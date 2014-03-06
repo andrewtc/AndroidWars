@@ -378,10 +378,13 @@ void OnlineGameClient::RequestGameData( const std::string& gameID, OnlineGameCal
 				const rapidjson::Value& gameJSON = result.json[ "result" ];
 
 				// Construct a new game data entry.
-				gameData.id   = GetJSONStringValue( gameJSON, "id", "" );
-				gameData.name = GetJSONStringValue( gameJSON, "name", "" );
+				gameData.id        = GetJSONStringValue( gameJSON, "id", "" );
+				gameData.name      = GetJSONStringValue( gameJSON, "name", "" );
 
-				if( !gameData.id.empty() && !gameData.name.empty() )
+				// Convert the JSON value to string.
+				gameData.gameState = ConvertJSONToString( gameJSON[ "currentState" ] );
+
+				if( !gameData.id.empty() && !gameData.name.empty() && !gameData.gameState.empty() )
 				{
 				}
 				else
