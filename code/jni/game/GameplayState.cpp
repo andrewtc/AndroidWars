@@ -27,8 +27,13 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 	mCamera = new Camera( gWindowWidth, gWindowHeight );
 //	gFont = new BitmapFont( "fonts/font.fnt" );
 
+	// Get the game ID.
+	std::string gameID;
+	parameters.Get( "gameID", gameID );
+	assertion( !gameID.empty(), "Game ID for GameplayState is empty!" );
+
 	// Create a new Game and start it.
-	mGame = Game::Create( 2, "Cobra Cove" );
+	mGame = Game::Create( gameID, 2, "Cobra Cove" );
 
 	// Load all necessary game data.
 	mGame->LoadDataFromFile( "data/Data.xml" );

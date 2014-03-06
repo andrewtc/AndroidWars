@@ -46,10 +46,10 @@ namespace mage
 		const static uint32 CITY_R_ID = 3;
 		const static uint32 CITY_B_ID = 4;
 
-		static Game* Create( int numPlayers, const std::string& mapName );
+		static Game* Create( const std::string& gameID, int numPlayers, const std::string& mapName );
 		static std::string FormatMapPath( const std::string& mapName );
 
-		Game();
+		Game( const std::string& gameID );
 		~Game();
 
 		void LoadDataFromFile( const char* filename );
@@ -66,6 +66,7 @@ namespace mage
 
 		void LoadState( const rapidjson::Document& state );
 		void SaveState( rapidjson::Document& result );
+		void PostTurn();
 
 		Database* GetDatabase() const;
 
@@ -191,6 +192,7 @@ namespace mage
 		void UpdateMessages( float dt );
 
 		static const float GAME_MESSAGE_LENGTH;
+		std::string mGameID;
 
 		friend class Unit;
 	};

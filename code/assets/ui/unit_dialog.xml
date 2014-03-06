@@ -1,4 +1,5 @@
 <Widget name="unit_dialog" sprite="background.anim" position="436,0" size="300,165" color="#FF8BE0CD">
+    <Graphic name="background" animationSet="box.anim" />
 
     <Label name="label"    text="Unit Info" font="default_s.fnt" margins="15,15,0,1" textColor="#FF88AAFF"/>
     <Label name="nameTxt"  text="Name:"    font="default_s.fnt"  margins="15,2,0,1" layout_below="label" textColor="#FF88AAFF"/>

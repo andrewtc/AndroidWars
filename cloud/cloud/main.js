@@ -238,7 +238,6 @@ Parse.Cloud.define( "getGame", function( request, response )
                                             id:      game.id,
                                             name:    game.get( "name" ),
                                             map:     map.get( "name" ),
-                                            players: ,
                                             turn:    0
                                         };
                                         
@@ -289,8 +288,103 @@ Parse.Cloud.define( "postTurn", function( request, response )
 {
     assertCurrentPlayer( request, response, function( user, player )
     {
-
-    }
+        // Get the ID from the request.
+        var gameID = request.params[ "id" ];
+        
+        if( gameID )
+        {
+            // Convert the Game ID to a pointer.
+            var gamePointer = new Game();
+            gamePointer.id = gameID;
+        
+            // Get the requested game by its ID.
+            var findGame = new Parse.Query( GamePlayer )
+                .equalTo( "player", player )
+                .equalTo( "game", gamePointer )
+                .include( "game" );
+                
+            findGame.first(
+            {
+                success: function( gamePlayer )
+                {
+                    if( gamePlayer )
+                    {
+                        // Get the game.
+                        var game = gamePlayer.get( "game" );
+                        
+                        // Get the game state.
+                        var gameState = request.params;
+                        
+                        if( gameState )
+                        {
+                            // Get current turn.
+                            var findCurrentTurn = new Parse.Query( Turn )
+                                .equalTo( "game", game )
+                                .descending( "number" );
+                        
+                            findCurrentTurn.first(
+                            {
+                                success: function( currentTurn )
+                                {
+                                    var turnNumber = 0;
+                                    
+                                    if( currentTurn )
+                                    {
+                                        // If a current Turn record exists, get its number.
+                                        turnNumber = currentTurn.get( "number" );
+                                    }
+                                    
+                                    // Increment the turn counter.
+                                    turnNumber++;
+                            
+                                    // Create a new Turn.
+                                    var turn = new Turn();
+                                    
+                                    turn.set( "game", game );
+                                    turn.set( "gamePlayer", gamePlayer );
+                                    turn.set( "number", turnNumber );
+                                    turn.set( "currentState", gameState );
+                                    
+                                    turn.save(
+                                    {
+                                        success: function( turn )
+                                        {
+                                            // Success!
+                                            response.success( "Created Turn " + turnNumber + "! playerID=" + player.id + ", gameID=" + gameID + ", turnID=" + turn.id );
+                                        },
+                                        error: function( turn, error )
+                                        {
+                                            response.error( "Error saving Turn: " + error.message );
+                                        }
+                                    });
+                                },
+                                error: function( error )
+                                {
+                                    response.error( "Error retrieving current turn for game \"" + gameID + "\": " + error.message );
+                                }
+                            });
+                        }
+                        else
+                        {
+                            response.error( "No game state supplied for turn!. playerID=" + player.id + ", gameID=" + gameID );
+                        }
+                    }
+                    else
+                    {
+                        response.error( "You do not have access to this Game. playerID=" + player.id + ", gameID=" + gameID );
+                    }
+                },
+                error: function( error )
+                {
+                    response.error( "Error posting turn for game \"" + gameID + "\": " + error.message );
+                }
+            });
+        }
+        else
+        {
+            response.error( "No game ID supplied!" );
+        }
+    });
 });
 
 

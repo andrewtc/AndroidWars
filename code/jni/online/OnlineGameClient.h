@@ -92,6 +92,7 @@ namespace mage
 
 		void RequestCurrentGamesList( OnlineGameListCallback callback = OnlineGameListCallback() );
 		void RequestGameData( const std::string& gameID, OnlineGameCallback callback = OnlineGameCallback() );
+		void PostTurn( const std::string& gameState );
 
 	private:
 		static const char* const PARSE_FUNCTION_PREFIX = "functions/";

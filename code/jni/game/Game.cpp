@@ -13,10 +13,10 @@ const char* Game::MAP_FILE_EXTENSION = "tmx";
 const float Game::GAME_MESSAGE_LENGTH = 5;	// in sec
 
 
-Game* Game::Create( int numPlayers, const std::string& mapName )
+Game* Game::Create( const std::string& gameID, int numPlayers, const std::string& mapName )
 {
 	// Create a new Game.
-	Game* game = new Game();
+	Game* game = new Game( gameID );
 
 	// Set the map for this Game.
 	game->SetMapName( mapName );
@@ -40,7 +40,7 @@ std::string Game::FormatMapPath( const std::string& mapName )
 }
 
 
-Game::Game()
+Game::Game( const std::string& gameID )
 	: mNextPlayerIndex( 0 )
 	, mStatus( STATUS_NOT_STARTED )
 	, mDatabase( nullptr )
@@ -50,7 +50,10 @@ Game::Game()
 	, mCurrentTurnIndex( -1 )
 	, mCurrentPlayerIndex( -1 )
 	, mUnitMotionInProgress( false )
+	, mGameID( gameID )
 {
+	assertion( !mGameID.empty(), "Game ID is empty!" );
+
 	// Create the game Database.
 	mDatabase = new Database();
 
@@ -205,15 +208,16 @@ void Game::Start()
 
 	// Serialize the game.
 	// TODO: Remove this.
-	rapidjson::Document gameState;
-	gameState.SetObject();
-	SaveState( gameState );
-	DebugPrintf( ConvertJSONToString( gameState ).c_str() );
+	//rapidjson::Document gameState;
+	//gameState.SetObject();
+	//SaveState( gameState );
+	//DebugPrintf( ConvertJSONToString( gameState ).c_str() );
 
 	// Load the game.
 	// tODO: Remove this.
-	LoadState( gameState );
+	//LoadState( gameState );
 	//SpawnUnit( mDatabase->UnitTypes.FindByName( "MediumTank" ), GetPlayer( 0 ), 0, 0 );
+	PostTurn();
 }
 
 
@@ -303,6 +307,11 @@ void Game::SaveState( rapidjson::Document& result )
 {
 	DebugPrintf( "Saving game state..." );
 
+	// Add the ID.
+	rapidjson::Value gameIDValue;
+	gameIDValue.SetString( mGameID.c_str(), result.GetAllocator() );
+	result.AddMember( "id", gameIDValue, result.GetAllocator() );
+
 	// Start an array for Units.
 	rapidjson::Value unitsArray;
 	unitsArray.SetArray();
@@ -327,6 +336,19 @@ void Game::SaveState( rapidjson::Document& result )
 	// Add it to the result.
 	result.AddMember( "units", unitsArray, result.GetAllocator() );
 	DebugPrintf( "Added array!" );
+}
+
+
+void Game::PostTurn()
+{
+	// Serialize the game.
+	rapidjson::Document gameState;
+	gameState.SetObject();
+	SaveState( gameState );
+	DebugPrintf( ConvertJSONToString( gameState ).c_str() );
+
+	// Create a new turn on the service.
+	gOnlineGameClient->PostTurn( ConvertJSONToString( gameState ) );
 }
 
 

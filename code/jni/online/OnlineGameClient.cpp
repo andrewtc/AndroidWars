@@ -408,6 +408,13 @@ void OnlineGameClient::RequestGameData( const std::string& gameID, OnlineGameCal
 }
 
 
+void OnlineGameClient::PostTurn( const std::string& gameState )
+{
+	// Fire off the request.
+	CallCloudFunction( "postTurn", gameState );
+}
+
+
 jobject OnlineGameClient::CreateJavaRequestParams( const OnlineRequestParameters& parameters )
 {
 	assertion( IsInitialized(), "Cannot create Java RequestParams object for OnlineGameClient that hasn't been initialized!" );
