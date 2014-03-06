@@ -64,6 +64,9 @@ namespace mage
 		bool IsGameOver() const;
 		void Destroy();
 
+		void LoadState( const rapidjson::Document& state );
+		void SaveState( rapidjson::Document& result );
+
 		Database* GetDatabase() const;
 
 		void SetCamera( Camera* camera );

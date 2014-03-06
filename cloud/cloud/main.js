@@ -9,6 +9,7 @@ var Player = Parse.Object.extend( "Player" );
 var Game = Parse.Object.extend( "Game" );
 var GamePlayer = Parse.Object.extend( "GamePlayer" );
 var GameRequest = Parse.Object.extend( "GameRequest" );
+var Turn = Parse.Object.extend( "Turn" );
 
 
 // ========== COMMON FUNCTIONALITY ===========
@@ -222,12 +223,41 @@ Parse.Cloud.define( "getGame", function( request, response )
                         {
                             success: function( map )
                             {
-                                // Return the game data.
-                                response.success(
+                                // Get current turn.
+                                var findCurrentTurn = new Parse.Query( Turn )
+                                    .equalTo( "game", game )
+                                    .descending( "number" );
+                            
+                                findCurrentTurn.first(
                                 {
-                                    id:   game.id,
-                                    name: game.get( "name" ),
-                                    map:  map.get( "name" )
+                                    success: function( currentTurn )
+                                    {
+                                        // Create the game data to return.
+                                        var gameData = 
+                                        {
+                                            id:      game.id,
+                                            name:    game.get( "name" ),
+                                            map:     map.get( "name" ),
+                                            players: ,
+                                            turn:    0
+                                        };
+                                        
+                                        if( currentTurn )
+                                        {
+                                            // If a current Turn record exists, get its number.
+                                            gameData.turn = currentTurn.get( "number" );
+                                            
+                                            // Return the current turn state as part of the data.
+                                            gameData.currentState = currentTurn.get( "currentState" );
+                                        }
+                                        
+                                        // Return the game data.
+                                        response.success( gameData );
+                                    },
+                                    error: function( error )
+                                    {
+                                        response.error( "Error retrieving current turn for game \"" + gameID + "\": " + error.message );
+                                    }
                                 });
                             },
                             error: function( error )
@@ -252,6 +282,12 @@ Parse.Cloud.define( "getGame", function( request, response )
             response.error( "No game ID supplied!" );
         }
     });
+});
+
+
+Parse.Cloud.define( "postTurn", function( request, response )
+{
+    response.error( "TODO" );
 });
 
 

@@ -182,6 +182,34 @@ void Unit::OnUpdate( float dt )
 	}
 }
 
+void Unit::SaveToJSON( rapidjson::Document& document, rapidjson::Value& object )
+{
+	auto& allocator = document.GetAllocator();
+
+	// Save UnitType name.
+	std::string unitTypeName = mUnitType->GetName().GetString();
+	rapidjson::Value unitTypeValue;
+	unitTypeValue.SetString( unitTypeName.c_str(), allocator );
+	object.AddMember( "unitType", unitTypeValue, allocator );
+
+	// Save owner Player index.
+	rapidjson::Value ownerIndexValue;
+	ownerIndexValue.SetInt( mOwner->GetIndex() );
+	object.AddMember( "owner", ownerIndexValue, allocator );
+}
+
+
+void Unit::LoadFromJSON( const rapidjson::Value& object )
+{
+	// Get all properties.
+	HashString unitType = GetJSONStringValue( object, "unitType", "" );
+	int ownerIndex = GetJSONIntValue( object, "owner", -1 );
+
+	// Set all properties.
+	SetUnitType( mGame->GetDatabase()->UnitTypes.FindByName( unitType ) );
+	SetOwner( mGame->GetPlayer( ownerIndex ) );
+}
+
 
 void Unit::SetUnitType( UnitType* unitType )
 {

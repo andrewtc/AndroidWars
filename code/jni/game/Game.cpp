@@ -202,6 +202,13 @@ void Game::Start()
 			unit->ConsumeAP( 9999 );
 		}
 	});
+
+	// Serialize the game.
+	// TODO: Remove this.
+	rapidjson::Document gameState;
+	gameState.SetObject();
+	SaveState( gameState );
+	DebugPrintf( ConvertJSONToString( gameState ).c_str() );
 }
 
 
@@ -245,6 +252,43 @@ void Game::Destroy()
 
 	// Unload all game data.
 	mDatabase->ClearData();
+}
+
+
+void Game::LoadState( const rapidjson::Document& gameData )
+{
+	// TODO
+}
+
+
+void Game::SaveState( rapidjson::Document& result )
+{
+	DebugPrintf( "Saving game state..." );
+
+	// Start an array for Units.
+	rapidjson::Value unitsArray;
+	unitsArray.SetArray();
+	DebugPrintf( "Created array!" );
+
+	mMap.ForeachObjectOfType< Unit >( [ &result, &unitsArray ]( Unit* unit )
+	{
+		// Serialize each Unit.
+		rapidjson::Value unitJSON;
+		unitJSON.SetObject();
+		DebugPrintf( "Created object for \"%s\"!", unit->ToString() );
+
+		// Have the Unit serialize its values to JSON.
+		unit->SaveToJSON( result, unitJSON );
+		DebugPrintf( "Saved state for \"%s\"!", unit->ToString() );
+
+		// Add each Unit's JSON to the array.
+		unitsArray.PushBack( unitJSON, result.GetAllocator() );
+		DebugPrintf( "Added object for \"%s\"!", unit->ToString() );
+	});
+
+	// Add it to the result.
+	result.AddMember( "units", unitsArray, result.GetAllocator() );
+	DebugPrintf( "Added array!" );
 }
 
 

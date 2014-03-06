@@ -22,6 +22,9 @@ namespace mage
 		virtual void OnDraw( const Camera& camera ) const;
 		virtual void OnUpdate( float dt );
 
+		void SaveToJSON( rapidjson::Document& document, rapidjson::Value& object );
+		void LoadFromJSON( const rapidjson::Value& object );
+
 		void SetUnitType( UnitType* unitType );
 		UnitType* GetUnitType() const;
 		void SetTilePos( int x, int y );
