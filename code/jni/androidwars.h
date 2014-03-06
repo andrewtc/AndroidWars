@@ -29,6 +29,8 @@ extern mage::int32 gWindowHeight;
 
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/document.h"
+#include "rapidjson/prettywriter.h"
+#include "rapidjson/stringbuffer.h"
 
 #include "states/InputState.h"
 #include "states/DialogInputState.h"

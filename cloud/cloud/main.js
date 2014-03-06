@@ -167,7 +167,7 @@ Parse.Cloud.define( "getCurrentGameList", function( request, response )
                 {
                     // Build the list of game data to send back to the client.
                     var game = list[ i ].get( "game" );
-                    console.log( JSON.stringify( game ) );
+                    //console.log( JSON.stringify( game ) );
                     games.push(
                     {
                         id:   game.id,
@@ -184,6 +184,73 @@ Parse.Cloud.define( "getCurrentGameList", function( request, response )
                 response.error( "Error retrieving current game list for player \"" + player.get( "name" ) + "\": " + error.message );
             }
         });
+    });
+});
+
+
+Parse.Cloud.define( "getGame", function( request, response )
+{
+    assertCurrentPlayer( request, response, function( user, player )
+    {
+        // Get the ID from the request.
+        var gameID = request.params[ "id" ];
+        
+        if( gameID )
+        {
+            // Convert the Game ID to a pointer.
+            var gamePointer = new Game();
+            gamePointer.id = gameID;
+        
+            // Get the requested game by its ID.
+            var findGame = new Parse.Query( GamePlayer )
+                .equalTo( "player", player )
+                .equalTo( "game", gamePointer )
+                .include( "game" );
+                
+            findGame.first(
+            {
+                success: function( gamePlayer )
+                {
+                    if( gamePlayer )
+                    {
+                        // Return the game.
+                        var game = gamePlayer.get( "game" );
+                        
+                        // Get the Map.
+                        var map = game.get( "map" );
+                        map.fetch(
+                        {
+                            success: function( map )
+                            {
+                                // Return the game data.
+                                response.success(
+                                {
+                                    id:   game.id,
+                                    name: game.get( "name" ),
+                                    map:  map.get( "name" )
+                                });
+                            },
+                            error: function( error )
+                            {
+                                response.error( "Invalid Map for Game!" );
+                            }
+                        });
+                    }
+                    else
+                    {
+                        response.error( "You do not have access to this Game. playerID=" + player.id + ", gameID=" + gameID );
+                    }
+                },
+                error: function( error )
+                {
+                    response.error( "Error retrieving game \"" + gameID + "\": " + error.message );
+                }
+            });
+        }
+        else
+        {
+            response.error( "No game ID supplied!" );
+        }
     });
 });
 

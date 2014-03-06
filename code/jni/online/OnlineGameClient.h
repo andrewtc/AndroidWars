@@ -25,6 +25,13 @@ namespace mage
 	};
 
 
+	struct OnlineGameData
+	{
+		std::string id;
+		std::string name;
+	};
+
+
 	/**
 	 * Accepts any function or lambda with the signature: void (*)( const OnlineRequestResult& result )
 	 */
@@ -39,6 +46,11 @@ namespace mage
 	 * Accepts any function or lambda with the signature: void (*)( bool success, const std::vector< OnlineGameListData >& onlineGameList )
 	 */
 	typedef Callback< void, bool, const std::vector< OnlineGameListData >& > OnlineGameListCallback;
+
+	/**
+	 * Accepts any function or lambda with the signature: void (*)( bool success, OnlineGameData )
+	 */
+	typedef Callback< void, bool, OnlineGameData > OnlineGameCallback;
 
 	/**
 	 * Holds a single parameter to send with a GET request.
@@ -79,6 +91,7 @@ namespace mage
 		void LogOut();
 
 		void RequestCurrentGamesList( OnlineGameListCallback callback = OnlineGameListCallback() );
+		void RequestGameData( const std::string& gameID, OnlineGameCallback callback = OnlineGameCallback() );
 
 	private:
 		static const char* const PARSE_FUNCTION_PREFIX = "functions/";
@@ -158,4 +171,18 @@ namespace mage
 	MAGE_IMPLEMENT_GET_JSON_VALUE( unsigned int, Uint );
 	MAGE_IMPLEMENT_GET_JSON_VALUE( uint64_t, Uint64 );
 	MAGE_IMPLEMENT_GET_JSON_VALUE( const char*, String );
+
+
+	inline std::string ConvertJSONToString( const rapidjson::Value& object )
+	{
+		// Create a buffer and a JSON writer.
+		rapidjson::GenericStringBuffer< rapidjson::UTF8<> > buffer;
+		rapidjson::Writer< rapidjson::GenericStringBuffer< rapidjson::UTF8<> > > writer( buffer );
+
+		// Write the JSON object to the buffer.
+		object.Accept( writer );
+
+		// Return the result;
+		return std::string( buffer.GetString(), buffer.Size() );
+	}
 }

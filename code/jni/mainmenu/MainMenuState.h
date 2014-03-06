@@ -17,6 +17,8 @@ namespace mage
 		MainMenuState();
 		virtual ~MainMenuState();
 
+		void LoadGame( const std::string& gameID );
+
 		LogInInputState* GetLogInState() const;
 		DashboardInputState* GetDashboardState() const;
 
@@ -76,7 +78,8 @@ namespace mage
 		void OnRefreshButtonPressed();
 		void OnNewGameButtonPressed();
 
-		void RefreshGamesList( const std::vector< OnlineGameListData >& currentGameList );
+		void RefreshGamesList();
+		void SetGamesList( const std::vector< OnlineGameListData >& currentGameList );
 
 		ListLayout* GetGamesList() const;
 

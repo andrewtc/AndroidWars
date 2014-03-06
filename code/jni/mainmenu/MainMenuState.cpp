@@ -88,6 +88,23 @@ void MainMenuState::OnExit()
 }
 
 
+void MainMenuState::LoadGame( const std::string& gameID )
+{
+	gOnlineGameClient->RequestGameData( gameID, [this]( bool success, OnlineGameData gameData )
+	{
+		if( success )
+		{
+			// Go to the gameplay state.
+			GetManager()->ChangeState< GameplayState >();
+		}
+		else
+		{
+			WarnFail( "Error requesting Game data!" );
+		}
+	});
+}
+
+
 LogInInputState* MainMenuState::GetLogInState() const
 {
 	return mLogInState;
@@ -297,6 +314,9 @@ void DashboardInputState::OnEnter( const Dictionary& parameters )
 
 		// Show the widget.
 		dashboardScreen->Show();
+
+		// Refresh the games list.
+		RefreshGamesList();
 	}
 }
 
@@ -318,7 +338,7 @@ void DashboardInputState::OnExit()
 		}
 
 		// Unregister callbacks.
-		Button* logOutButton = dashboardScreen->GetChildByName< Button >( "logOutButton" );
+		Button* logOutButton  = dashboardScreen->GetChildByName< Button >( "logOutButton" );
 		Button* refreshButton = dashboardScreen->GetChildByName< Button >( "refreshButton" );
 		Button* newGameButton = dashboardScreen->GetChildByName< Button >( "newGameButton" );
 
@@ -359,14 +379,19 @@ void DashboardInputState::OnLogOutButtonPressed()
 void DashboardInputState::OnRefreshButtonPressed()
 {
 	DebugPrintf( "Refresh button pressed!" );
+	RefreshGamesList();
+}
 
+
+void DashboardInputState::RefreshGamesList()
+{
 	// Request the current games list.
 	gOnlineGameClient->RequestCurrentGamesList( [this]( bool success, const std::vector< OnlineGameListData >& currentGameList )
 	{
 		if( success )
 		{
 			// Refresh the list of games.
-			RefreshGamesList( currentGameList );
+			SetGamesList( currentGameList );
 		}
 		else
 		{
@@ -377,7 +402,7 @@ void DashboardInputState::OnRefreshButtonPressed()
 }
 
 
-void DashboardInputState::RefreshGamesList( const std::vector< OnlineGameListData >& currentGameList )
+void DashboardInputState::SetGamesList( const std::vector< OnlineGameListData >& currentGameList )
 {
 	// Get the games list.
 	ListLayout* gamesList = GetGamesList();
@@ -401,6 +426,21 @@ void DashboardInputState::RefreshGamesList( const std::vector< OnlineGameListDat
 
 				// Set the label to the name of the game.
 				listItem->SetLabel( it->name );
+
+				// Cache the ID (for the callback).
+				std::string gameID = it->id;
+
+				// Set the callback for each list item.
+				listItem->SetOnClickDelegate( [this, gameID]( float x, float y )
+				{
+					MainMenuState* owner = GetOwnerDerived();
+
+					if( owner )
+					{
+						// Load the game for this list item.
+						owner->LoadGame( gameID );
+					}
+				});
 			}
 		}
 		else

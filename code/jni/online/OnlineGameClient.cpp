@@ -352,6 +352,62 @@ void OnlineGameClient::RequestCurrentGamesList( OnlineGameListCallback callback 
 }
 
 
+void OnlineGameClient::RequestGameData( const std::string& gameID, OnlineGameCallback callback )
+{
+	// Format parameters.
+	rapidjson::Document parameters;
+	parameters.SetObject();
+
+	rapidjson::Value gameIDValue;
+	gameIDValue.SetString( gameID.c_str(), gameID.length() );
+
+	parameters.AddMember( "id", gameIDValue, parameters.GetAllocator() );
+
+	// Fire off the request.
+	CallCloudFunction( "getGame", ConvertJSONToString( parameters ), [ this, callback, gameID ]( const OnlineRequestResult& result )
+	{
+		bool success = false;
+		OnlineGameData gameData;
+
+		if( !result.isError )
+		{
+			if( result.resultIsJSON )
+			{
+				success = true;
+
+				const rapidjson::Value& gameJSON = result.json[ "result" ];
+
+				// Construct a new game data entry.
+				gameData.id   = GetJSONStringValue( gameJSON, "id", "" );
+				gameData.name = GetJSONStringValue( gameJSON, "name", "" );
+
+				if( !gameData.id.empty() && !gameData.name.empty() )
+				{
+				}
+				else
+				{
+					WarnFail( "Received invalid game data! (id=\"%s\", name=\"%s\").", gameData.id.c_str(), gameData.name.c_str() );
+				}
+			}
+			else
+			{
+				WarnFail( "The games list response was not a JSON object!" );
+			}
+		}
+		else
+		{
+			WarnFail( "Error retrieving current game \"%s\": %s", gameID.c_str(), result.string.c_str() );
+		}
+
+		if( callback.IsValid() )
+		{
+			// Pass the list of games to the success callback.
+			callback.Invoke( success, gameData );
+		}
+	});
+}
+
+
 jobject OnlineGameClient::CreateJavaRequestParams( const OnlineRequestParameters& parameters )
 {
 	assertion( IsInitialized(), "Cannot create Java RequestParams object for OnlineGameClient that hasn't been initialized!" );
