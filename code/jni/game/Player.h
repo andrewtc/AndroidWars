@@ -23,9 +23,13 @@ namespace mage
 		void OnLoseUnit( Unit* unit );
 		void AddFunds( int funds ) { mFunds -= funds; if ( mFunds < 0 ) mFunds = 0; }
 
+		void SetControllable( bool isControllable );
+		bool IsControllable() const;
+
 		int CitiesOwned;
 
 	protected:
+		bool mIsControllable;
 		int mIndex;
 		int mFunds;
 		int mUnits;
@@ -56,5 +60,17 @@ namespace mage
 	inline int Player::GetFunds() const
 	{
 		return mFunds;
+	}
+
+
+	inline void Player::SetControllable( bool isControllable )
+	{
+		mIsControllable = isControllable;
+	}
+
+
+	inline bool Player::IsControllable() const
+	{
+		return mIsControllable;
 	}
 }

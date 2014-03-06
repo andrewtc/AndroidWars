@@ -438,6 +438,7 @@ void Game::SelectUnit( Unit* unit )
 	{
 		DebugPrintf( "Selecting unit \"%s\"...", unit->GetName().c_str() );
 		Player* currentPlayer = GetCurrentPlayer();
+		assertion( currentPlayer->IsControllable(), "Cannot select Unit for Player that cannot be controlled!" );
 
 		if ( unit->IsOwnedBy( currentPlayer ) )
 		{
@@ -729,34 +730,41 @@ void Game::OnTouchEvent( float x, float y )
 	if ( mUnitMotionInProgress )
 		return;
 
-	// Get the position of the tile that was tapped.
-	Vec2f worldPos = ( Vec2f( x, y ) + mCamera->GetPosition() );
-	Vec2i tilePos = mMap.WorldToTile( worldPos );
-	MapTile tile = GetTile( tilePos );
-
-	// See if a Unit was tapped.
-	MapObject* obj = mMap.GetFirstObjectAt( worldPos );
-
-	if ( obj && obj->IsExactly( Unit::TYPE ) )
+	if( GetCurrentPlayer()->IsControllable() )
 	{
-		// Select the unit that was tapped.
-		Unit* unit = (Unit*) obj;
-		if ( unit->IsOwnedBy( GetCurrentPlayer() ) )
-			SelectUnit( 0 );
-		SelectUnit( unit );
-	}
-	else if( tile != TileMap::INVALID_TILE && TileIsReachable( tilePos ) )
-	{
-		// Find the best path to this tile.
-		FindBestPathToTile( tilePos, mSelectedPath );
+		// Get the position of the tile that was tapped.
+		Vec2f worldPos = ( Vec2f( x, y ) + mCamera->GetPosition() );
+		Vec2i tilePos = mMap.WorldToTile( worldPos );
+		MapTile tile = GetTile( tilePos );
 
-		// Show the confirm dialog.
-		ShowMoveDialog();
+		// See if a Unit was tapped.
+		MapObject* obj = mMap.GetFirstObjectAt( worldPos );
+
+		if ( obj && obj->IsExactly( Unit::TYPE ) )
+		{
+			// Select the unit that was tapped.
+			Unit* unit = (Unit*) obj;
+			if ( unit->IsOwnedBy( GetCurrentPlayer() ) )
+				SelectUnit( 0 );
+			SelectUnit( unit );
+		}
+		else if( tile != TileMap::INVALID_TILE && TileIsReachable( tilePos ) )
+		{
+			// Find the best path to this tile.
+			FindBestPathToTile( tilePos, mSelectedPath );
+
+			// Show the confirm dialog.
+			ShowMoveDialog();
+		}
+		else
+		{
+			// Deselect the currently selected unit (if any).
+			SelectUnit( nullptr );
+		}
 	}
 	else
 	{
-		// Deselect the currently selected unit (if any).
-		SelectUnit( nullptr );
+		WarnFail( "Current Player is not controllable!" );
 	}
 }
 

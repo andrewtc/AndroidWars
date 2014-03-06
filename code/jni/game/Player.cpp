@@ -9,6 +9,7 @@ Player::Player()
 	, CitiesOwned( 0 )
 	, mFunds( 0 )
 	, mUnits( 0 )
+	, mIsControllable( false )
 { }
 
 
