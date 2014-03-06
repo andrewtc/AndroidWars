@@ -958,8 +958,8 @@ Vec2f TileMap::TileToWorld( const Vec2i& pos ) const
 //---------------------------------------
 Vec2i TileMap::WorldToTile( float x, float y ) const
 {
-	return Vec2i( (int) ( x / mTileWidth ),
-				  (int) ( y / mTileHeight ) );
+	return Vec2i( (int) ( x / (float) mTileWidth ),
+				  (int) ( y / (float) mTileHeight ) );
 }
 //---------------------------------------
 Vec2i TileMap::WorldToTile( const Vec2f& pos ) const

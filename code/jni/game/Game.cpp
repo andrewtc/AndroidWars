@@ -209,6 +209,11 @@ void Game::Start()
 	gameState.SetObject();
 	SaveState( gameState );
 	DebugPrintf( ConvertJSONToString( gameState ).c_str() );
+
+	// Load the game.
+	// tODO: Remove this.
+	LoadState( gameState );
+	//SpawnUnit( mDatabase->UnitTypes.FindByName( "MediumTank" ), GetPlayer( 0 ), 0, 0 );
 }
 
 
@@ -257,7 +262,40 @@ void Game::Destroy()
 
 void Game::LoadState( const rapidjson::Document& gameData )
 {
-	// TODO
+	// Destroy all Units.
+	RemoveAllUnits();
+	DestroyRemovedUnits();
+
+	// Get the Units tag.
+	const rapidjson::Value& unitsArray = gameData[ "units" ];
+	assertion( unitsArray.IsArray(), "Could not load game state from JSON because no \"units\" list was found!" );
+
+	for( auto it = unitsArray.Begin(); it != unitsArray.End(); ++it )
+	{
+		const rapidjson::Value& object = ( *it );
+		assertion( object.IsObject(), "Could not load Unit from JSON because the JSON provided was not an object!" );
+
+		// Get all properties.
+		HashString unitTypeName = GetJSONStringValue( object, "unitType", "" );
+		int ownerIndex = GetJSONIntValue( object, "owner", -1 );
+		int tileX = GetJSONIntValue( object, "x", -1 );
+		int tileY = GetJSONIntValue( object, "y", -1 );
+
+		assertion( GetTile( tileX, tileY ) != TileMap::INVALID_TILE, "Loaded invalid tile position (%d,%d) from JSON!", tileX, tileY );
+
+		// Get references.
+		UnitType* unitType = mDatabase->UnitTypes.FindByName( unitTypeName );
+		assertion( unitType, "Loaded invalid UnitType from JSON!" );
+
+		Player* player = GetPlayer( ownerIndex );
+		assertion( player, "Loaded invalid Player from JSON!" );
+
+		// Spawn the Unit.
+		Unit* unit = SpawnUnit( unitType, player, tileX, tileY );
+
+		// Load each Unit from the array.
+		unit->LoadFromJSON( *it );
+	}
 }
 
 
@@ -342,18 +380,8 @@ void Game::OnUpdate( float dt )
 		// Update the world.
 		mMap.OnUpdate( dt );
 
-		for( auto it = mUnitsToRemove.begin(); it != mUnitsToRemove.end(); ++it )
-		{
-			// Remove all destroyed Units.
-			Unit* unit = ( *it );
-			DebugPrintf( "Removing %s from the game.", unit->ToString() );
-
-			MapObject* unitAsMapObject = (MapObject*) unit;
-			mMap.RemoveObject( unitAsMapObject, true );
-		}
-
-		mUnitsToRemove.clear();
-
+		// Destroy all removed Units.
+		DestroyRemovedUnits();
 	}
 	else if ( mStatus == STATUS_GAME_OVER )
 	{
@@ -465,12 +493,19 @@ Unit* Game::SpawnUnit( UnitType* unitType, Player* owner, int x, int y )
 {
 	// Create a new Unit of the specified type at the specified location on the map.
 	Unit* unit = new Unit();
+
+	// Add the Unit to the map.
+	mMap.AddMapObject( unit, UNIT_LAYER_INDEX );
+
+	// Load Unit properties.
 	unit->SetUnitType( unitType );
 	unit->SetOwner( owner );
-	unit->SetTilePos( x, y );
 
 	// Initialize the Unit.
 	unit->Init( this );
+
+	// Set the position of the Unit.
+	unit->SetTilePos( x, y );
 
 	return unit;
 }
@@ -877,6 +912,32 @@ void Game::RemoveUnit( Unit* unit )
 {
 	// Add the Unit to the list of Units to remove.
 	mUnitsToRemove.push_back( unit );
+}
+
+
+void Game::RemoveAllUnits()
+{
+	mMap.ForeachObjectOfType< Unit >( [this]( Unit* unit )
+	{
+		// Add the Unit to the list of Units to remove.
+		mUnitsToRemove.push_back( unit );
+	});
+}
+
+
+void Game::DestroyRemovedUnits()
+{
+	for( auto it = mUnitsToRemove.begin(); it != mUnitsToRemove.end(); ++it )
+	{
+		// Remove all destroyed Units.
+		Unit* unit = ( *it );
+		DebugPrintf( "Removing %s from the game.", unit->ToString() );
+
+		MapObject* unitAsMapObject = (MapObject*) unit;
+		mMap.RemoveObject( unitAsMapObject, true );
+	}
+
+	mUnitsToRemove.clear();
 }
 
 

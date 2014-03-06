@@ -126,6 +126,7 @@ namespace mage
 		typedef std::vector< Player* > Players;
 
 		const static unsigned int TERRAIN_LAYER_INDEX = 1;
+		const static unsigned int UNIT_LAYER_INDEX = 3;
 
 		static MapObject* SpawnObjectFromXml( const XmlReader::XmlReaderIterator& xmlIterator );
 
@@ -148,6 +149,8 @@ namespace mage
 		void HideAllDialogs();
 
 		void RemoveUnit( Unit* unit );
+		void RemoveAllUnits();
+		void DestroyRemovedUnits();
 
 		int mNextPlayerIndex;
 		int mCurrentTurnIndex;

@@ -287,7 +287,10 @@ Parse.Cloud.define( "getGame", function( request, response )
 
 Parse.Cloud.define( "postTurn", function( request, response )
 {
-    response.error( "TODO" );
+    assertCurrentPlayer( request, response, function( user, player )
+    {
+
+    }
 });
 
 

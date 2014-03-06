@@ -196,18 +196,23 @@ void Unit::SaveToJSON( rapidjson::Document& document, rapidjson::Value& object )
 	rapidjson::Value ownerIndexValue;
 	ownerIndexValue.SetInt( mOwner->GetIndex() );
 	object.AddMember( "owner", ownerIndexValue, allocator );
+
+	// Save position.
+	Vec2i tilePosition = GetTilePos();
+
+	rapidjson::Value xValue;
+	xValue.SetInt( tilePosition.x );
+	object.AddMember( "x", xValue, allocator );
+
+	rapidjson::Value yValue;
+	yValue.SetInt( tilePosition.y );
+	object.AddMember( "y", yValue, allocator );
 }
 
 
 void Unit::LoadFromJSON( const rapidjson::Value& object )
 {
-	// Get all properties.
-	HashString unitType = GetJSONStringValue( object, "unitType", "" );
-	int ownerIndex = GetJSONIntValue( object, "owner", -1 );
-
-	// Set all properties.
-	SetUnitType( mGame->GetDatabase()->UnitTypes.FindByName( unitType ) );
-	SetOwner( mGame->GetPlayer( ownerIndex ) );
+	// TODO
 }
 
 
@@ -229,6 +234,9 @@ void Unit::SetTilePos( const Vec2i& tilePos )
 
 	// Update the position of the object in the world.
 	Position = mGame->GetMap()->TileToWorld( tilePos );
+
+	// Update the destination.
+	mDestination = Position;
 }
 
 
