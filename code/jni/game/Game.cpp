@@ -64,10 +64,58 @@ Game::Game()
 	mGameOverDialog = gWidgetManager->CreateWidgetFromTemplate( "GameOverSplash" );
 	mUnitDialog     = gWidgetManager->CreateWidgetFromTemplate( "UnitDialog" );
 
+	// Add dialogs.
+	Widget* root = gWidgetManager->GetRootWidget();
+
+	if( mMoveDialog )
+	{
+		root->AddChild( mMoveDialog );
+	}
+	else
+	{
+		WarnFail( "Could not create move dialog!" );
+	}
+
+	if( mAttackDialog )
+	{
+		root->AddChild( mAttackDialog );
+	}
+	else
+	{
+		WarnFail( "Could not create attack dialog!" );
+	}
+
+	if( mCaptureDialog )
+	{
+		root->AddChild( mCaptureDialog );
+		mCaptureDialog->Hide();
+	}
+	else
+	{
+		WarnFail( "Could not create capture dialog!" );
+	}
+
+	if( mGameOverDialog )
+	{
+		root->AddChild( mGameOverDialog );
+	}
+	else
+	{
+		WarnFail( "Could not create game over dialog!" );
+	}
+
+	if( mUnitDialog )
+	{
+		root->AddChild( mUnitDialog );
+		mUnitDialog->Hide();
+	}
+	else
+	{
+		WarnFail( "Could not create unit dialog!" );
+	}
+
 	// Hide them
 	HideAllDialogs();
-	mCaptureDialog->Hide();
-	mUnitDialog->Hide();
 
 	// Register events
 	RegisterObjectEventFunc( Game, ConfirmMoveEvent );
@@ -161,6 +209,39 @@ void Game::Destroy()
 {
 	// Destroy all event bindings for this Game.
 	EventManager::UnregisterObjectForAllEvent( *this );
+
+	// Destroy all Widgets.
+	Widget* root = gWidgetManager->GetRootWidget();
+
+	if( mMoveDialog )
+	{
+		root->RemoveChild( mMoveDialog );
+		gWidgetManager->DestroyWidget( mMoveDialog );
+	}
+
+	if( mAttackDialog )
+	{
+		root->RemoveChild( mAttackDialog );
+		gWidgetManager->DestroyWidget( mAttackDialog );
+	}
+
+	if( mCaptureDialog )
+	{
+		root->RemoveChild( mCaptureDialog );
+		gWidgetManager->DestroyWidget( mCaptureDialog );
+	}
+
+	if( mGameOverDialog )
+	{
+		root->RemoveChild( mGameOverDialog );
+		gWidgetManager->DestroyWidget( mGameOverDialog );
+	}
+
+	if( mUnitDialog )
+	{
+		root->RemoveChild( mUnitDialog );
+		gWidgetManager->DestroyWidget( mUnitDialog );
+	}
 
 	// Unload all game data.
 	mDatabase->ClearData();
@@ -355,6 +436,7 @@ void Game::SelectUnit( Unit* unit )
 {
 	if( unit )
 	{
+		DebugPrintf( "Selecting unit \"%s\"...", unit->GetName().c_str() );
 		Player* currentPlayer = GetCurrentPlayer();
 
 		if ( unit->IsOwnedBy( currentPlayer ) )
@@ -372,29 +454,64 @@ void Game::SelectUnit( Unit* unit )
 			int id = tile.GetTileId();
 			int playerId = currentPlayer->GetIndex();
 			if ( id == CITY_N_ID )
+			{
 				ShowCaptureDialog();
+			}
 			else if ( id == CITY_B_ID )
 			{
-				if ( playerId == 0 )
+				if( mCaptureDialog )
 				{
-					((Button*)mCaptureDialog->GetChildByName( "button" ))->Show();
+					Button* button = mCaptureDialog->GetChildByName< Button >( "button" );
+
+					if( button )
+					{
+						if ( playerId == 0 )
+						{
+							button->Show();
+						}
+						else
+						{
+							button->Hide();
+						}
+					}
+					ShowCaptureDialog();
 				}
 				else
-					((Button*)mCaptureDialog->GetChildByName( "button" ))->Hide();
-				ShowCaptureDialog();
+				{
+					WarnFail( "Capture dialog does not exist!" );
+				}
 			}
 			else if ( id == CITY_R_ID )
 			{
-				if ( playerId == 1 )
+				if( mCaptureDialog )
 				{
-					((Button*)mCaptureDialog->GetChildByName( "button" ))->Show();
+					Button* button = mCaptureDialog->GetChildByName< Button >( "button" );
+
+					if( button )
+					{
+						if ( playerId == 1 )
+						{
+							button->Show();
+						}
+						else
+						{
+							button->Hide();
+						}
+					}
+					ShowCaptureDialog();
 				}
 				else
-					((Button*)mCaptureDialog->GetChildByName( "button" ))->Hide();
-				ShowCaptureDialog();
+				{
+					WarnFail( "Capture dialog does not exist!" );
+				}
 			}
 			else
-				mCaptureDialog->Hide();
+			{
+				if( mCaptureDialog )
+				{
+					mCaptureDialog->Hide();
+				}
+			}
 
 			// Show unit info
 			ShowUnitDialog();
@@ -402,13 +519,13 @@ void Game::SelectUnit( Unit* unit )
 			// Select all reachable tiles from this Unit's position.
 			SelectReachableTilesForUnit( unit, unit->GetTilePos(), 0, CARDINAL_DIRECTION_NONE, unit->GetMovementRange() );
 
-			DebugPrintf( "Selected unit %s", unit->ToString() );
+			DebugPrintf( "Selected %s", unit->ToString() );
 
-			for( auto it = mReachableTiles.begin(); it != mReachableTiles.end(); ++it )
+			/*for( auto it = mReachableTiles.begin(); it != mReachableTiles.end(); ++it )
 			{
 				TileInfo& info = it->second;
 				DebugPrintf( "Tile (%d, %d) is reachable (best cost of %d)!", info.tilePos.x, info.tilePos.y, info.bestTotalCostToEnter );
-			}
+			}*/
 		}
 		else
 		{
@@ -441,15 +558,24 @@ void Game::SelectUnit( Unit* unit )
 		// Clear the currently selected path.
 		mSelectedPath.Clear();
 
-		// Hide capture dialog
-		mCaptureDialog->Hide();
-		mUnitDialog->Hide();
+		if( mCaptureDialog )
+		{
+			// Hide capture dialog
+			mCaptureDialog->Hide();
+		}
+
+		if( mUnitDialog )
+		{
+			mUnitDialog->Hide();
+		}
 	}
 }
 
 
 void Game::SelectReachableTilesForUnit( Unit* unit, const Vec2i& tilePos, int totalCostToEnter, CardinalDirection previousTileDirection, int movementRange )
 {
+	assertion( unit, "Cannot select tiles for null Unit!" );
+
 	// Select the current tile.
 	int tileIndex = GetIndexOfTile( tilePos );
 
@@ -475,12 +601,15 @@ void Game::SelectReachableTilesForUnit( Unit* unit, const Vec2i& tilePos, int to
 
 		if( adjacentTile != TileMap::INVALID_TILE )
 		{
+			//DebugPrintf( "Adjacent tile is valid!" );
+
 			// Get the TerrainType of the adjacent tile.
 			TerrainType* adjacentType = GetTerrainTypeOfTile( adjacentPos );
+			assertion( adjacentType, "Could not find terrain type of tile (%d,%d)!", adjacentPos.x, adjacentPos.y );
 
 			// Calculate the cost to enter the adjacent tile.
 			int costToEnterAdjacentTile = unit->GetMovementCostAcrossTerrain( adjacentType );
-			DebugPrintf( "Unit %s move into tile (%d, %d) with cost %d (TerrainType \"%s\").", ( unit->CanMoveAcrossTerrain( adjacentType ) ? "CAN" : "CANNOT" ), adjacentPos.x, adjacentPos.y, costToEnterAdjacentTile, adjacentType->GetName().GetString().c_str() );
+			//DebugPrintf( "Unit %s move into tile (%d, %d) with cost %d (TerrainType \"%s\").", ( unit->CanMoveAcrossTerrain( adjacentType ) ? "CAN" : "CANNOT" ), adjacentPos.x, adjacentPos.y, costToEnterAdjacentTile, adjacentType->GetName().GetString().c_str() );
 
 			if( unit->CanMoveAcrossTerrain( adjacentType ) )
 			{
@@ -518,7 +647,7 @@ void Game::FindBestPathToTile( const Vec2i& tilePos, Path& result ) const
 	{
 		// Construct a path through the selected tiles back to the starting tile.
 		result.AddWaypoint( tileInfo->tilePos );
-		DebugPrintf( "Tracing path through selected tiles: (%d, %d)", tileInfo->tilePos.x, tileInfo->tilePos.y );
+		//DebugPrintf( "Tracing path through selected tiles: (%d, %d)", tileInfo->tilePos.x, tileInfo->tilePos.y );
 	}
 
 	// Make sure the path that was found is valid.
@@ -590,6 +719,8 @@ void Game::OnGameOver()
 
 void Game::OnTouchEvent( float x, float y )
 {
+	DebugPrintf( "Touch event!" );
+
 	// A widget is blocking input
 	if ( WidgetIsOpen() )
 		return;
@@ -653,12 +784,16 @@ void Game::NextTurn()
 
 TerrainType* Game::GetTerrainTypeOfTile( int x, int y )
 {
-	MapTile tile = mMap.GetTile( x, y, TERRAIN_LAYER_INDEX );
+	//DebugPrintf( "Getting terrain type of tile (%d, %d)...", x, y );
+
+	MapTile& tile = mMap.GetTile( x, y, TERRAIN_LAYER_INDEX );
 	assertion( tile != TileMap::INVALID_TILE, "Cannot get TerrainType of invalid Tile (%d, %d)!", x, y );
 
 	// TODO: Make this actually use the properties of the Tile to determine TerrainType.
 	HashString terrainTypeName = tile.GetPropertyAsString( "TerrainType" );
-	return mDatabase->TerrainTypes.FindByName( terrainTypeName );
+
+	TerrainType* result = mDatabase->TerrainTypes.FindByName( terrainTypeName );
+	return result;
 }
 
 bool Game::WidgetIsOpen() const
@@ -669,9 +804,20 @@ bool Game::WidgetIsOpen() const
 
 void Game::HideAllDialogs()
 {
-	mMoveDialog->Hide();
-	mAttackDialog->Hide();
-	mGameOverDialog->Hide();
+	if( mMoveDialog )
+	{
+		mMoveDialog->Hide();
+	}
+
+	if( mAttackDialog )
+	{
+		mAttackDialog->Hide();
+	}
+
+	if( mGameOverDialog )
+	{
+		mGameOverDialog->Hide();
+	}
 }
 
 
@@ -692,8 +838,11 @@ ObjectEventFunc( Game, ConfirmMoveEvent )
 	// Clear the currently selected unit.
 //	SelectUnit( nullptr );
 
-	// Hide the movement dialog.
-	mMoveDialog->Hide();
+	if( mMoveDialog )
+	{
+		// Hide the movement dialog.
+		mMoveDialog->Hide();
+	}
 }
 
 ObjectEventFunc( Game, CancelMoveEvent )
@@ -701,8 +850,11 @@ ObjectEventFunc( Game, CancelMoveEvent )
 	// Clear the currently selected path.
 	mSelectedPath.Clear();
 
-	// Hide the movement dialog.
-	mMoveDialog->Hide();
+	if( mMoveDialog )
+	{
+		// Hide the movement dialog.
+		mMoveDialog->Hide();
+	}
 }
 
 ObjectEventFunc( Game, ConfirmAttackEvent )
@@ -730,14 +882,22 @@ ObjectEventFunc( Game, ConfirmAttackEvent )
 	// Reset game state.
 	mTargetUnit->Deselect();
 	SelectUnit( 0 );
-	mAttackDialog->Hide();
+
+	if( mAttackDialog )
+	{
+		mAttackDialog->Hide();
+	}
 }
 
 ObjectEventFunc( Game, CancelAttackEvent )
 {
 	mTargetUnit->Deselect();
 	SelectUnit( 0 );
-	mAttackDialog->Hide();
+
+	if( mAttackDialog )
+	{
+		mAttackDialog->Hide();
+	}
 }
 
 ObjectEventFunc( Game, ConfirmCaptureEvent )
@@ -784,7 +944,12 @@ ObjectEventFunc( Game, ConfirmCaptureEvent )
 
 
 	}
-	mCaptureDialog->Hide();
+
+	if( mCaptureDialog )
+	{
+		mCaptureDialog->Hide();
+	}
+
 	SelectUnit( 0 );
 }
 
@@ -848,54 +1013,141 @@ void Game::UpdateMessages( float dt )
 		}), mMessageQueue.end() );
 }
 
+
+
+void Game::ShowMoveDialog() const
+{
+	if( mMoveDialog )
+	{
+		mMoveDialog->Show();
+	}
+	else
+	{
+		WarnFail( "Cannot show move dialog because it does not exist!" );
+	}
+}
+
+
+void Game::ShowAttackDialog() const
+{
+	if( mAttackDialog )
+	{
+		mAttackDialog->Show();
+	}
+	else
+	{
+		WarnFail( "Cannot show attack dialog because it does not exist!" );
+	}
+}
+
+
 void Game::ShowCaptureDialog() const
 {
-	if ( mSelectedUnit )
+	DebugPrintf( "Showing capture dialog..." );
+
+	if( mCaptureDialog )
 	{
-		Label* ownerText = (Label*) mCaptureDialog->GetChildByName( "ownerTxt" );
-		Vec2i tilePos = mSelectedUnit->GetTilePos();
-		TileMap::MapTile& tile = mMap.GetTile( tilePos.x, tilePos.y, TERRAIN_LAYER_INDEX );
-		int tileId = tile.GetTileId();
-		if ( tileId == CITY_N_ID )
+		if ( mSelectedUnit )
 		{
-			ownerText->SetText( "None" );
-			ownerText->SetTextColor( Color::GREY );
+			Label* ownerText = mCaptureDialog->GetChildByName< Label >( "ownerTxt" );
+
+			if( ownerText )
+			{
+				Vec2i tilePos = mSelectedUnit->GetTilePos();
+				TileMap::MapTile& tile = mMap.GetTile( tilePos.x, tilePos.y, TERRAIN_LAYER_INDEX );
+				int tileId = tile.GetTileId();
+				if ( tileId == CITY_N_ID )
+				{
+					ownerText->SetText( "None" );
+					ownerText->SetTextColor( Color::GREY );
+				}
+				else if ( tileId == CITY_R_ID )
+				{
+					ownerText->SetText( "Red" );
+					ownerText->SetTextColor( Color::RED );
+				}
+				else if ( tileId == CITY_B_ID )
+				{
+					ownerText->SetText( "Blue" );
+					ownerText->SetTextColor( Color::BLUE );
+				}
+			}
+			else
+			{
+				WarnFail( "Owner label not found!" );
+			}
 		}
-		else if ( tileId == CITY_R_ID )
-		{
-			ownerText->SetText( "Red" );
-			ownerText->SetTextColor( Color::RED );
-		}
-		else if ( tileId == CITY_B_ID )
-		{
-			ownerText->SetText( "Blue" );
-			ownerText->SetTextColor( Color::BLUE );
-		}
+
+		mCaptureDialog->Show();
 	}
-	mCaptureDialog->Show();
+	else
+	{
+		WarnFail( "Could not show capture dialog because it does not exist!" );
+	}
 }
 
 void Game::ShowUnitDialog() const
 {
-	Label* nameText = (Label*)mUnitDialog->GetChildByName( "nameTxt" );
-	Label* hpText   = (Label*)mUnitDialog->GetChildByName( "hpTxt" );
-	Label* apText   = (Label*)mUnitDialog->GetChildByName( "apTxt" );
-	Player* player  = GetCurrentPlayer();
+	DebugPrintf( "Showing unit dialog..." );
 
-	if ( mSelectedUnit )
+	if( mUnitDialog )
 	{
-		if ( player->GetFunds() < 100 || mSelectedUnit->GetRemainingAP() == 0 || mSelectedUnit->GetHP() == mSelectedUnit->GetTotalHP() )
-			((Button*)mUnitDialog->GetChildByName( "button" ))->Disable();
-		else
-			((Button*)mUnitDialog->GetChildByName( "button" ))->Enable();
+		Label* nameText = mUnitDialog->GetChildByName< Label >( "nameTxt" );
+		Label* hpText   = mUnitDialog->GetChildByName< Label >( "hpTxt" );
+		Label* apText   = mUnitDialog->GetChildByName< Label >( "apTxt" );
+		Player* player  = GetCurrentPlayer();
 
-		nameText->SetText( mSelectedUnit->ToString() );
-		nameText->SetTextColor( player->GetPlayerColor() );
-		hpText->SetText( std::string( "HP: " ) + StringUtil::ToString( mSelectedUnit->GetHP() ) + "/" + StringUtil::ToString( mSelectedUnit->GetTotalHP() ) );
-		apText->SetText( std::string( "AP: " ) + StringUtil::ToString( mSelectedUnit->GetRemainingAP() ) + "/" + StringUtil::ToString( mSelectedUnit->GetTotalAP() ) );
+		if ( mSelectedUnit )
+		{
+			Button* button = mUnitDialog->GetChildByName< Button >( "button" );
+
+			if( button )
+			{
+				if ( player->GetFunds() < 100 || mSelectedUnit->GetRemainingAP() == 0 || mSelectedUnit->GetHP() == mSelectedUnit->GetTotalHP() )
+					button->Disable();
+				else
+					button->Enable();
+			}
+			else
+			{
+				WarnFail( "Button not found!" );
+			}
+
+			if( nameText )
+			{
+				nameText->SetText( mSelectedUnit->ToString() );
+				nameText->SetTextColor( player->GetPlayerColor() );
+			}
+			else
+			{
+				WarnFail( "Name text not found!" );
+			}
+
+			if( hpText )
+			{
+				hpText->SetText( std::string( "HP: " ) + StringUtil::ToString( mSelectedUnit->GetHP() ) + "/" + StringUtil::ToString( mSelectedUnit->GetTotalHP() ) );
+			}
+			else
+			{
+				WarnFail( "HP text not found!" );
+			}
+
+			if( apText )
+			{
+				apText->SetText( std::string( "AP: " ) + StringUtil::ToString( mSelectedUnit->GetRemainingAP() ) + "/" + StringUtil::ToString( mSelectedUnit->GetTotalAP() ) );
+			}
+			else
+			{
+				WarnFail( "AP text not found!" );
+			}
+		}
+
+		mUnitDialog->Show();
 	}
-
-	mUnitDialog->Show();
+	else
+	{
+		WarnFail( "Cannot show unit dialog because it does not exist!" );
+	}
 }
 
 ObjectEventFunc( Game, BuyEnforcementsEvent )

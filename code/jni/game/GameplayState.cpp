@@ -35,60 +35,6 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 
 	mGame->SetCamera( mCamera );
 	mGame->Start();
-
-	// Log in.
-	gOnlineGameClient->LogIn( "andrewtc", "test", [this]( bool success )
-	{
-		DebugPrintf( "Login %s successful!", ( success ? "was" : "was NOT" ) );
-
-		if( success )
-		{
-			DebugPrintf( "User session token is now \"%s\".", gOnlineGameClient->GetUserSessionToken().c_str() );
-
-			// Start a new request.
-			gOnlineGameClient->CallCloudFunction( "hello", "{ \"name\": \"Andrew\" }", [this]( const OnlineRequestResult& result )
-			{
-				OnHelloResponse( result );
-			});
-		}
-	});
-}
-
-
-void GameplayState::OnHelloResponse( const OnlineRequestResult& result )
-{
-	DebugPrintf( "RESPONSE %d: (%d)", result.requestID, result.statusCode );
-
-	if( !result.isError )
-	{
-		// Print the response from the server.
-		DebugPrintf( "The server says: \"%s\"", result.json[ "result" ].GetString() );
-
-		// Call another request.
-		gOnlineGameClient->CallCloudFunction( "requestMatchmakingGame", "{}", []( const OnlineRequestResult& result )
-		{
-			DebugPrintf( "The second callback worked!" );
-
-			gOnlineGameClient->CallCloudFunction( "getCurrentGameList", "{}" );
-		});
-	}
-	else
-	{
-		const char* error;
-
-		if( result.resultIsJSON )
-		{
-			// Print the error string sent from Parse.
-			error = result.json[ "error" ].GetString();
-		}
-		else
-		{
-			// Print the result as the error message.
-			error = result.string.c_str();
-		}
-
-		DebugPrintf( "An error occurred: %s", error );
-	}
 }
 
 

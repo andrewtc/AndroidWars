@@ -135,8 +135,8 @@ namespace mage
 		void OnStartTurn();
 		void OnEndTurn();
 
-		void ShowMoveDialog() const { mMoveDialog->Show(); }
-		void ShowAttackDialog() const { mAttackDialog->Show(); }
+		void ShowMoveDialog() const;
+		void ShowAttackDialog() const;
 		void ShowCaptureDialog() const;
 		void ShowUnitDialog() const;
 		// True if game input should be blocked

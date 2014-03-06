@@ -81,7 +81,11 @@ namespace mage
 
 
 	MAGE_TABLE_TEMPLATE
-	MAGE_TABLE::Table( Database* mDatabase ) { }
+	MAGE_TABLE::Table( Database* database ) :
+		mDatabase( database )
+	{
+		assertion( mDatabase, "Cannot create table without Database!" );
+	}
 
 
 	MAGE_TABLE_TEMPLATE

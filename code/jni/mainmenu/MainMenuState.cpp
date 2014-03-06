@@ -82,6 +82,13 @@ void MainMenuState::OnExit()
 {
 	DebugPrintf( "MainMenuState exited!" );
 
+	if( mWidget )
+	{
+		// Destroy the Widget.
+		gWidgetManager->GetRootWidget()->RemoveChild( mWidget );
+		gWidgetManager->DestroyWidget( mWidget );
+	}
+
 	// Destroy all states.
 	DestroyState( mLogInState );
 	DestroyState( mDashboardState );

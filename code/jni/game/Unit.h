@@ -110,6 +110,7 @@ namespace mage
 
 	inline int Unit::GetMovementCostAcrossTerrain( TerrainType* terrainType ) const
 	{
+		assertion( terrainType, "Cannot get movement cost because null TerrainType was specified!" );
 		assertion( mUnitType, "No UnitType found for %s!", ToString() );
 		return mUnitType->GetMovementCostAcrossTerrain( terrainType );
 	}
