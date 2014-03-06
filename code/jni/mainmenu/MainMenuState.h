@@ -76,6 +76,10 @@ namespace mage
 		void OnRefreshButtonPressed();
 		void OnNewGameButtonPressed();
 
+		void RefreshGamesList( const std::vector< OnlineGameListData >& currentGameList );
+
+		ListLayout* GetGamesList() const;
+
 		friend class GameState;
 	};
 }

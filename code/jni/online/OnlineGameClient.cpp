@@ -303,29 +303,44 @@ void OnlineGameClient::RequestCurrentGamesList( OnlineGameListCallback callback 
 
 		if( !result.isError )
 		{
-			assertion( result.resultIsJSON, "The games list response was not a JSON object!" );
-			//DebugPrintf( "Current games: \"%s\"", result.string.c_str() );
-
-			const rapidjson::Value& list = result.json[ "result" ];
-			assertion( list.IsArray(), "Result of game list request is not an array!" );
-
-			for( rapidjson::SizeType i = 0; i < list.Size(); ++i )
+			if( result.resultIsJSON )
 			{
-				const rapidjson::Value& gameJSON = list[ i ];
+				//DebugPrintf( "Current games: \"%s\"", result.string.c_str() );
 
-				// Construct a new game data entry.
-				OnlineGameListData gameData;
+				const rapidjson::Value& list = result.json[ "result" ];
+				assertion( list.IsArray(), "Result of game list request is not an array!" );
 
-				gameData.id   = GetJSONStringValue( gameJSON, "id", "" );
-				gameData.name = GetJSONStringValue( gameJSON, "name", "" );
+				success = true;
 
-				// Add the new entry to the list of current games.
-				onlineGameList.push_back( gameData );
+				for( rapidjson::SizeType i = 0; i < list.Size(); ++i )
+				{
+					const rapidjson::Value& gameJSON = list[ i ];
+
+					// Construct a new game data entry.
+					OnlineGameListData gameData;
+
+					gameData.id   = GetJSONStringValue( gameJSON, "id", "" );
+					gameData.name = GetJSONStringValue( gameJSON, "name", "" );
+
+					if( !gameData.id.empty() && !gameData.name.empty() )
+					{
+						// Add the new entry to the list of current games.
+						onlineGameList.push_back( gameData );
+					}
+					else
+					{
+						WarnFail( "Received invalid game data! (id=\"%s\", name=\"%s\").", gameData.id.c_str(), gameData.name.c_str() );
+					}
+				}
+			}
+			else
+			{
+				WarnFail( "The games list response was not a JSON object!" );
 			}
 		}
 		else
 		{
-			DebugPrintf( "Error retrieving current games list: %s", result.string.c_str() );
+			WarnFail( "Error retrieving current games list: %s", result.string.c_str() );
 		}
 
 		if( callback.IsValid() )

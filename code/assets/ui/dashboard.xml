@@ -33,8 +33,8 @@
         label="Refresh"
         position="32,444"
         />
-    <Listbox
-        name="gameList"
+    <ListLayout
+        name="gamesList"
         position="512,144"
         />
 </Widget>

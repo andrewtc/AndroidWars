@@ -44,6 +44,7 @@ namespace mage
 		void LoadTheme( const char* file );
 		WidgetTemplate* CreateTemplate( const HashString& name );
 		WidgetTemplate* GetTemplate( const HashString& name ) const;
+		bool HasTemplate( const HashString& name ) const;
 		WidgetTemplate* LoadTemplateFromFile( const HashString& name, const std::string& file );
 		WidgetTemplate* LoadTemplateFromXML( const HashString& name, const XmlReader::XmlReaderIterator& xml );
 		void DestroyTemplate( const HashString& name );
@@ -54,6 +55,9 @@ namespace mage
 		bool IsInitialized() const;
 
 	private:
+		template< class WidgetSubclass = Widget >
+		WidgetSubclass* InstantiateWidget( const WidgetTemplate& widgetTemplate, const HashString& name = "" );
+
 		void BuildWidgetTemplateFromXML( const XmlReader::XmlReaderIterator& xml, WidgetTemplate& widgetTemplate );
 
 		bool mIsInitialized;
@@ -128,19 +132,13 @@ namespace mage
 
 		WidgetSubclass* widget = nullptr;
 
-		// Look up the template.
+		// Get the template.
 		const WidgetTemplate* widgetTemplate = GetTemplate( templateName );
 
-		if( widgetTemplate != nullptr )
+		if( widgetTemplate )
 		{
-			DebugPrintf( "Resolving includes for template \"%s\"...", templateName.GetCString() );
-
-			// Copy the template and resolve all includes.
-			WidgetTemplate resolvedTemplate( *widgetTemplate );
-			resolvedTemplate.ResolveIncludes( this );
-
-			// Create the Widget using the resolved template.
-			widget = CreateWidgetFromTemplate< WidgetSubclass >( resolvedTemplate, name );
+			// Resolve includes and create the template.
+			widget = CreateWidgetFromTemplate< WidgetSubclass >( *widgetTemplate, name );
 		}
 		else
 		{
@@ -152,6 +150,17 @@ namespace mage
 	//---------------------------------------
 	template< class WidgetSubclass >
 	WidgetSubclass* WidgetManager::CreateWidgetFromTemplate( const WidgetTemplate& widgetTemplate, const HashString& name )
+	{
+		// Resolve all includes in the template.
+		WidgetTemplate resolvedTemplate( widgetTemplate );
+		resolvedTemplate.ResolveIncludes( this );
+
+		// Create the Widget.
+		return InstantiateWidget< WidgetSubclass >( resolvedTemplate, name );
+	}
+	//---------------------------------------
+	template< class WidgetSubclass >
+	WidgetSubclass* WidgetManager::InstantiateWidget( const WidgetTemplate& widgetTemplate, const HashString& name )
 	{
 		assertion( IsInitialized(), "Cannot create Widget from template for WidgetManager that is not initialized!" );
 
@@ -184,7 +193,7 @@ namespace mage
 					for( auto it = children.begin(); it != children.end(); ++it )
 					{
 						// Load all children.
-						Widget* child = CreateWidgetFromTemplate( it->second );
+						Widget* child = InstantiateWidget( it->second );
 
 						if( child )
 						{

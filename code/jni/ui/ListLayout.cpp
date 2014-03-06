@@ -5,39 +5,19 @@ using namespace mage;
 
 MAGE_IMPLEMENT_RTTI( Widget, ListLayout );
 
+const std::string ListLayout::ITEM_PREFIX = "item";
+
 
 ListLayout::ListLayout( WidgetManager* manager, const HashString& name ) :
-	Widget( manager, name )
+	Widget( manager, name ),
+	mNextItemID( 0 )
 { }
 
 
 ListLayout::~ListLayout() { }
 
 
-void ListLayout::InsertItem( Widget* item )
-{
-	// Insert the item at the back of the list.
-	InsertItemAt( item, mItems.size() - 1 );
-}
-
-
-void ListLayout::InsertItemAt( Widget* item, int index )
-{
-	assertion( item, "Cannot add null Widget to ListLayout \"%s\" items!", GetFullName().c_str() );
-	assertion( item->GetParent() == nullptr, "Cannot add Widget \"%s\" to ListLayout \"%s\" items because it is already the child of a Widget!", item->GetFullName().c_str(), GetFullName().c_str() );
-	assertion( !HasItem( item ), "Cannot add Widget \"%s\" to ListLayout \"%s\" items because it is already part of the list!", item->GetFullName().c_str(), GetFullName().c_str() );
-	assertion( index >= 0 && index <= mItems.size(), "Cannot add Widget \"%s\" to ListLayout \"%s\" items at index %d because the index is out of bounds!", item->GetFullName().c_str(), GetFullName().c_str(), index );
-
-	// Add the Widget as a child of this one.
-	AddChild( item );
-
-	// Add the Widget name to the list of list items at the specified index.
-	mItems.insert( mItems.begin() + index, item->GetName() );
-	InvalidateListItems();
-}
-
-
-void ListLayout::RemoveItem( Widget* item )
+void ListLayout::DestroyItem( Widget* item )
 {
 	assertion( item, "Cannot remove null Widget from ListLayout \"%s\" items!", GetFullName().c_str() );
 	assertion( item->GetParent() == this, "Cannot remove Widget \"%s\" from ListLayout \"%s\" items because it is not a child of this ListLayout!", item->GetFullName().c_str(), GetFullName().c_str() );
@@ -47,11 +27,11 @@ void ListLayout::RemoveItem( Widget* item )
 	assertion( index >= 0, "Could not remove Widget \"%s\" from ListLayout \"%s\" items because it is not a list item!", item->GetFullName().c_str(), GetFullName().c_str() );
 
 	// If the item was found in the list, remove it.
-	RemoveItemAt( index );
+	DestroyItemAtIndex( index );
 }
 
 
-void ListLayout::RemoveItemAt( int index )
+void ListLayout::DestroyItemAtIndex( int index )
 {
 	assertion( index >= 0 && index < mItems.size(), "Cannot remove item %d from ListLayout \"%s\" items because the index is out of bounds!", index, GetFullName().c_str() );
 
@@ -59,40 +39,28 @@ void ListLayout::RemoveItemAt( int index )
 	auto it = ( mItems.begin() + index );
 	HashString name = ( *it );
 
+	// Get the item to remove.
+	Widget* itemToRemove = GetChildByName( name );
+	assertion( itemToRemove, "Cannot remove item %d from ListLayout \"%s\" items because no child Widget with the name \"%s\" exists!", index, GetFullName().c_str(), name.GetCString() );
+
 	// Remove the item from the list.
 	mItems.erase( it );
 
-	// Remove the item from this Widget.
+	// Remove and destroy the item.
 	RemoveChildByName( name );
+	GetManager()->DestroyWidget( itemToRemove );
 
 	// Invalidate the list.
 	InvalidateListItems();
 }
 
 
-void ListLayout::RemoveItemByName( const HashString& name )
-{
-	// Get the index of the item to remove.
-	int index = GetIndexOfItemWithName( name );
-
-	if( index >= 0 )
-	{
-		// Remove the item from the list.
-		RemoveItemAt( index );
-	}
-	else
-	{
-		WarnFail( "Could not remove item \"%s\" from ListLayout \"%s\" because no item with that name exists!", name.GetCString(), GetFullName().c_str() );
-	}
-}
-
-
-void ListLayout::RemoveAllItems()
+void ListLayout::DestroyAllItems()
 {
 	for( int i = ( mItems.size() - 1 ); i >= 0; --i )
 	{
 		// Remove each item from the list.
-		RemoveItemAt( i );
+		DestroyItemAtIndex( i );
 	}
 }
 
@@ -101,7 +69,11 @@ int ListLayout::GetIndexOfItem( const Widget* item ) const
 {
 	assertion( item, "Cannot get list item index of null Widget from ListLayout \"%s\" items!", GetFullName().c_str() );
 	assertion( item->GetParent() == this, "Cannot get list item index of Widget \"%s\" from ListLayout \"%s\" because it is not a child of this ListLayout!", item->GetFullName().c_str(), GetFullName().c_str() );
-	return GetIndexOfItemWithName( item->GetName() );
+
+	int index = GetIndexOfItemWithName( item->GetName() );
+	assertion( index >= 0, "Cannot get list item index of Widget \"%s\" from ListLayout \"%s\" because it is not an item of this ListLayout!", item->GetFullName().c_str(), GetFullName().c_str() );
+
+	return index;
 }
 
 
@@ -126,14 +98,13 @@ int ListLayout::GetIndexOfItemWithName( const HashString& name ) const
 
 bool ListLayout::HasItem( const Widget* item ) const
 {
-	assertion( item != nullptr, "Cannot test if ListLayout \"%s\" contains null Widget!", GetFullName().c_str() );
-	return ( item->GetParent() == this && HasItemWithName( item->GetName() ) );
+	return ( item && item->GetParent() == this && HasItemWithName( item->GetName() ) );
 }
 
 
 bool ListLayout::HasItemWithName( const HashString& item ) const
 {
-	return ( GetIndexOfItemWithName( item ) != -1 );
+	return ( GetIndexOfItemWithName( item ) >= 0 );
 }
 
 
@@ -163,6 +134,26 @@ void ListLayout::UpdateListItems()
 {
 	if( mNeedsListUpdate )
 	{
-		// TODO
+		Vec2f nextListItemOffset;
+
+		for( int i = 0; i < mItems.size(); ++i )
+		{
+			// Get the next list item.
+			Widget* item = GetItemAtIndex( i );
+
+			// Reposition the item.
+			item->SetOffset( nextListItemOffset );
+
+			// Add the height of the item to the next position.
+			nextListItemOffset.y += item->GetHeight();
+		}
 	}
+}
+
+
+size_t ListLayout::ReserveNextItemID()
+{
+	size_t result = mNextItemID;
+	mNextItemID++;
+	return result;
 }

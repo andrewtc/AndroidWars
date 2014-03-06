@@ -28,6 +28,7 @@
     <Template name="Login"          file="ui/login.xml"            />
     <Template name="Progress"       file="ui/progress.xml"         />
     <Template name="Dashboard"      file="ui/dashboard.xml"        />
+    <Template name="GamesListItem"  file="ui/games_list_item.xml"  />
 	<Template name="MoveDialog"     file="ui/move_dialog.xml"      />
 	<Template name="AttackDialog"   file="ui/attack_dialog.xml"    />
 	<Template name="CaptureDialog"  file="ui/capture_dialog.xml"   />

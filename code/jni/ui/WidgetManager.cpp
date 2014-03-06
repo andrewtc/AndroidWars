@@ -228,6 +228,11 @@ WidgetTemplate* WidgetManager::GetTemplate( const HashString& name ) const
 	return result;
 }
 //---------------------------------------
+bool WidgetManager::HasTemplate( const HashString& name ) const
+{
+	return ( GetTemplate( name ) != nullptr );
+}
+//---------------------------------------
 WidgetTemplate* WidgetManager::LoadTemplateFromFile( const HashString& name, const std::string& file )
 {
 	WidgetTemplate* widgetTemplate = nullptr;

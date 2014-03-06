@@ -309,7 +309,15 @@ void DashboardInputState::OnExit()
 
 	if( dashboardScreen )
 	{
-		// Register callbacks.
+		ListLayout* gamesList = GetGamesList();
+
+		if( gamesList )
+		{
+			// Destroy all games list items.
+			gamesList->DestroyAllItems();
+		}
+
+		// Unregister callbacks.
 		Button* logOutButton = dashboardScreen->GetChildByName< Button >( "logOutButton" );
 		Button* refreshButton = dashboardScreen->GetChildByName< Button >( "refreshButton" );
 		Button* newGameButton = dashboardScreen->GetChildByName< Button >( "newGameButton" );
@@ -355,11 +363,55 @@ void DashboardInputState::OnRefreshButtonPressed()
 	// Request the current games list.
 	gOnlineGameClient->RequestCurrentGamesList( [this]( bool success, const std::vector< OnlineGameListData >& currentGameList )
 	{
-		for( auto it = currentGameList.begin(); it != currentGameList.end(); ++it )
+		if( success )
 		{
-			DebugPrintf( "Found game: \"%s\" (id: %s)", it->name.c_str(), it->id.c_str() );
+			// Refresh the list of games.
+			RefreshGamesList( currentGameList );
+		}
+		else
+		{
+			// TODO: Show an error dialog.
+			DebugPrintf( "Could not fetch games list!" );
 		}
 	});
+}
+
+
+void DashboardInputState::RefreshGamesList( const std::vector< OnlineGameListData >& currentGameList )
+{
+	// Get the games list.
+	ListLayout* gamesList = GetGamesList();
+
+	if( gamesList )
+	{
+		// Clear the list.
+		gamesList->DestroyAllItems();
+
+		// Get the list item template.
+		const WidgetTemplate* listItemTemplate = gWidgetManager->GetTemplate( "GamesListItem" );
+
+		if( listItemTemplate )
+		{
+			for( auto it = currentGameList.begin(); it != currentGameList.end(); ++it )
+			{
+				DebugPrintf( "Found game: \"%s\" (id: %s)", it->name.c_str(), it->id.c_str() );
+
+				// Add a new list item to the list.
+				Button* listItem = gamesList->CreateItem< Button >( *listItemTemplate );
+
+				// Set the label to the name of the game.
+				listItem->SetLabel( it->name );
+			}
+		}
+		else
+		{
+			WarnFail( "Could not find games list item template!" );
+		}
+	}
+	else
+	{
+		WarnFail( "Could not find games list element!" );
+	}
 }
 
 
@@ -376,7 +428,7 @@ Widget* DashboardInputState::GetDashboardScreen() const
 {
 	Widget* dashboardScreen = nullptr;
 
-	// Get the login widget.
+	// Get the dashboard Widget.
 	Widget* mainMenu = GetOwnerDerived()->GetWidget();
 
 	if( mainMenu )
@@ -385,5 +437,22 @@ Widget* DashboardInputState::GetDashboardScreen() const
 	}
 
 	return dashboardScreen;
+}
+
+
+ListLayout* DashboardInputState::GetGamesList() const
+{
+	ListLayout* result = nullptr;
+
+	// Get the dashboard screen.
+	Widget* dashboardScreen = GetDashboardScreen();
+
+	if( dashboardScreen )
+	{
+		// Get the games list Widget.
+		result = dashboardScreen->GetChildByName< ListLayout >( "gamesList" );
+	}
+
+	return result;
 }
 

@@ -315,7 +315,7 @@ void WidgetTemplate::ClearAllChildren()
 //---------------------------------------
 void WidgetTemplate::Replace( const WidgetTemplate& other )
 {
-	DebugPrintf( "Replacing \"%s\" <= \"%s\"", GetProperty( "name" ).c_str(), other.GetProperty( "name" ).c_str() );
+	//DebugPrintf( "Replacing \"%s\" <= \"%s\"", GetProperty( "name" ).c_str(), other.GetProperty( "name" ).c_str() );
 
 	// Clear all properties and children.
 	MergeProperties( other );
@@ -324,7 +324,7 @@ void WidgetTemplate::Replace( const WidgetTemplate& other )
 //---------------------------------------
 void WidgetTemplate::Merge( const WidgetTemplate& other )
 {
-	DebugPrintf( "Merging \"%s\" <= \"%s\"", GetProperty( "name" ).c_str(), other.GetProperty( "name" ).c_str() );
+	//DebugPrintf( "Merging \"%s\" <= \"%s\"", GetProperty( "name" ).c_str(), other.GetProperty( "name" ).c_str() );
 
 	// Clear all properties and children.
 	MergeProperties( other );
@@ -333,7 +333,7 @@ void WidgetTemplate::Merge( const WidgetTemplate& other )
 //---------------------------------------
 void WidgetTemplate::DeepMerge( const WidgetTemplate& other )
 {
-	DebugPrintf( "Deep merging \"%s\" <= \"%s\"", GetProperty( "name" ).c_str(), other.GetProperty( "name" ).c_str() );
+	//DebugPrintf( "Deep merging \"%s\" <= \"%s\"", GetProperty( "name" ).c_str(), other.GetProperty( "name" ).c_str() );
 
 	// Clear all properties and children.
 	MergeProperties( other );

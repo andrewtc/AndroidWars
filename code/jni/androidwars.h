@@ -42,12 +42,12 @@ extern mage::int32 gWindowHeight;
 
 #include "ui/WidgetTemplate.h"
 #include "ui/Widget.h"
+#include "ui/WidgetManager.h"
 #include "ui/Label.h"
 #include "ui/Graphic.h"
 #include "ui/Button.h"
 #include "ui/TextField.h"
 #include "ui/ListLayout.h"
-#include "ui/WidgetManager.h"
 
 #include "mainmenu/MainMenuState.h"
 
