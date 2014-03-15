@@ -14,8 +14,19 @@ TerrainTypesTable::TerrainTypesTable( Database* database )
 TerrainTypesTable::~TerrainTypesTable() { }
 
 
-void TerrainTypesTable::LoadRecordFromXml( TerrainType* terrainType, XmlReader::XmlReaderIterator xmlIterator )
+void TerrainTypesTable::OnLoadRecordFromXml( TerrainType* terrainType, XmlReader::XmlReaderIterator xmlIterator )
 {
 	// Read in all attributes.
 	terrainType->mCoverBonus = xmlIterator.GetAttributeAsInt( "coverBonus", 0 );
+}
+
+
+void TerrainTypesTable::OnLoadRecordFromJSON( TerrainType* terrainType, const rapidjson::Value& object )
+{
+	// Read in all attributes.
+	terrainType->mDisplayName = GetJSONStringValue( object, "animationSet", "" );
+	terrainType->mAnimationSetName = Database::FormatAnimationName( GetJSONStringValue( object, "animationSet", "" ) );
+	terrainType->mAnimationSetPath = Database::FormatAnimationPath( GetJSONStringValue( object, "animationSet", "" ) );
+	terrainType->mIsCapturable = GetJSONBoolValue( object, "isCapturable", false );
+	terrainType->mCoverBonus = GetJSONIntValue( object, "coverBonus", 0 );
 }

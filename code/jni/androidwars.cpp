@@ -60,18 +60,6 @@ void OnScreenSizeChanged( int32 w, int32 h )
 }
 
 
-void OnHelloWorldSuccess( long requestID, int statusCode, const std::string& response )
-{
-	DebugPrintf( "The online game server says: \"%s\"", response.c_str() );
-}
-
-
-void OnHelloWorldComplete( long requestID, int statusCode, const std::string& response )
-{
-	DebugPrintf( "RESPONSE %d: Status Code %d : \"%s\"", requestID, statusCode, response.c_str() );
-}
-
-
 void OnWindowShown()
 {
 	// The window is shown
@@ -86,7 +74,10 @@ void OnWindowShown()
 		// Create the GameStateManager and create the first state.
 		DebugPrintf( "Creating GameStateManager..." );
 		gGameStateManager = new GameStateManager();
-		gGameStateManager->ChangeState< MainMenuState >();
+
+		// TODO: Start in the Main Menu state.
+		//gGameStateManager->ChangeState< MainMenuState >();
+		gGameStateManager->ChangeState< EditorState >();
 	}
 
 	gInit = true;
@@ -159,6 +150,10 @@ void main()
 	// Initialize the application
 	MageAppInit( "Test" );
 	// Do user initialization here
+
+	// Initialize the JNI wrapper.
+	assertion( app, "Cannot create OnlineGameClient without a reference to the Java app instance!" );
+	JNI::Init( app->activity->vm );
 
 	// Sounds can either be .wav or .pcm files, but they must be saved as mono with a sampling rate of 44,100 Hz.
 	gSoundManager = new SoundManager( app );

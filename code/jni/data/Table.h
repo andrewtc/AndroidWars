@@ -59,6 +59,7 @@ namespace mage
 		virtual ~Table();
 
 		void LoadRecordsFromXML( XmlReader::XmlReaderIterator rootIterator );
+		void LoadRecordsFromJSON( const rapidjson::Value& object );
 		RecordType* CreateRecord( const HashString& name );
 		void AddRecord( RecordType* record );
 		void DeleteAllRecords();
@@ -66,12 +67,15 @@ namespace mage
 		RecordType* FindByName( const HashString& name );
 		const RecordType* FindByName( const HashString& name ) const;
 
+		void DebugPrintData() const;
+
 		Database* GetDatabase() const;
 
 	protected:
 		Table( Database* database );
 
-		virtual void LoadRecordFromXml( RecordType* record, XmlReader::XmlReaderIterator elementIterator ) = 0;
+		virtual void OnLoadRecordFromXml( RecordType* record, XmlReader::XmlReaderIterator elementIterator ) = 0;
+		virtual void OnLoadRecordFromJSON( RecordType* record, const rapidjson::Value& object ) = 0;
 
 		typedef HashMap< RecordType* > RecordsByHashedName;
 
@@ -106,7 +110,7 @@ namespace mage
 
 		while( elementIterator.IsValid() )
 		{
-			// Get the name of the TerrainType.
+			// Get the name of the element.
 			HashString name = elementIterator.GetAttributeAsString( "name" );
 
 			// Create a new record with the name.
@@ -116,7 +120,7 @@ namespace mage
 			{
 				// Load the record properties.
 				DebugPrintf( "Loading %s \"%s\".", RECORD_NAME, name.GetString().c_str() );
-				LoadRecordFromXml( record, elementIterator );
+				OnLoadRecordFromXml( record, elementIterator );
 			}
 
 			// Go to the next XML element in the file.
@@ -126,10 +130,63 @@ namespace mage
 
 
 	MAGE_TABLE_TEMPLATE
+	void MAGE_TABLE::LoadRecordsFromJSON( const rapidjson::Value& object )
+	{
+		assertion( object.IsObject(), "Could not load %s records from JSON because the JSON value specified is not an object!", RECORD_NAME );
+
+		if( object.HasMember( TABLE_NAME ) )
+		{
+			// Get the container element for this table.
+			const rapidjson::Value& tableArray = object[ TABLE_NAME ];
+
+			if( tableArray.IsArray() )
+			{
+				for( auto it = tableArray.Begin(); it != tableArray.End(); ++it )
+				{
+					// Get the nested object for the record.
+					const rapidjson::Value& recordObject = ( *it );
+
+					if( recordObject.IsObject() )
+					{
+						// Get the record name.
+						HashString name = GetJSONStringValue( recordObject, "name", "" );
+
+						if( !name.GetString().empty() )
+						{
+							// Create a new record with the name.
+							RecordType* record = CreateRecord( name );
+
+							if( record )
+							{
+								// Load the record properties.
+								DebugPrintf( "Loading %s \"%s\"...", RECORD_NAME, name.GetString().c_str() );
+								OnLoadRecordFromJSON( record, recordObject );
+							}
+						}
+						else
+						{
+							WarnFail( "Could not load %s record %d from JSON because no \"name\" property was specified!", RECORD_NAME, ( it - tableArray.Begin() ) );
+						}
+					}
+					else
+					{
+						WarnFail( "Could not load %s record %d from JSON because it is not an object!", RECORD_NAME, ( it - tableArray.Begin() ) );
+					}
+				}
+			}
+			else
+			{
+				WarnFail( "Could not load %s records from JSON because the JSON value \"%s\" is not an array!", RECORD_NAME, TABLE_NAME );
+			}
+		}
+	}
+
+
+	MAGE_TABLE_TEMPLATE
 	RecordType* MAGE_TABLE::CreateRecord( const HashString& name )
 	{
 		// Make sure the name is valid and unique.
-		assertion( name.GetHash() != 0, "Cannot create record without a valid name!" );
+		assertion( !name.GetString().empty(), "Cannot create record without a valid name!" );
 
 		// Create a new record with the specified name and add it to the Table.
 		RecordType* record = new RecordType( name );
@@ -161,6 +218,8 @@ namespace mage
 	MAGE_TABLE_TEMPLATE
 	void MAGE_TABLE::DeleteAllRecords()
 	{
+		DebugPrintf( "Deleting all Database records..." );
+
 		for( auto it = mRecords.begin(); it != mRecords.end(); ++it )
 		{
 			// Delete each record in the table.
@@ -207,6 +266,19 @@ namespace mage
 		}
 
 		return result;
+	}
+
+
+	MAGE_TABLE_TEMPLATE
+	void MAGE_TABLE::DebugPrintData() const
+	{
+		// Print table header.
+		DebugPrintf( "  %s (%d records):", TABLE_NAME, mRecords.size() );
+
+		for( auto it = mRecords.begin(); it != mRecords.end(); ++it )
+		{
+			DebugPrintf( "    %s", it->second->ToString() );
+		}
 	}
 
 

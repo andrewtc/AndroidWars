@@ -1,0 +1,235 @@
+{
+    "TerrainTypes":
+    [
+        {
+            "name":         "Plain",
+            "animationSet": "Plain",
+            "coverBonus":   1
+        },
+        {
+            "name":         "Sea",
+            "animationSet": "Sea",
+            "coverBonus":   1
+        },
+        {
+            "name":         "City",
+            "animationSet": "City",
+            "coverBonus":   3,
+            "isCapturable": true
+        },
+        {
+            "name":         "Road",
+            "animationSet": "Road"
+        }
+    ],
+    
+    "MovementTypes":
+    [
+        {
+            "name": "Boots",
+            "movementCosts":
+            [
+                { "terrainType": "Plain", "cost": 1 },
+                { "terrainType": "City",  "cost": 1 },
+                { "terrainType": "Road",  "cost": 1 }
+            ]
+        },
+        {
+            "name": "Tires",
+            "movementCosts":
+            [
+                { "terrainType": "Plain", "cost": 2 },
+                { "terrainType": "City",  "cost": 1 },
+                { "terrainType": "Road",  "cost": 1 }
+            ]
+        },
+        {
+            "name": "Treads",
+            "movementCosts":
+            [
+                { "terrainType": "Plain", "cost": 1 },
+                { "terrainType": "City",  "cost": 1 },
+                { "terrainType": "Road",  "cost": 1 }
+            ]
+        }
+    ],
+    
+    "UnitTypes":
+    [
+        {
+            "name":          "Infantry",
+            "animationSet":  "Tank",
+            "movementType":  "Boots",
+            "movementRange": 3,
+            "attackRange":   "1~1",
+            "hp":            10,
+            "weapons":
+            [
+                {
+                    "name":        "MachineGun",
+                    "displayName": "Machine Gun",
+                    "ammoPerShot": 0,
+                    "damage":
+                    [
+                        { "unitType": "Infantry",   "percentage": 55 },
+                        { "unitType": "AntiTank",   "percentage": 45 },
+                        { "unitType": "Recon",      "percentage": 12 },
+                        { "unitType": "APC",        "percentage": 14 },
+                        { "unitType": "Artillery",  "percentage": 15 },
+                        { "unitType": "Tank",       "percentage": 5  },
+                        { "unitType": "AntiAir",    "percentage": 5  },
+                        { "unitType": "Missiles",   "percentage": 26 },
+                        { "unitType": "Rockets",    "percentage": 25 },
+                        { "unitType": "MediumTank", "percentage": 1  }
+                    ]
+                }
+            ]
+        },
+        {
+            "name":          "AntiTank",
+            "animationSet":  "Tank",
+            "movementType":  "Boots",
+            "movementRange": 2,
+            "attackRange":   "1~1",
+            "hp":            10,
+            "ammo":          3,
+            "weapons":
+            [
+                {
+                    "name":        "Bazooka",
+                    "ammoPerShot": 1,
+                    "damage":
+                    [
+                        { "unitType": "Recon",      "percentage": 85 },
+                        { "unitType": "APC",        "percentage": 75 },
+                        { "unitType": "Artillery",  "percentage": 70 },
+                        { "unitType": "Tank",       "percentage": 55 },
+                        { "unitType": "AntiAir",    "percentage": 65 },
+                        { "unitType": "Missiles",   "percentage": 85 },
+                        { "unitType": "Rockets",    "percentage": 85 },
+                        { "unitType": "MediumTank", "percentage": 15 }
+                    ]
+                },
+                {
+                    "name":        "MachineGun",
+                    "displayName": "Machine Gun",
+                    "ammoPerShot": 0,
+                    "damage":
+                    [
+                        { "unitType": "Infantry",   "percentage": 65 },
+                        { "unitType": "AntiTank",   "percentage": 55 },
+                        { "unitType": "Recon",      "percentage": 18 },
+                        { "unitType": "APC",        "percentage": 20 },
+                        { "unitType": "Artillery",  "percentage": 32 },
+                        { "unitType": "Tank",       "percentage": 6  },
+                        { "unitType": "AntiAir",    "percentage": 6  },
+                        { "unitType": "Missiles",   "percentage": 35 },
+                        { "unitType": "Rockets",    "percentage": 35 },
+                        { "unitType": "MediumTank", "percentage": 1  }
+                    ]
+                }
+            ]
+        },
+        {
+            "name":          "Recon",
+            "animationSet":  "Tank",
+            "movementType":  "Tires",
+            "movementRange": 6,
+            "attackRange":   "1~1",
+            "hp":            10
+        },
+        {
+            "name":          "APC",
+            "animationSet":  "Tank",
+            "movementType":  "Treads",
+            "movementRange": 6,
+            "attackRange":   "1~1",
+            "hp":            10
+        },
+        {
+            "name":          "Artillery",
+            "animationSet":  "Tank",
+            "movementType":  "Treads",
+            "movementRange": 6,
+            "attackRange":   "1~1",
+            "hp":            10
+        },
+        {
+            "name":          "Tank",
+            "animationSet":  "Tank",
+            "movementType":  "Treads",
+            "movementRange": 6,
+            "attackRange":   "1~1",
+            "hp":            10
+        },
+        {
+            "name":          "AntiAir",
+            "animationSet":  "Tank",
+            "movementType":  "Treads",
+            "movementRange": 6,
+            "attackRange":   "1~1",
+            "hp":            10
+        },
+        {
+            "name":          "Rockets",
+            "animationSet":  "Tank",
+            "movementType":  "Tires",
+            "movementRange": 6,
+            "attackRange":   "1~1",
+            "hp":            10
+        },
+        {
+            "name":          "Missiles",
+            "animationSet":  "Tank",
+            "movementType":  "Tires",
+            "movementRange": 6,
+            "attackRange":   "1~1",
+            "hp":            10
+        },
+        {
+            "name":            "MediumTank",
+            "displayName":     "Medium Tank",
+            "animationSet":    "Tank",
+            "movementType":    "Tires",
+            "movementRange":   6,
+            "attackRange":     "1~1",
+            "hp":              10,
+            "weapons":
+            [
+                {
+                    "name":        "Cannon",
+                    "ammoPerShot": 0,
+                    "damage":
+                    [
+                        { "unitType": "Recon",      "percentage": 105 },
+                        { "unitType": "APC",        "percentage": 105 },
+                        { "unitType": "Artillery",  "percentage": 105 },
+                        { "unitType": "Tank",       "percentage": 85  },
+                        { "unitType": "AntiAir",    "percentage": 105 },
+                        { "unitType": "Missiles",   "percentage": 105 },
+                        { "unitType": "Rockets",    "percentage": 105 },
+                        { "unitType": "MediumTank", "percentage": 55  }
+                    ]
+                },
+                {
+                    "name":        "MachineGun",
+                    "displayName": "Machine Gun",
+                    "ammoPerShot": 0,
+                    "damage":
+                    [
+                        { "unitType": "Infantry",   "percentage": 105 },
+                        { "unitType": "AntiTank",   "percentage": 95  },
+                        { "unitType": "Recon",      "percentage": 45  },
+                        { "unitType": "APC",        "percentage": 45  },
+                        { "unitType": "Artillery",  "percentage": 32  },
+                        { "unitType": "Tank",       "percentage": 8   },
+                        { "unitType": "AntiAir",    "percentage": 7   },
+                        { "unitType": "Missiles",   "percentage": 35  },
+                        { "unitType": "Rockets",    "percentage": 45  },
+                        { "unitType": "MediumTank", "percentage": 1   }
+                    ]
+                }
+            ]
+        }
+    ]
+}

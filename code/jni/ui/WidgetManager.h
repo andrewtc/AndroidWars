@@ -61,6 +61,7 @@ namespace mage
 		void BuildWidgetTemplateFromXML( const XmlReader::XmlReaderIterator& xml, WidgetTemplate& widgetTemplate );
 
 		bool mIsInitialized;
+		jmethodID mToggleKeyboardMethod;
 		Widget* mRootWidget;
 		HashMap< WidgetTemplate* > mTemplatesByName;
 		HashMap< AbstractWidgetFactory* > mFactoriesByType;

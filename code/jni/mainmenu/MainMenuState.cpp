@@ -50,6 +50,16 @@ void MainMenuState::OnEnter( const Dictionary& parameters )
 		// Otherwise, show the user dashboard.
 		ChangeState( mDashboardState );
 	}
+
+	gOnlineGameClient->LogIn( "andrewtc", "test", [this]( bool success )
+	{
+		if( success )
+		{
+			// FIXME: HACK
+			std::string gameID = "li3MB7xvsi";
+			LoadGame( gameID );
+		}
+	});
 }
 
 

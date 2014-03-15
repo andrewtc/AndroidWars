@@ -2,27 +2,7 @@
 
 using namespace mage;
 
-const char* const UnitType::SPRITE_DIRECTORY = "sprites";
-const char* const UnitType::ANIMATION_FILE_EXTENSION = "anim";
 const int UnitType::DEFAULT_MAX_SUPPLIES;
-
-
-std::string UnitType::FormatAnimationPath( const std::string& animationName )
-{
-	// Construct a path to the animation and return the result.
-	std::stringstream formatter;
-	formatter << SPRITE_DIRECTORY << "/" << animationName << "." << ANIMATION_FILE_EXTENSION;
-	return formatter.str();
-}
-
-
-std::string UnitType::FormatAnimationName( const std::string& animationName )
-{
-	// Construct a name for the animation and return the result.
-	std::stringstream formatter;
-	formatter << animationName << "." << ANIMATION_FILE_EXTENSION;
-	return formatter.str();
-}
 
 
 UnitType::UnitType( const HashString& name )

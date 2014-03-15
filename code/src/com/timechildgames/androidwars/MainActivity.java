@@ -40,17 +40,21 @@ public class MainActivity extends NativeActivity
 	}
 	
 	
-	public void showKeyboard()
+	public void toggleKeyboard( boolean visible )
 	{
+		// Get the input manager.
 		InputMethodManager manager = (InputMethodManager) getSystemService( INPUT_METHOD_SERVICE );
-		manager.toggleSoftInput( InputMethodManager.SHOW_FORCED, 0 );
-	}
-	
-	
-	public void hideKeyboard()
-	{
-		InputMethodManager manager = (InputMethodManager) getSystemService( INPUT_METHOD_SERVICE );
-		manager.toggleSoftInput( 0, 0 );
+		
+		if( visible )
+		{
+			// If the keyboard should be visible, show it.
+			manager.toggleSoftInput( InputMethodManager.SHOW_FORCED, 0 );
+		}
+		else
+		{
+			// Otherwise, hide the keyboard.
+			manager.toggleSoftInput( 0, 0 );
+		}
 	}
 	
 	

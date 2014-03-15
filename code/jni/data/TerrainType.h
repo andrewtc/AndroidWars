@@ -13,10 +13,16 @@ namespace mage
 
 		std::string GetDisplayName() const;
 		int GetCoverBonus() const;
+		bool IsCapturable() const;
 
 	protected:
+		void LoadAnimation();
+
+		HashString mAnimationSetName;
+		std::string mAnimationSetPath;
 		std::string mDisplayName;
 		int mCoverBonus;
+		bool mIsCapturable;
 
 		friend class TerrainTypesTable;
 	};

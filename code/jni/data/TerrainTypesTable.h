@@ -14,6 +14,7 @@ namespace mage
 		virtual ~TerrainTypesTable();
 
 	protected:
-		virtual void LoadRecordFromXml( TerrainType* terrainType, XmlReader::XmlReaderIterator xmlIterator );
+		virtual void OnLoadRecordFromXml( TerrainType* terrainType, XmlReader::XmlReaderIterator xmlIterator );
+		virtual void OnLoadRecordFromJSON( TerrainType* terrainType, const rapidjson::Value& object );
 	};
 }

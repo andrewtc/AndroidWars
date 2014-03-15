@@ -36,10 +36,9 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 	mGame = Game::Create( gameID, 2, "Cobra Cove" );
 
 	// Load all necessary game data.
-	mGame->LoadDataFromFile( "data/Data.xml" );
+	mGame->GetDatabase()->LoadDataFromFile( "data/Data.json" );
 
 	mGame->SetCamera( mCamera );
-	mGame->Start();
 
 	gOnlineGameClient->RequestGameData( gameID, [ this ]( bool success, OnlineGameData gameData )
 	{
@@ -50,6 +49,7 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 			gameState.Parse< 0 >( gameData.gameState.c_str() );
 
 			// Load the game from the state.
+			mGame->Start();
 			mGame->LoadState( gameState );
 		}
 		else
@@ -118,7 +118,7 @@ bool GameplayState::OnPointerDown( float x, float y, size_t which )
 
 bool GameplayState::OnPointerUp( float x, float y, size_t which )
 {
-	if( mGame && !mWasMotion )
+	if( mGame && mGame->IsInProgress() && !mWasMotion )
 	{
 		mGame->OnTouchEvent( x, y );
 	}

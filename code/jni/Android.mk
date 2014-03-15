@@ -134,6 +134,7 @@ include $(BUILD_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 
 aw_game_path := game
+aw_editor_path := editor
 aw_mainmenu_path := mainmenu
 aw_data_path := data
 aw_states_path := states
@@ -158,6 +159,7 @@ $(aw_game_path)/GameplayState.cpp \
 $(aw_game_path)/Game.cpp \
 $(aw_game_path)/Player.cpp \
 $(aw_game_path)/Unit.cpp \
+$(aw_editor_path)/EditorState.cpp \
  ui/WidgetManager.cpp \
  ui/WidgetTemplate.cpp \
  ui/Widget.cpp \

@@ -861,7 +861,19 @@ void Game::OnTouchEvent( float x, float y )
 			FindBestPathToTile( tilePos, mSelectedPath );
 
 			// Show the confirm dialog.
-			ShowMoveDialog();
+			//ShowMoveDialog();
+
+			// TODO: Show dialog.
+			// Move the unit to its intended destination.
+			MoveUnitToTile( mSelectedUnit, mSelectedPath.GetDestination() );
+
+			// Clear the currently selected unit.
+			// TODO: Action choices.
+			SelectUnit( nullptr );
+
+			// Save the new state to the server.
+			// TODO: Move this elsewhere.
+			PostTurn();
 		}
 		else
 		{

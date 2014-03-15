@@ -7,22 +7,6 @@ namespace mage
 	class Unit;
 
 	/**
-	 * Represents a tile direction (i.e. north, south, east, or west).
-	 */
-	enum CardinalDirection
-	{
-		CARDINAL_DIRECTION_NONE,
-		CARDINAL_DIRECTION_EAST,
-		CARDINAL_DIRECTION_NORTH,
-		CARDINAL_DIRECTION_WEST,
-		CARDINAL_DIRECTION_SOUTH
-	};
-
-	static const CardinalDirection FIRST_VALID_DIRECTION = CARDINAL_DIRECTION_EAST;
-	static const CardinalDirection LAST_VALID_DIRECTION = CARDINAL_DIRECTION_SOUTH;
-	static const int NUM_DIRECTIONS = ( LAST_VALID_DIRECTION - FIRST_VALID_DIRECTION + 1 );
-
-	/**
 	 * Represents a single play session of AndroidWars.
 	 */
 	class Game
@@ -51,10 +35,6 @@ namespace mage
 
 		Game( const std::string& gameID );
 		~Game();
-
-		void LoadDataFromFile( const char* filename );
-		void LoadDataFromXMLData( const char* xmlData );
-		void LoadDataFromXML( XmlReader::XmlReaderIterator rootIterator );
 
 		void SetMapName( const std::string& mapName );
 
@@ -197,33 +177,6 @@ namespace mage
 
 		friend class Unit;
 	};
-
-
-	inline void Game::LoadDataFromFile( const char* filename )
-	{
-		mDatabase->LoadDataFromFile( filename );
-	}
-
-
-	inline void Game::LoadDataFromXMLData( const char* xmlData )
-	{
-		// Open the data file.
-		XmlReader xmlReader;
-		xmlReader.LoadData( xmlData );
-		assertion( !xmlReader.Fail(), "Could not load game data from raw XML data!" );
-
-		// Get the root element.
-		XmlReader::XmlReaderIterator rootIterator = xmlReader.ReadRoot();
-
-		// Load all game data.
-		mDatabase->LoadDataFromXML( rootIterator );
-	}
-
-
-	inline void Game::LoadDataFromXML( XmlReader::XmlReaderIterator rootIterator )
-	{
-		mDatabase->LoadDataFromXML( rootIterator );
-	}
 
 
 	inline void Game::SetMapName( const std::string& mapName )

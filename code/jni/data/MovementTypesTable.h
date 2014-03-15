@@ -10,17 +10,13 @@ namespace mage
 	class MovementTypesTable : public Table< MovementTypesTable, MovementType >
 	{
 	public:
+		static const char* const MOVEMENT_COSTS_JSON_PROPERTY_NAME;
+
 		MovementTypesTable( Database* database );
 		virtual ~MovementTypesTable();
 
 	protected:
-		virtual const char* GetXmlElementName() const;
-		virtual void LoadRecordFromXml( MovementType* movementType, XmlReader::XmlReaderIterator xmlIterator );
+		virtual void OnLoadRecordFromXml( MovementType* movementType, XmlReader::XmlReaderIterator xmlIterator );
+		virtual void OnLoadRecordFromJSON( MovementType* movementType, const rapidjson::Value& object );
 	};
-
-
-	inline const char* MovementTypesTable::GetXmlElementName() const
-	{
-		return "MovementType";
-	}
 }

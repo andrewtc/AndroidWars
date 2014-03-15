@@ -371,6 +371,7 @@ namespace mage
 	typedef Vector2< float    > Vec2f;
 	typedef Vector2< double   > Vec2d;
 	typedef Vector2< int      > Vec2i;
+	typedef Vector2< short    > Vec2s;
 	typedef Vector2< unsigned > Vec2u;
 	typedef Vector2< long     > Vec2l;
 	//---------------------------------------

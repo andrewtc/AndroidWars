@@ -11,6 +11,7 @@ namespace mage
 	class OnlineGameClient;
 	class Game;
 	class Unit;
+	class Player;
 }
 
 #include <MageTypes.h>
@@ -63,8 +64,12 @@ extern mage::int32 gWindowHeight;
 #include "data/Weapon.h"
 #include "data/Database.h"
 
+#include "game/Map.h"
 #include "game/GameplayState.h"
 #include "game/Player.h"
 #include "game/Unit.h"
 #include "game/Path.h"
 #include "game/Game.h"
+
+#include "editor/EditorState.h"
+

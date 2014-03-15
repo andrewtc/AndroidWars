@@ -9,7 +9,8 @@ using namespace mage;
 // WidgetManager
 //---------------------------------------
 WidgetManager::WidgetManager() :
-	mRootWidget( nullptr )
+	mRootWidget( nullptr ),
+	mToggleKeyboardMethod( 0 )
 { }
 //---------------------------------------
 WidgetManager::~WidgetManager() { }
@@ -35,6 +36,9 @@ void WidgetManager::Init()
 	// Create the root Widget.
 	mRootWidget = new Widget( this, "root" );
 	mRootWidget->Init();
+
+	// Get the method for hiding/showing the keyboard from Java.
+	// TODO
 }
 //---------------------------------------
 void WidgetManager::Destroy()

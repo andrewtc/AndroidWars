@@ -10,12 +10,7 @@ namespace mage
 	class UnitType : public UnitTypesTable::Record
 	{
 	public:
-		static const char* const SPRITE_DIRECTORY;
-		static const char* const ANIMATION_FILE_EXTENSION;
 		static const int DEFAULT_MAX_SUPPLIES = 99;
-
-		static std::string FormatAnimationPath( const std::string& animationName );
-		static std::string FormatAnimationName( const std::string& animationName );
 
 		UnitType( const HashString& name );
 		virtual ~UnitType();

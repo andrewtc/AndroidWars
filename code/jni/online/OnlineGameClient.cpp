@@ -44,10 +44,6 @@ void OnlineGameClient::Init( android_app* app )
 {
 	assertion( !IsInitialized(), "Cannot initialize OnlineGameClient that has already been initialized!" );
 
-	// Initialize the JNI wrapper.
-	assertion( app, "Cannot create OnlineGameClient without a reference to the Java app instance!" );
-	JNI::Init( app->activity->vm );
-
 	// Get a reference to the OnlineGameClient Java instance.
 	JNI env;
 
