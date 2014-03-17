@@ -14,7 +14,7 @@
 
 namespace mage
 {
-	class Database;
+	class Scenario;
 
 
 	/**
@@ -38,7 +38,7 @@ namespace mage
 		public:
 			~Record();
 
-			Database* GetDatabase() const;
+			Scenario* GetScenario() const;
 			TableType* GetTable() const;
 			HashString GetName() const;
 			const char* ToString() const;
@@ -69,24 +69,24 @@ namespace mage
 
 		void DebugPrintData() const;
 
-		Database* GetDatabase() const;
+		Scenario* GetScenario() const;
 
 	protected:
-		Table( Database* database );
+		Table( Scenario* scenario );
 
 		virtual void OnLoadRecordFromXml( RecordType* record, XmlReader::XmlReaderIterator elementIterator ) = 0;
 		virtual void OnLoadRecordFromJSON( RecordType* record, const rapidjson::Value& object ) = 0;
 
 		typedef HashMap< RecordType* > RecordsByHashedName;
 
-		Database* mDatabase;
+		Scenario* mDatabase;
 		RecordsByHashedName mRecords;
 	};
 
 
 	MAGE_TABLE_TEMPLATE
-	MAGE_TABLE::Table( Database* database ) :
-		mDatabase( database )
+	MAGE_TABLE::Table( Scenario* scenario ) :
+		mDatabase( scenario )
 	{
 		assertion( mDatabase, "Cannot create table without Database!" );
 	}
@@ -283,7 +283,7 @@ namespace mage
 
 
 	MAGE_TABLE_TEMPLATE
-	Database* MAGE_TABLE::GetDatabase() const
+	Scenario* MAGE_TABLE::GetScenario() const
 	{
 		return mDatabase;
 	}
@@ -315,9 +315,9 @@ namespace mage
 
 
 	MAGE_TABLE_TEMPLATE
-	Database* MAGE_TABLE::Record::GetDatabase() const
+	Scenario* MAGE_TABLE::Record::GetScenario() const
 	{
-		return mTable->GetDatabase();
+		return mTable->GetScenario();
 	}
 
 

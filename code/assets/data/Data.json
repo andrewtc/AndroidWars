@@ -1,4 +1,7 @@
 {
+    "name": "Default",
+    "defaultTerrainType": "Plain",
+
     "TerrainTypes":
     [
         {
@@ -19,7 +22,8 @@
         },
         {
             "name":         "Road",
-            "animationSet": "Road"
+            "animationSet": "Road",
+            "isPath":       true
         }
     ],
     

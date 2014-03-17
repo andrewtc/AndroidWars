@@ -10,7 +10,7 @@ namespace mage
 	class TerrainTypesTable : public Table< TerrainTypesTable, TerrainType >
 	{
 	public:
-		TerrainTypesTable( Database* database );
+		TerrainTypesTable( Scenario* database );
 		virtual ~TerrainTypesTable();
 
 	protected:

@@ -7,6 +7,7 @@ TerrainType::TerrainType( const HashString& name )
 	: Record( name )
 	, mDisplayName( "" )
 	, mIsCapturable( false )
+	, mIsPath( false )
 { }
 
 
@@ -17,6 +18,12 @@ void TerrainType::LoadAnimation()
 {
 	// Load the animation.
 	SpriteManager::LoadSpriteAnimations( mAnimationSetPath.c_str() );
+}
+
+
+HashString TerrainType::GetAnimationSetName() const
+{
+	return mAnimationSetName;
 }
 
 
@@ -37,4 +44,10 @@ std::string TerrainType::GetDisplayName() const
 bool TerrainType::IsCapturable() const
 {
 	return mIsCapturable;
+}
+
+
+bool TerrainType::IsPath() const
+{
+	return mIsPath;
 }

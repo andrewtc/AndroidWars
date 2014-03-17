@@ -4,11 +4,11 @@
 
 using namespace mage;
 
-const char* const Database::SPRITE_DIRECTORY = "sprites";
-const char* const Database::ANIMATION_FILE_EXTENSION = "anim";
+const char* const Scenario::SPRITE_DIRECTORY = "sprites";
+const char* const Scenario::ANIMATION_FILE_EXTENSION = "anim";
 
 
-std::string Database::FormatAnimationPath( const std::string& animationName )
+std::string Scenario::FormatAnimationPath( const std::string& animationName )
 {
 	// Construct a path to the animation and return the result.
 	std::stringstream formatter;
@@ -17,7 +17,7 @@ std::string Database::FormatAnimationPath( const std::string& animationName )
 }
 
 
-std::string Database::FormatAnimationName( const std::string& animationName )
+std::string Scenario::FormatAnimationName( const std::string& animationName )
 {
 	// Construct a name for the animation and return the result.
 	std::stringstream formatter;
@@ -26,23 +26,23 @@ std::string Database::FormatAnimationName( const std::string& animationName )
 }
 
 
-Database::Database()
+Scenario::Scenario()
 	: TerrainTypes( this )
 	, UnitTypes( this )
 	, MovementTypes( this )
 { }
 
 
-Database::~Database() { }
+Scenario::~Scenario() { }
 
 
-void Database::LoadDataFromFile( const std::string& filePath )
+void Scenario::LoadDataFromFile( const std::string& filePath )
 {
 	LoadDataFromFile( filePath.c_str() );
 }
 
 
-void Database::LoadDataFromFile( const char* filePath )
+void Scenario::LoadDataFromFile( const char* filePath )
 {
 	/*
 	// Open the data file.
@@ -74,13 +74,13 @@ void Database::LoadDataFromFile( const char* filePath )
 }
 
 
-void Database::LoadDataFromString( const std::string& data )
+void Scenario::LoadDataFromString( const std::string& data )
 {
 	LoadDataFromString( data.c_str() );
 }
 
 
-void Database::LoadDataFromString( const char* data )
+void Scenario::LoadDataFromString( const char* data )
 {
 	// Parse the file.
 	rapidjson::Document document;
@@ -121,7 +121,7 @@ void Database::LoadDataFromString( const char* data )
 }
 
 
-void Database::LoadDataFromXML( XmlReader::XmlReaderIterator rootIterator )
+void Scenario::LoadDataFromXML( XmlReader::XmlReaderIterator rootIterator )
 {
 	// Load all game data.
 	TerrainTypes.LoadRecordsFromXML( rootIterator );
@@ -130,9 +130,13 @@ void Database::LoadDataFromXML( XmlReader::XmlReaderIterator rootIterator )
 }
 
 
-void Database::LoadDataFromJSON( const rapidjson::Value& object )
+void Scenario::LoadDataFromJSON( const rapidjson::Value& object )
 {
 	assertion( object.IsObject(), "Could not load data from JSON because the JSON value specified is not an object!" );
+
+	// Load Scenario fields.
+	SetName( GetJSONStringValue( object, "name", "" ) );
+	SetDefaultTerrainTypeName( GetJSONStringValue( object, "defaultTerrainType", "" ) );
 
 	// Load all game data.
 	TerrainTypes.LoadRecordsFromJSON( object );
@@ -143,7 +147,7 @@ void Database::LoadDataFromJSON( const rapidjson::Value& object )
 }
 
 
-void Database::ClearData()
+void Scenario::ClearData()
 {
 	// Clear all game data.
 	TerrainTypes.DeleteAllRecords();
@@ -152,9 +156,9 @@ void Database::ClearData()
 }
 
 
-void Database::DebugPrintData() const
+void Scenario::DebugPrintData() const
 {
-	DebugPrintf( "DATABASE:" );
+	DebugPrintf( "Scenario \"%s\":", mName.GetCString() );
 
 	// Print all records in the database.
 	TerrainTypes.DebugPrintData();
@@ -162,3 +166,47 @@ void Database::DebugPrintData() const
 	MovementTypes.DebugPrintData();
 }
 
+
+void Scenario::SetName( const HashString& name )
+{
+	mName = name;
+}
+
+
+HashString Scenario::GetName() const
+{
+	return mName;
+}
+
+
+void Scenario::SetDefaultTerrainType( TerrainType* defaultTerrainType )
+{
+	assertion( defaultTerrainType == nullptr || defaultTerrainType->GetScenario() == this,
+			   "Cannot set default TerrainType to %s because that record is not part of this Scenario (\"%s\")!",
+			   defaultTerrainType->ToString(), mName.GetCString() );
+	SetDefaultTerrainTypeName( defaultTerrainType->GetName() );
+}
+
+
+TerrainType* Scenario::GetDefaultTerrainType()
+{
+	return TerrainTypes.FindByName( mDefaultTerrainTypeName );
+}
+
+
+const TerrainType* Scenario::GetDefaultTerrainType() const
+{
+	return TerrainTypes.FindByName( mDefaultTerrainTypeName );
+}
+
+
+void Scenario::SetDefaultTerrainTypeName( const HashString& defaultTerrainTypeName )
+{
+	mDefaultTerrainTypeName = defaultTerrainTypeName;
+}
+
+
+HashString Scenario::GetDefaultTerrainTypeName() const
+{
+	return mDefaultTerrainTypeName;
+}

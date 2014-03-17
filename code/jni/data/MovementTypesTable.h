@@ -12,7 +12,7 @@ namespace mage
 	public:
 		static const char* const MOVEMENT_COSTS_JSON_PROPERTY_NAME;
 
-		MovementTypesTable( Database* database );
+		MovementTypesTable( Scenario* database );
 		virtual ~MovementTypesTable();
 
 	protected:

@@ -9,7 +9,7 @@ const char* const UnitTypesTable::WEAPONS_JSON_PROPERTY_NAME = "weapons";
 const char* const UnitTypesTable::DAMAGE_JSON_PROPERTY_NAME = "damage";
 
 
-UnitTypesTable::UnitTypesTable( Database* database )
+UnitTypesTable::UnitTypesTable( Scenario* database )
 	: Table( database )
 { }
 
@@ -20,8 +20,8 @@ UnitTypesTable::~UnitTypesTable() { }
 void UnitTypesTable::OnLoadRecordFromXml( UnitType* unitType, XmlReader::XmlReaderIterator xmlIterator )
 {
 	// Read in the sprite for this UnitType and pre-load it.
-	unitType->mAnimationSetPath = Database::FormatAnimationPath( xmlIterator.GetAttributeAsString( "animationSet" ) );
-	unitType->mAnimationSetName = Database::FormatAnimationName( xmlIterator.GetAttributeAsString( "animationSet" ) );
+	unitType->mAnimationSetPath = Scenario::FormatAnimationPath( xmlIterator.GetAttributeAsString( "animationSet" ) );
+	unitType->mAnimationSetName = Scenario::FormatAnimationName( xmlIterator.GetAttributeAsString( "animationSet" ) );
 	unitType->LoadAnimation();
 
 	// Read in the unit display name (if it exists).
@@ -59,8 +59,8 @@ void UnitTypesTable::OnLoadRecordFromXml( UnitType* unitType, XmlReader::XmlRead
 void UnitTypesTable::OnLoadRecordFromJSON( UnitType* unitType, const rapidjson::Value& object )
 {
 	// Read in the sprite for this UnitType and pre-load it.
-	unitType->mAnimationSetPath = Database::FormatAnimationPath( GetJSONStringValue( object, "animationSet", "" ) );
-	unitType->mAnimationSetName = Database::FormatAnimationName( GetJSONStringValue( object, "animationSet", "" ) );
+	unitType->mAnimationSetPath = Scenario::FormatAnimationPath( GetJSONStringValue( object, "animationSet", "" ) );
+	unitType->mAnimationSetName = Scenario::FormatAnimationName( GetJSONStringValue( object, "animationSet", "" ) );
 	unitType->LoadAnimation();
 
 	// Read in the unit display name (if it exists).

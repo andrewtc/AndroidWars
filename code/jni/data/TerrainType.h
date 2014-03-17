@@ -11,9 +11,11 @@ namespace mage
 		TerrainType( const HashString& name );
 		virtual ~TerrainType();
 
+		HashString GetAnimationSetName() const;
 		std::string GetDisplayName() const;
 		int GetCoverBonus() const;
 		bool IsCapturable() const;
+		bool IsPath() const;
 
 	protected:
 		void LoadAnimation();
@@ -23,6 +25,7 @@ namespace mage
 		std::string mDisplayName;
 		int mCoverBonus;
 		bool mIsCapturable;
+		bool mIsPath;
 
 		friend class TerrainTypesTable;
 	};

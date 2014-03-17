@@ -36,7 +36,7 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 	mGame = Game::Create( gameID, 2, "Cobra Cove" );
 
 	// Load all necessary game data.
-	mGame->GetDatabase()->LoadDataFromFile( "data/Data.json" );
+	mGame->GetScenario()->LoadDataFromFile( "data/Data.json" );
 
 	mGame->SetCamera( mCamera );
 

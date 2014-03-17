@@ -8,7 +8,7 @@ MAGE_AUTO_GENERATE_TABLE_NAME( MovementTypesTable, MovementType );
 const char* const MovementTypesTable::MOVEMENT_COSTS_JSON_PROPERTY_NAME = "movementCosts";
 
 
-MovementTypesTable::MovementTypesTable( Database* database )
+MovementTypesTable::MovementTypesTable( Scenario* database )
 	: Table( database )
 { }
 

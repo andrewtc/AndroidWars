@@ -43,7 +43,7 @@ std::string Game::FormatMapPath( const std::string& mapName )
 Game::Game( const std::string& gameID )
 	: mNextPlayerIndex( 0 )
 	, mStatus( STATUS_NOT_STARTED )
-	, mDatabase( nullptr )
+	, mScenario( nullptr )
 	, mCamera( nullptr )
 	, mSelectedUnit( nullptr )
 	, mTargetUnit( nullptr )
@@ -54,8 +54,8 @@ Game::Game( const std::string& gameID )
 {
 	assertion( !mGameID.empty(), "Game ID is empty!" );
 
-	// Create the game Database.
-	mDatabase = new Database();
+	// Create the game Scenario.
+	mScenario = new Scenario();
 
 	// Add map object creation callback.
 	mMap.SetNewMapObjectCB( &SpawnObjectFromXml );
@@ -260,7 +260,7 @@ void Game::Destroy()
 	}
 
 	// Unload all game data.
-	mDatabase->ClearData();
+	mScenario->ClearData();
 }
 
 
@@ -288,7 +288,7 @@ void Game::LoadState( const rapidjson::Document& gameData )
 		assertion( GetTile( tileX, tileY ) != TileMap::INVALID_TILE, "Loaded invalid tile position (%d,%d) from JSON!", tileX, tileY );
 
 		// Get references.
-		UnitType* unitType = mDatabase->UnitTypes.FindByName( unitTypeName );
+		UnitType* unitType = mScenario->UnitTypes.FindByName( unitTypeName );
 		assertion( unitType, "Loaded invalid UnitType from JSON!" );
 
 		Player* player = GetPlayer( ownerIndex );
@@ -919,7 +919,7 @@ TerrainType* Game::GetTerrainTypeOfTile( int x, int y )
 	// TODO: Make this actually use the properties of the Tile to determine TerrainType.
 	HashString terrainTypeName = tile.GetPropertyAsString( "TerrainType" );
 
-	TerrainType* result = mDatabase->TerrainTypes.FindByName( terrainTypeName );
+	TerrainType* result = mScenario->TerrainTypes.FindByName( terrainTypeName );
 	return result;
 }
 

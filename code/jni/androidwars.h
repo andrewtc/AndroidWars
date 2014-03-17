@@ -62,9 +62,10 @@ extern mage::int32 gWindowHeight;
 #include "data/UnitTypesTable.h"
 #include "data/UnitType.h"
 #include "data/Weapon.h"
-#include "data/Database.h"
+#include "data/Scenario.h"
 
 #include "game/Map.h"
+#include "game/World.h"
 #include "game/GameplayState.h"
 #include "game/Player.h"
 #include "game/Unit.h"
@@ -72,4 +73,5 @@ extern mage::int32 gWindowHeight;
 #include "game/Game.h"
 
 #include "editor/EditorState.h"
+#include "editor/EditorInputStates.h"
 

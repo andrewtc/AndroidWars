@@ -72,7 +72,7 @@ void Unit::Init( Game* game )
 	if( mUnitType == nullptr )
 	{
 		// Load the UnitType for this Unit (if necessary).
-		mUnitType = mGame->GetDatabase()->UnitTypes.FindByName( mUnitTypeName );
+		mUnitType = mGame->GetScenario()->UnitTypes.FindByName( mUnitTypeName );
 		assertion( mUnitType, "UnitType \"%s\" not found!", mUnitTypeName.GetCString() );
 	}
 

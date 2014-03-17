@@ -78,21 +78,21 @@ bool Tile::IsCapturable() const
 
 
 Map::ConstIterator::ConstIterator( const Map* map ) :
-	mMap( map ), mX( -1 ), mY( -1 )
+	mMap( map ), mTilePos( -1, -1 )
 {
 	assertion( mMap, "Cannot create Map::ConstIterator without a Map reference!" );
 }
 
 
 Map::ConstIterator::ConstIterator( const Map* map, const Vec2s& tilePos ) :
-	mMap( map ), mX( tilePos.x ), mY( tilePos.y )
+	mMap( map ), mTilePos( tilePos )
 {
 	assertion( mMap, "Cannot create Map::ConstIterator without a Map reference!" );
 }
 
 
 Map::ConstIterator::ConstIterator( const Map* map, short x, short y ) :
-	mMap( map ), mX( x ), mY( y )
+	mMap( map ), mTilePos( x, y )
 {
 	assertion( mMap, "Cannot create Map::ConstIterator without a Map reference!" );
 }
@@ -103,59 +103,50 @@ Map::ConstIterator::~ConstIterator() { }
 
 Map::ConstIterator Map::ConstIterator::GetAdjacent( CardinalDirection direction ) const
 {
-	short x = mX, y = mY;
+	return ConstIterator( mMap, GetAdjacentTilePos( mTilePos, direction ) );
+}
 
-	switch( direction )
-	{
-	case CARDINAL_DIRECTION_EAST:
-		++x;
-		break;
 
-	case CARDINAL_DIRECTION_NORTH:
-		++y;
-		break;
-
-	case CARDINAL_DIRECTION_WEST:
-		--x;
-		break;
-
-	case CARDINAL_DIRECTION_SOUTH:
-		--y;
-		break;
-	}
-
-	return ConstIterator( mMap, x, y );
+const Tile& Map::ConstIterator::operator*() const
+{
+	return mMap->mTiles[ mMap->GetTileIndex( mTilePos ) ];
 }
 
 
 const Tile* Map::ConstIterator::operator->() const
 {
-	return mMap->mTiles[ mMap->GetTileIndex( mX, mY ) ];
+	return &( operator*() );
+}
+
+
+Vec2s Map::ConstIterator::GetTilePos() const
+{
+	return mTilePos;
 }
 
 
 bool Map::ConstIterator::IsValid() const
 {
-	return mMap->IsValidTilePos( mX, mY );
+	return ( mMap->IsValidTilePos( mTilePos ) && ( *this )->HasTerrainType() );
 }
 
 
 Map::Iterator::Iterator( Map* map ) :
-	mMap( map ), mX( -1 ), mY( -1 )
+	mMap( map ), mTilePos( -1, -1 )
 {
 	assertion( mMap, "Cannot create Map::Iterator without a Map reference!" );
 }
 
 
 Map::Iterator::Iterator( Map* map, short x, short y ) :
-	mMap( map ), mX( x ), mY( y )
+	mMap( map ), mTilePos( x, y )
 {
 	assertion( mMap, "Cannot create Map::Iterator without a Map reference!" );
 }
 
 
-Map::Iterator::Iterator( const Map* map, const Vec2s& tilePos ) :
-	mMap( map ), mX( tilePos.x ), mY( tilePos.y )
+Map::Iterator::Iterator( Map* map, const Vec2s& tilePos ) :
+	mMap( map ), mTilePos( tilePos )
 {
 	assertion( mMap, "Cannot create Map::ConstIterator without a Map reference!" );
 }
@@ -166,49 +157,130 @@ Map::Iterator::~Iterator() { }
 
 Map::Iterator Map::Iterator::GetAdjacent( CardinalDirection direction ) const
 {
-	short x = mX, y = mY;
+	return Iterator( mMap, GetAdjacentTilePos( mTilePos, direction ) );
+}
 
-	switch( direction )
-	{
-	case CARDINAL_DIRECTION_EAST:
-		++x;
-		break;
 
-	case CARDINAL_DIRECTION_NORTH:
-		++y;
-		break;
-
-	case CARDINAL_DIRECTION_WEST:
-		--x;
-		break;
-
-	case CARDINAL_DIRECTION_SOUTH:
-		--y;
-		break;
-	}
-
-	return ConstIterator( mMap, x, y );
+Tile& Map::Iterator::operator*() const
+{
+	return mMap->mTiles[ mMap->GetTileIndex( mTilePos ) ];
 }
 
 
 Tile* Map::Iterator::operator->() const
 {
-	return mMap->mTiles[ mMap->GetTileIndex( mX, mY ) ];
+	return &( operator*() );
 }
 
 
 bool Map::Iterator::IsValid() const
 {
-	return mMap->IsValidTilePos( mX, mY );
+	return ( mMap->IsValidTilePos( mTilePos ) && ( *this )->HasTerrainType() );
 }
 
 
-Map::Map( Database* database ) :
-	mDatabase( database )
+Vec2s Map::Iterator::GetTilePos() const
+{
+	return mTilePos;
+}
+
+
+Vec2s Map::GetAdjacentTilePos( short x, short y, CardinalDirection direction )
+{
+	Vec2s result( x, y );
+
+	switch( direction )
+	{
+	case CARDINAL_DIRECTION_EAST:
+		result.x += 1;
+		break;
+
+	case CARDINAL_DIRECTION_WEST:
+		result.x -= 1;
+		break;
+
+	case CARDINAL_DIRECTION_SOUTH:
+		result.y += 1;
+		break;
+
+	case CARDINAL_DIRECTION_NORTH:
+		result.y -= 1;
+		break;
+	}
+
+	return result;
+}
+
+
+Vec2s Map::GetAdjacentTilePos( const Vec2s& tilePos, CardinalDirection direction )
+{
+	return GetAdjacentTilePos( tilePos.x, tilePos.y, direction );
+}
+
+
+CardinalDirection Map::GetOppositeDirection( CardinalDirection direction )
+{
+	CardinalDirection result = CARDINAL_DIRECTION_NONE;
+
+	switch( direction )
+	{
+	case CARDINAL_DIRECTION_EAST:
+		result = CARDINAL_DIRECTION_WEST;
+		break;
+
+	case CARDINAL_DIRECTION_WEST:
+		result = CARDINAL_DIRECTION_EAST;
+		break;
+
+	case CARDINAL_DIRECTION_SOUTH:
+		result = CARDINAL_DIRECTION_NORTH;
+		break;
+
+	case CARDINAL_DIRECTION_NORTH:
+		result = CARDINAL_DIRECTION_SOUTH;
+		break;
+	}
+
+	return result;
+}
+
+
+Map::Map() :
+	mIsInitialized( false ),
+	mScenario( nullptr ),
+	mSize( 0, 0 )
 { }
 
 
 Map::~Map() { }
+
+
+void Map::Init( Scenario* scenario )
+{
+	assertion( !mIsInitialized, "Cannot initialize Map that has already been initialized!" );
+
+	// Initialize the Map.
+	mIsInitialized = true;
+
+	// Set the Scenario.
+	assertion( scenario, "Cannot initialize Map without a valid Scenario!" );
+	mScenario = scenario;
+
+	// Make sure the size of the map is valid.
+	assertion( IsValid(), "Cannot initialize Map with invalid size (%d,%d)!", mSize.x, mSize.y );
+}
+
+
+void Map::Destroy()
+{
+	assertion( mIsInitialized, "Cannot destroy Map that has not been initialized!" );
+
+	// Clear the scenario.
+	mScenario = nullptr;
+
+	// Destroy the Map.
+	mIsInitialized = false;
+}
 
 
 void Map::SaveToJSON( rapidjson::Document& document, rapidjson::Value& object )
@@ -226,6 +298,59 @@ void Map::LoadFromFile( const std::string& filePath )
 void Map::LoadFromJSON( const rapidjson::Value& object )
 {
 	// TODO
+}
+
+
+void Map::Resize( const Vec2s& size )
+{
+	Resize( size.x, size.y );
+}
+
+
+void Map::Resize( short x, short y )
+{
+	assertion( IsValidSize( x, y ), "Cannot resize Map to invalid size (%d,%d)!", x, y );
+
+	//
+
+	// Set the size of the map.
+	mSize.Set( x, y );
+}
+
+
+short Map::GetWidth() const
+{
+	return mSize.x;
+}
+
+
+short Map::GetHeight() const
+{
+	return mSize.y;
+}
+
+
+Vec2s Map::GetSize() const
+{
+	return mSize;
+}
+
+
+bool Map::IsValidSize( const Vec2s& size )
+{
+	return ( size.x > 0 && size.y > 0 && size.x <= MAX_SIZE && size.y <= MAX_SIZE );
+}
+
+
+bool Map::IsValidSize( short x, short y )
+{
+	return ( x > 0 && y > 0 && x <= MAX_SIZE && y <= MAX_SIZE );
+}
+
+
+bool Map::IsValid() const
+{
+	return IsValidSize( mSize );
 }
 
 
@@ -253,6 +378,101 @@ Map::ConstIterator Map::GetTile( short x, short y ) const
 }
 
 
+bool Map::IsValidTilePos( const Vec2s& tilePos ) const
+{
+	return IsValidTilePos( tilePos.x, tilePos.y );
+}
+
+
+bool Map::IsValidTilePos( short x, short y ) const
+{
+	return ( x >= 0 && x < mSize.x && y >= 0 && y < mSize.y );
+}
+
+
+void Map::ForEachTile( ForEachTileCallback callback )
+{
+	RectS area( 0, 0, mSize.x, mSize.y );
+	ForEachTileInArea( area, callback );
+}
+
+
+void Map::ForEachTile( ForEachConstTileCallback callback ) const
+{
+	RectS area( 0, 0, mSize.x, mSize.y );
+	ForEachTileInArea( area, callback );
+}
+
+
+void Map::ForEachTileInArea( const RectS& area, ForEachTileCallback callback )
+{
+	assertion( area.IsValid(), "Cannot run Tile callback on invalid area (%d,%d,%d,%d)!", area.Left, area.Top, area.Right, area.Bottom );
+	assertion( callback.IsValid(), "Cannot run Tile callback on area (%d,%d,%d,%d) because the callback is invalid!", area.Left, area.Top, area.Right, area.Bottom );
+
+	for( short y = area.Top; y < area.Bottom; ++y )
+	{
+		for( short x = area.Left; x < area.Right; ++x )
+		{
+			// Fire the callback for each Tile.
+			callback.Invoke( Iterator( this, x, y ) );
+		}
+	}
+}
+
+
+void Map::ForEachTileInArea( const RectS& area, ForEachConstTileCallback callback ) const
+{
+	assertion( area.IsValid(), "Cannot run Tile callback on invalid area (%d,%d,%d,%d)!", area.Left, area.Top, area.Right, area.Bottom );
+	assertion( callback.IsValid(), "Cannot run Tile callback on area (%d,%d,%d,%d) because the callback is invalid!", area.Left, area.Top, area.Right, area.Bottom );
+
+	for( short y = area.Top; y < area.Bottom; ++y )
+	{
+		for( short x = area.Left; x < area.Right; ++x )
+		{
+			// Fire the callback for each Tile.
+			callback.Invoke( ConstIterator( this, x, y ) );
+		}
+	}
+}
+
+
+void Map::ForEachUnit( ForEachUnitCallback callback )
+{
+	for( auto it = mUnits.begin(); it != mUnits.end(); ++it )
+	{
+		// Call the function for each Unit.
+		callback.Invoke( *it );
+	}
+}
+
+
+void Map::ForEachUnit( ForEachConstUnitCallback callback ) const
+{
+	for( auto it = mUnits.begin(); it != mUnits.end(); ++it )
+	{
+		// Call the function for each Unit.
+		callback.Invoke( *it );
+	}
+}
+
+
+void Map::Fill( const Tile& tile )
+{
+	RectS area( 0, 0, mSize.x, mSize.y );
+	Fill( tile, area );
+}
+
+
+void Map::Fill( const Tile& tile, const RectS& area )
+{
+	ForEachTileInArea( area, [ this, &tile ]( const Iterator& it )
+	{
+		// Fill each Tile in the area.
+		( *it ) = tile;
+	});
+}
+
+
 void Map::SetTileChangedCallback( const TileChangedCallback& callback )
 {
 	mTileChangedCallback = callback;
@@ -277,14 +497,14 @@ bool Map::HasTileChangedCallback() const
 }
 
 
-bool Map::IsValidTilePos( short x, short y ) const
+Scenario* Map::GetScenario() const
 {
-	return ( x >= 0 && x < mWidth && y >= 0 && y < mHeight );
+	return mScenario;
 }
 
 
-size_t Map::GetTileIndex( short x, short y ) const
+size_t Map::GetTileIndex( const Vec2s& tilePos ) const
 {
-	assertion( IsValidTilePos( x, y ), "Cannot get tile index for invalid tile position (%d,%d)!", x, y );
-	return ( ( y << MAX_SIZE_EXPONENT ) + x );
+	assertion( IsValidTilePos( tilePos ), "Cannot get tile index for invalid tile position (%d,%d)!", tilePos.x, tilePos.y );
+	return ( ( tilePos.y << MAX_SIZE_EXPONENT ) + tilePos.x );
 }

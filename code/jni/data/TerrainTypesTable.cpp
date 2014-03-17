@@ -6,7 +6,7 @@ using namespace mage;
 MAGE_AUTO_GENERATE_TABLE_NAME( TerrainTypesTable, TerrainType );
 
 
-TerrainTypesTable::TerrainTypesTable( Database* database )
+TerrainTypesTable::TerrainTypesTable( Scenario* database )
 	: Table( database )
 { }
 
@@ -25,8 +25,12 @@ void TerrainTypesTable::OnLoadRecordFromJSON( TerrainType* terrainType, const ra
 {
 	// Read in all attributes.
 	terrainType->mDisplayName = GetJSONStringValue( object, "animationSet", "" );
-	terrainType->mAnimationSetName = Database::FormatAnimationName( GetJSONStringValue( object, "animationSet", "" ) );
-	terrainType->mAnimationSetPath = Database::FormatAnimationPath( GetJSONStringValue( object, "animationSet", "" ) );
+	terrainType->mAnimationSetName = Scenario::FormatAnimationName( GetJSONStringValue( object, "animationSet", "" ) );
+	terrainType->mAnimationSetPath = Scenario::FormatAnimationPath( GetJSONStringValue( object, "animationSet", "" ) );
 	terrainType->mIsCapturable = GetJSONBoolValue( object, "isCapturable", false );
+	terrainType->mIsPath = GetJSONBoolValue( object, "isPath", false );
 	terrainType->mCoverBonus = GetJSONIntValue( object, "coverBonus", 0 );
+
+	// Pre-load the animation set.
+	terrainType->LoadAnimation();
 }

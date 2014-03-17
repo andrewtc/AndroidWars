@@ -154,12 +154,15 @@ $(aw_data_path)/Weapon.cpp \
 $(aw_data_path)/UnitTypesTable.cpp \
 $(aw_data_path)/MovementType.cpp \
 $(aw_data_path)/MovementTypesTable.cpp \
-$(aw_data_path)/Database.cpp \
+$(aw_data_path)/Scenario.cpp \
 $(aw_game_path)/GameplayState.cpp \
 $(aw_game_path)/Game.cpp \
 $(aw_game_path)/Player.cpp \
 $(aw_game_path)/Unit.cpp \
+$(aw_game_path)/Map.cpp \
+$(aw_game_path)/World.cpp \
 $(aw_editor_path)/EditorState.cpp \
+$(aw_editor_path)/EditorInputStates.cpp \
  ui/WidgetManager.cpp \
  ui/WidgetTemplate.cpp \
  ui/Widget.cpp \

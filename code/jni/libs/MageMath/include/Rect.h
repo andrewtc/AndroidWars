@@ -68,4 +68,5 @@ namespace mage
 
 	typedef Rect< float > RectF;
 	typedef Rect< int   > RectI;
+	typedef Rect< short > RectS;
 }

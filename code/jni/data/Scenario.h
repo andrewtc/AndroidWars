@@ -5,7 +5,7 @@ namespace mage
 	/**
 	 * Stores all game data.
 	 */
-	class Database
+	class Scenario
 	{
 	public:
 		static const char* const SPRITE_DIRECTORY;
@@ -14,8 +14,8 @@ namespace mage
 		static std::string FormatAnimationPath( const std::string& animationName );
 		static std::string FormatAnimationName( const std::string& animationName );
 
-		Database();
-		~Database();
+		Scenario();
+		~Scenario();
 
 		void LoadDataFromFile( const std::string& filePath );
 		void LoadDataFromFile( const char* filePath );
@@ -27,8 +27,21 @@ namespace mage
 
 		void DebugPrintData() const;
 
+		void SetName( const HashString& name );
+		HashString GetName() const;
+
+		void SetDefaultTerrainType( TerrainType* defaultTerrainType );
+		TerrainType* GetDefaultTerrainType();
+		const TerrainType* GetDefaultTerrainType() const;
+		void SetDefaultTerrainTypeName( const HashString& defaultTerrainTypeName );
+		HashString GetDefaultTerrainTypeName() const;
+
 		TerrainTypesTable TerrainTypes;
 		UnitTypesTable UnitTypes;
 		MovementTypesTable MovementTypes;
+
+	protected:
+		HashString mName;
+		HashString mDefaultTerrainTypeName;
 	};
 }

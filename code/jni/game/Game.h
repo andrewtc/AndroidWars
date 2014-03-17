@@ -49,7 +49,7 @@ namespace mage
 		void PostTurn();
 		void FetchTurn();
 
-		Database* GetDatabase() const;
+		Scenario* GetScenario() const;
 
 		void SetCamera( Camera* camera );
 		Camera* GetCamera() const;
@@ -137,7 +137,7 @@ namespace mage
 		int mNextPlayerIndex;
 		int mCurrentTurnIndex;
 		int mCurrentPlayerIndex;
-		Database* mDatabase;
+		Scenario* mScenario;
 		Camera* mCamera;
 		Status mStatus;
 		Players mPlayers;
@@ -203,9 +203,9 @@ namespace mage
 	}
 
 
-	inline Database* Game::GetDatabase() const
+	inline Scenario* Game::GetScenario() const
 	{
-		return mDatabase;
+		return mScenario;
 	}
 
 

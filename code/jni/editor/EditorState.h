@@ -2,11 +2,16 @@
 
 namespace mage
 {
+	class PaintTilesInputState;
+
 	class EditorState : public GameState
 	{
 	public:
 		EditorState();
 		virtual ~EditorState();
+
+		Map* GetMap();
+		const Map* GetMap() const;
 
 	private:
 		virtual void OnEnter( const Dictionary& parameters );
@@ -18,5 +23,12 @@ namespace mage
 		virtual bool OnPointerDown( float x, float y, size_t which );
 		virtual bool OnPointerUp( float x, float y, size_t which );
 		virtual bool OnPointerMotion( float x, float y, float dx, float dy, size_t which );
+
+		PaintTilesInputState* mPaintTilesInputState;
+
+		Camera mCamera;
+		World mWorld;
+		Scenario mScenario;
+		Map mMap;
 	};
 }
