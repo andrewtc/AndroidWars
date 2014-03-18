@@ -5,15 +5,17 @@
     <Font name="MainMenuFont" file="fonts/main_menu_font.fnt"/>
     
     <!-- Sprites used in UI -->
-    <Sprite file="ui/background.anim"/>
-    <Sprite file="ui/button.anim"/>
+    <Sprite file="ui/background.anim" />
+    <Sprite file="ui/button.anim" />
     <Sprite file="ui/box.anim" />
     <Sprite file="ui/wheel.anim" />
-    <Sprite file="ui/main_menu_bg.anim"/>
-    <Sprite file="ui/main_menu_scroll_bg.anim"/>
-    <Sprite file="ui/main_menu_button.anim"/>
-    <Sprite file="ui/main_menu_text_field.anim"/>
-    <Sprite file="ui/dashboard.anim"/>
+    <Sprite file="ui/main_menu_bg.anim" />
+    <Sprite file="ui/main_menu_scroll_bg.anim" />
+    <Sprite file="ui/main_menu_button.anim" />
+    <Sprite file="ui/main_menu_text_field.anim" />
+    <Sprite file="ui/dashboard.anim" />
+    <Sprite file="ui/tool_button.anim" />
+    <Sprite file="ui/tool_icon.anim" />
     
     <!-- Sounds used in UI -->
     <Sound file="sfx/super_mario_jump.wav" name="click.sfx"/>
@@ -34,5 +36,7 @@
 	<Template name="CaptureDialog"  file="ui/capture_dialog.xml"   />
 	<Template name="GameOverSplash" file="ui/game_end.xml"         />
 	<Template name="UnitDialog"     file="ui/unit_dialog.xml"      />
+	<Template name="ToolButton"     file="ui/tool_button.xml"      />
+    <Template name="ToolPalette"    file="ui/tool_palette.xml"     />
         
 </Theme>

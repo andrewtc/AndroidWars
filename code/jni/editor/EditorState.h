@@ -2,7 +2,8 @@
 
 namespace mage
 {
-	class PaintTilesInputState;
+	class BrushToolInputState;
+	class EraserToolInputState;
 
 	class EditorState : public GameState
 	{
@@ -12,6 +13,13 @@ namespace mage
 
 		Map* GetMap();
 		const Map* GetMap() const;
+
+		World* GetWorld();
+		const World* GetWorld() const;
+
+		Tile CreateTileTemplate( TerrainType* terrainType );
+		Tile CreateDefaultTileTemplate();
+		void PaintTileAt( float x, float y, const Tile& tile );
 
 	private:
 		virtual void OnEnter( const Dictionary& parameters );
@@ -24,7 +32,9 @@ namespace mage
 		virtual bool OnPointerUp( float x, float y, size_t which );
 		virtual bool OnPointerMotion( float x, float y, float dx, float dy, size_t which );
 
-		PaintTilesInputState* mPaintTilesInputState;
+		BrushToolInputState* mBrushToolInputState;
+		EraserToolInputState* mEraserToolInputState;
+		Widget* mToolPalette;
 
 		Camera mCamera;
 		World mWorld;

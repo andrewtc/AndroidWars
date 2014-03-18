@@ -19,7 +19,7 @@ namespace mage
 		Camera( float viewWidth, float viewHeight, const std::string& name );
 		virtual ~Camera();
 
-		void SetPositin( const Vec2f& pos );
+		void SetPosition( const Vec2f& pos );
 		void SetViewport( float width, float height );
 		void LookAt( const Vec2f& pos );
 		void LookAtClamp( Vec2f& pos );
@@ -37,6 +37,7 @@ namespace mage
 		float mZoom;
 		RectF mViewportRect;
 		RectF mWorldBounds;
+		RectF mLookAtBounds;
 		float mViewWidth, mViewHeight;
 	};
 

@@ -354,6 +354,20 @@ bool Map::IsValid() const
 }
 
 
+void Map::SetTile( const Vec2s& tilePos, const Tile& tile )
+{
+	Iterator iterator = GetTile( tilePos );
+	( *iterator ) = tile;
+}
+
+
+void Map::SetTile( short x, short y, const Tile& tile )
+{
+	Iterator iterator = GetTile( x, y );
+	( *iterator ) = tile;
+}
+
+
 Map::Iterator Map::GetTile( const Vec2s& tilePos )
 {
 	return Iterator( this, tilePos );

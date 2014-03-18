@@ -3,70 +3,131 @@
 using namespace mage;
 
 
-PaintTilesInputState::PaintTilesInputState( GameState* owner ) :
+BrushToolInputState::BrushToolInputState( GameState* owner ) :
 	DerivedInputState( owner ),
-	mSelectedTerrainType( nullptr )
+	mTileTemplate()
 { }
 
 
-PaintTilesInputState::~PaintTilesInputState() { }
+BrushToolInputState::~BrushToolInputState() { }
 
 
-void PaintTilesInputState::OnEnter( const Dictionary& parameters )
+void BrushToolInputState::OnEnter( const Dictionary& parameters )
 {
-	// Get the selected terrain type (if specified).
-	TerrainType* terrainType = nullptr;
-	Dictionary::DictionaryError error = parameters.Get( "selectedTerrainType", terrainType );
+	// Get the selected Tile template (if specified).
+	Tile tileTemplate;
+	Dictionary::DictionaryError error = parameters.Get( "tileTemplate", tileTemplate );
 
 	if( error == Dictionary::DErr_SUCCESS )
 	{
-		// Set the selected terrain type.
-		SetSelectedTerrainType( terrainType );
+		// Set the selected Tile template.
+		SetTileTemplate( tileTemplate );
 	}
 }
 
 
-void PaintTilesInputState::OnExit()
+void BrushToolInputState::OnExit()
 {
 }
 
 
-bool PaintTilesInputState::OnPointerDown( float x, float y, size_t which )
+bool BrushToolInputState::OnPointerDown( float x, float y, size_t which )
 {
-	return true;
+	return false; //InputState::OnPointerDown( x, y, which );
 }
 
 
-bool PaintTilesInputState::OnPointerMotion( float x, float y, float dx, float dy, size_t which )
+bool BrushToolInputState::OnPointerMotion( float x, float y, float dx, float dy, size_t which )
 {
-	PaintTile( x, y );
-	return true;
-}
+	bool wasHandled = false; //InputState::OnPointerMotion( x, y, dx, dy, which );
 
-
-bool PaintTilesInputState::OnPointerUp( float x, float y, size_t which )
-{
-	PaintTile( x, y );
-	return true;
-}
-
-
-void PaintTilesInputState::SetSelectedTerrainType( TerrainType* terrainType )
-{
-	mSelectedTerrainType = terrainType;
-}
-
-
-void PaintTilesInputState::PaintTile( float x, float y )
-{
-	// TODO: Universal tile to world conversion function.
-	Vec2s tilePos( x / World::TILE_WORLD_SCALE, y / World::TILE_WORLD_SCALE );
-
-	// Paint the Tile at the tile coordinates.
-	Map::Iterator iterator = GetOwnerDerived()->GetMap()->GetTile( tilePos );
-
-	if( iterator.IsValid() )
+	if( !wasHandled )
 	{
-		iterator->SetTerrainType( mSelectedTerrainType );
+		// Paint a tile.
+		GetOwnerDerived()->PaintTileAt( x, y, mTileTemplate );
+		wasHandled = true;
 	}
+
+	return wasHandled;
+}
+
+
+bool BrushToolInputState::OnPointerUp( float x, float y, size_t which )
+{
+	bool wasHandled = false; //InputState::OnPointerUp( x, y, which );
+
+	if( !wasHandled )
+	{
+		// Paint a tile.
+		GetOwnerDerived()->PaintTileAt( x, y, mTileTemplate );
+		wasHandled = true;
+	}
+
+	return wasHandled;
+}
+
+
+void BrushToolInputState::SetTileTemplate( const Tile& tile )
+{
+	// Set the terrain type of the template Tile.
+	mTileTemplate = tile;
+}
+
+
+EraserToolInputState::EraserToolInputState( GameState* owner ) :
+	DerivedInputState( owner ),
+	mTileTemplate()
+{ }
+
+
+EraserToolInputState::~EraserToolInputState() { }
+
+
+void EraserToolInputState::OnEnter( const Dictionary& parameters )
+{
+	EditorState* owner = GetOwnerDerived();
+
+	// Set the Tile template to the default tile for this Scenario.
+	mTileTemplate = owner->CreateDefaultTileTemplate();
+}
+
+
+void EraserToolInputState::OnExit()
+{
+}
+
+
+bool EraserToolInputState::OnPointerDown( float x, float y, size_t which )
+{
+	return false; //InputState::OnPointerDown( x, y, which );
+}
+
+
+bool EraserToolInputState::OnPointerMotion( float x, float y, float dx, float dy, size_t which )
+{
+	bool wasHandled = false; //InputState::OnPointerMotion( x, y, dx, dy, which );
+
+	if( !wasHandled )
+	{
+		// Paint a tile.
+		GetOwnerDerived()->PaintTileAt( x, y, mTileTemplate );
+		wasHandled = true;
+	}
+
+	return wasHandled;
+}
+
+
+bool EraserToolInputState::OnPointerUp( float x, float y, size_t which )
+{
+	bool wasHandled = false; //InputState::OnPointerUp( x, y, which );
+
+	if( !wasHandled )
+	{
+		// Paint a tile.
+		GetOwnerDerived()->PaintTileAt( x, y, mTileTemplate );
+		wasHandled = true;
+	}
+
+	return wasHandled;
 }

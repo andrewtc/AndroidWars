@@ -125,6 +125,8 @@ namespace mage
 		static bool IsValidSize( short x, short y );
 		bool IsValid() const;
 
+		void SetTile( const Vec2s& tilePos, const Tile& tile );
+		void SetTile( short x, short y, const Tile& tile );
 		Iterator GetTile( const Vec2s& tilePos );
 		Iterator GetTile( short x, short y );
 		ConstIterator GetTile( const Vec2s& tilePos ) const;

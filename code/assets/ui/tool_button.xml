@@ -1,0 +1,4 @@
+<Button size="80,80" >
+    <Graphic name="background" layer="-1" animationSet="tool_button.anim" />
+    <Graphic name="icon" animationSet="tool_icon.anim" initialAnimation="Brush" />
+</Button>

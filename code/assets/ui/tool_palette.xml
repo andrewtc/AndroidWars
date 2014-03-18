@@ -1,0 +1,4 @@
+<Widget name="toolPalette" position="20,20" >
+    <Include name="brushToolButton" template="ToolButton" position="0,0" />
+    <Include name="eraserToolButton" template="ToolButton" position="0,100" />
+</Widget>

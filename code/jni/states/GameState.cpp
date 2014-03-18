@@ -131,14 +131,17 @@ void GameState::OnScreenSizeChanged( int32 width, int32 height )
 
 bool GameState::OnPointerDown( float x, float y, size_t which )
 {
-	bool wasHandled = false;
+	bool wasHandled = gWidgetManager->PointerDown( x, y, which );
 
-	InputState* activeState = GetActiveState();
-
-	if( !gWidgetManager->PointerDown( x, y, which ) && activeState )
+	if( !wasHandled )
 	{
-		// Let the current InputState handle the event.
-		wasHandled = activeState->OnPointerDown( x, y, which );
+		InputState* activeState = GetActiveState();
+
+		if( activeState )
+		{
+			// Let the current InputState handle the event.
+			wasHandled = activeState->OnPointerDown( x, y, which );
+		}
 	}
 
 	return wasHandled;
@@ -147,14 +150,17 @@ bool GameState::OnPointerDown( float x, float y, size_t which )
 
 bool GameState::OnPointerUp( float x, float y, size_t which )
 {
-	bool wasHandled = false;
+	bool wasHandled = gWidgetManager->PointerUp( x, y, which );
 
-	InputState* activeState = GetActiveState();
-
-	if( !gWidgetManager->PointerUp( x, y, which ) && activeState )
+	if( !wasHandled )
 	{
-		// Let the current InputState handle the event.
-		wasHandled = activeState->OnPointerUp( x, y, which );
+		InputState* activeState = GetActiveState();
+
+		if( activeState )
+		{
+			// Let the current InputState handle the event.
+			wasHandled = activeState->OnPointerUp( x, y, which );
+		}
 	}
 
 	return wasHandled;
@@ -164,14 +170,17 @@ bool GameState::OnPointerUp( float x, float y, size_t which )
 bool GameState::OnPointerMotion( float x, float y, float dx, float dy, size_t which )
 {
 	// Let the Widget manager handle the event first.
-	bool wasHandled = false;
+	bool wasHandled = gWidgetManager->PointerMotion( x, y, dx, dy, which );
 
-	InputState* activeState = GetActiveState();
-
-	if( activeState )
+	if( !wasHandled )
 	{
-		// Let the current InputState handle the event.
-		wasHandled = activeState->OnPointerMotion( x, y, dx, dy, which );
+		InputState* activeState = GetActiveState();
+
+		if( activeState )
+		{
+			// Let the current InputState handle the event.
+			wasHandled = activeState->OnPointerMotion( x, y, dx, dy, which );
+		}
 	}
 
 	return wasHandled;

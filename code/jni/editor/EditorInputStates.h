@@ -2,10 +2,14 @@
 
 namespace mage
 {
-	class PaintTilesInputState : public DerivedInputState< EditorState >
+	class BrushToolInputState : public DerivedInputState< EditorState >
 	{
-		PaintTilesInputState( GameState* owner );
-		~PaintTilesInputState();
+	public:
+		void SetTileTemplate( const Tile& tile );
+
+	private:
+		BrushToolInputState( GameState* owner );
+		~BrushToolInputState();
 
 		virtual void OnEnter( const Dictionary& parameters );
 		virtual void OnExit();
@@ -14,11 +18,26 @@ namespace mage
 		virtual bool OnPointerMotion( float x, float y, float dx, float dy, size_t which );
 		virtual bool OnPointerUp( float x, float y, size_t which );
 
-		void SetSelectedTerrainType( TerrainType* terrainType );
+		Tile mTileTemplate;
 
-		void PaintTile( float x, float y );
+		friend class GameState;
+	};
 
-		TerrainType* mSelectedTerrainType;
+
+	class EraserToolInputState : public DerivedInputState< EditorState >
+	{
+	private:
+		EraserToolInputState( GameState* owner );
+		~EraserToolInputState();
+
+		virtual void OnEnter( const Dictionary& parameters );
+		virtual void OnExit();
+
+		virtual bool OnPointerDown( float x, float y, size_t which );
+		virtual bool OnPointerMotion( float x, float y, float dx, float dy, size_t which );
+		virtual bool OnPointerUp( float x, float y, size_t which );
+
+		Tile mTileTemplate;
 
 		friend class GameState;
 	};

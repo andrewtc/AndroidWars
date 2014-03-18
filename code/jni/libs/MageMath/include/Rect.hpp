@@ -22,13 +22,13 @@ Rect< TReal >::~Rect()
 template< typename TReal >
 inline TReal Rect< TReal >::CenterX() const
 {
-	return (TReal) ( ( Right - Left ) / 2.0 );
+	return (TReal) ( ( Right + Left ) / 2.0 );
 }
 //---------------------------------------
 template< typename TReal >
 inline TReal Rect< TReal >::CenterY() const
 {
-	return (TReal) ( ( Bottom - Top ) / 2.0 );
+	return (TReal) ( ( Bottom + Top ) / 2.0 );
 }
 //---------------------------------------
 template< typename TReal >
