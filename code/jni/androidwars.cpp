@@ -17,6 +17,29 @@ WidgetManager* gWidgetManager = nullptr;
 SoundManager* gSoundManager = nullptr;
 OnlineGameClient* gOnlineGameClient = nullptr;
 
+const float DEBUG_POINTER_DRAW_RADIUS = 40.0f;
+
+
+void DebugDrawPointers()
+{
+	// Get the list of pointers by ID.
+	const std::map< int, Pointer >& pointersByID = GetPointers();
+
+	for( auto it = pointersByID.begin(); it != pointersByID.end(); ++it )
+	{
+		const Pointer& pointer = it->second;
+
+		// Change the color of the Pointer debug drawing based on whether the pointer is moving.
+		Color drawColor = ( pointer.isMoving ? Color::RED : Color::WHITE );
+
+		// Draw a line from the Pointer to its original location.
+		DrawLine( pointer.startPosition.x, pointer.startPosition.y, pointer.position.x, pointer.position.y, 1.0f, drawColor );
+
+		// Draw a circle around the Pointer.
+		DrawCircle( pointer.position.x, pointer.position.y, DEBUG_POINTER_DRAW_RADIUS, drawColor );
+	}
+}
+
 
 void OnDraw()
 {
@@ -28,6 +51,8 @@ void OnDraw()
 		// Draw the game.
 		gGameStateManager->Draw();
 	}
+
+	DebugDrawPointers();
 
 	// Camera debug
 //	DrawRect( gCameraTarget.x - 5, gCameraTarget.y - 5, 10, 10, Color::PINK );

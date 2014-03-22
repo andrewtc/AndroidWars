@@ -27,8 +27,8 @@ namespace mage
 	static Clock* gMasterClock;
 
 	// Touch stuff
-	static const float POINTER_INITIAL_MOTION_TOLERANCE = 5.0f;
-	static const float POINTER_MOTION_TOLERANCE = 0.5f;
+	static const float POINTER_INITIAL_MOTION_TOLERANCE = 10.0f;
+	static const float POINTER_MOTION_TOLERANCE = 10.0f;
 	static const int INVALID_POINTER_ID = -1;
 	static int gActivePointerID = INVALID_POINTER_ID;
 	static bool gPointerMoved = false;
@@ -114,6 +114,9 @@ namespace mage
 			int events;
 			struct android_poll_source* source;
 
+			// Reset the velocity of each Pointer.
+			resetPointers();
+
 			while( (ident = ALooper_pollAll( 0, NULL, &events, (void**)&source ) ) >= 0 )
 			{
 				// Process this event.
@@ -129,9 +132,6 @@ namespace mage
 					return;
 				}
 			}
-
-			// Reset the velocity of each Pointer.
-			resetPointers();
 
 			// Only do stuff if not paused
 			if ( !gIsPaused )
@@ -344,9 +344,16 @@ namespace mage
 	{
 		for( auto it = gPointersByID.begin(); it != gPointersByID.end(); ++it )
 		{
-			// Update the last position of the Pointer.
 			Pointer& pointer = it->second;
-			pointer.lastPosition = pointer.position;
+
+			if( pointer.isMoving )
+			{
+				// If the Pointer was moving, update its last position.
+				pointer.lastPosition = pointer.position;
+			}
+
+			// Update the moving status of the Pointer.
+			pointer.isMoving = false;
 		}
 	}
 	//---------------------------------------
