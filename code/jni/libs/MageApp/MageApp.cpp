@@ -27,10 +27,12 @@ namespace mage
 	static Clock* gMasterClock;
 
 	// Touch stuff
+	static const float POINTER_INITIAL_MOTION_TOLERANCE = 5.0f;
+	static const float POINTER_MOTION_TOLERANCE = 0.5f;
 	static const int INVALID_POINTER_ID = -1;
-	static float gLastTouchX = 0;
-	static float gLastTouchY = 0;
-	static int gActivePointerId = INVALID_POINTER_ID;
+	static int gActivePointerID = INVALID_POINTER_ID;
+	static bool gPointerMoved = false;
+	static std::map< int, Pointer > gPointersByID;
 
 	static UpdateFn gUpdateFn = DefaultUpdateFn;
 	static RenderFn gRenderFn = DefaultRenderFn;
@@ -45,6 +47,14 @@ namespace mage
 	static OnFocusLostFn gOnFocusLostFn = 0;
 	static OnFocusGainedFn gOnFocusGainedFn = 0;
 	static OnVolumeChangedFn gOnVolumeChangedFn = 0;
+
+	static Vec2f getPointerPositionFromEvent( const AInputEvent* event, size_t pointerIndex );
+	static int getPointerIDFromEvent( const AInputEvent* event, size_t pointerIndex );
+	static void processPointerDown( const AInputEvent* event, size_t pointerIndex );
+	static void updatePointers( const AInputEvent* event );
+	static void resetPointers();
+	static Pointer& getPointerByID( int pointerID );
+	static void processPointerUp( const AInputEvent* event, size_t pointerIndex );
 
 	static void handleAppCmd( struct android_app* app, int32_t cmd );
 	static int32_t handleInputEvent( struct android_app* app, AInputEvent* event );
@@ -119,6 +129,9 @@ namespace mage
 					return;
 				}
 			}
+
+			// Reset the velocity of each Pointer.
+			resetPointers();
 
 			// Only do stuff if not paused
 			if ( !gIsPaused )
@@ -231,6 +244,155 @@ namespace mage
 	//---------------------------------------
 	// Input handling
 	//---------------------------------------
+	Pointer::Pointer() :
+		id( INVALID_POINTER_ID ),
+		hasMoved( false ),
+		isMoving( false )
+	{ }
+	//---------------------------------------
+	bool Pointer::IsActivePointer() const
+	{
+		return ( id == gActivePointerID );
+	}
+	//---------------------------------------
+	const std::map< int, Pointer >& GetPointers()
+	{
+		return gPointersByID;
+	}
+	//---------------------------------------
+	static Vec2f getPointerPositionFromEvent( const AInputEvent* event, size_t pointerIndex )
+	{
+		return Vec2f( AMotionEvent_getX( event, pointerIndex ),
+					  AMotionEvent_getY( event, pointerIndex ) );
+	}
+	//---------------------------------------
+	static int getPointerIDFromEvent( const AInputEvent* event, size_t pointerIndex )
+	{
+		return AMotionEvent_getPointerId( event, pointerIndex );
+	}
+	//---------------------------------------
+	static void processPointerDown( const AInputEvent* event, size_t pointerIndex )
+	{
+		// Keep track of the new pointer.
+		int pointerID = getPointerIDFromEvent( event, pointerIndex );
+		Pointer& pointer = gPointersByID[ pointerID ];
+
+		// Determine the initial Pointer position from the event.
+		Vec2f position = getPointerPositionFromEvent( event, pointerIndex );
+
+		pointer.id = pointerID;
+		pointer.startPosition = position;
+		pointer.lastPosition = position;
+		pointer.position = position;
+
+		if( gActivePointerID == INVALID_POINTER_ID )
+		{
+			// If this is the first pointer down, make this the primary pointer.
+			gActivePointerID = pointerID;
+		}
+
+		if( gOnPointerDown )
+		{
+			// Let the app handle the pointer down event.
+			gOnPointerDown( pointer );
+		}
+	}
+	//---------------------------------------
+	static void updatePointers( const AInputEvent* event )
+	{
+		// Get the number of pointers.
+		size_t pointerCount = AMotionEvent_getPointerCount( event );
+
+		for( size_t pointerIndex = 0; pointerIndex < pointerCount; ++pointerIndex )
+		{
+			// Fetch each Pointer.
+			int pointerID = getPointerIDFromEvent( event, pointerIndex );
+			Pointer& pointer = getPointerByID( pointerID );
+
+			// Determine how far the Pointer moved.
+			pointer.position = getPointerPositionFromEvent( event, pointerIndex );
+
+			if( !pointer.hasMoved )
+			{
+				// If the pointer has moved from its original location, mark that it has moved from its original position.
+				Vec2f initialDisplacement = ( pointer.position - pointer.startPosition );
+				pointer.hasMoved = ( initialDisplacement.LengthSqr() >= POINTER_INITIAL_MOTION_TOLERANCE );
+			}
+
+			if( pointer.hasMoved )
+			{
+				// Get the actual distance the Pointer travelled this frame.
+				Vec2f displacement = ( pointer.position - pointer.lastPosition );
+
+				if( displacement.LengthSqr() >= POINTER_MOTION_TOLERANCE )
+				{
+					// If the Pointer moved, mark that it moved.
+					gPointerMoved = true;
+					pointer.isMoving = true;
+				}
+			}
+		}
+
+		if( gPointerMoved && gOnPointerMotionFn )
+		{
+			// Let the app handle the move event.
+			gOnPointerMotionFn();
+		}
+	}
+	//---------------------------------------
+	static void resetPointers()
+	{
+		for( auto it = gPointersByID.begin(); it != gPointersByID.end(); ++it )
+		{
+			// Update the last position of the Pointer.
+			Pointer& pointer = it->second;
+			pointer.lastPosition = pointer.position;
+		}
+	}
+	//---------------------------------------
+	static Pointer& getPointerByID( int pointerID )
+	{
+		auto it = gPointersByID.find( pointerID );
+		assertion( it != gPointersByID.end(), "Could not find Pointer data for invalid ID %d!", pointerID );
+		return it->second;
+	}
+	//---------------------------------------
+	static void processPointerUp( const AInputEvent* event, size_t pointerIndex )
+	{
+		// Get the Pointer ID from its index.
+		int pointerID = getPointerIDFromEvent( event, pointerIndex );
+
+		// Look up the Pointer by its ID.
+		auto it = gPointersByID.find( pointerID );
+		assertion( it != gPointersByID.end(), "Could not remove Pointer data for invalid ID %d!", pointerID );
+		Pointer& pointer = it->second;
+
+		if( pointer.IsActivePointer() )
+		{
+			// If the Pointer being removed is the active one, choose a new active Pointer.
+			gActivePointerID = INVALID_POINTER_ID;
+
+			for( auto it = gPointersByID.begin(); it != gPointersByID.end(); ++it )
+			{
+				if( it->first != pointer.id )
+				{
+					// Choose the first available Pointer as the new active Pointer.
+					gActivePointerID = it->first;
+					break;
+				}
+			}
+		}
+
+		if( gOnPointerUp )
+		{
+			// Let the app handle the pointer up event.
+			gOnPointerUp( pointer );
+		}
+
+		// Remove the Pointer.
+		gPointersByID.erase( it );
+	}
+	//---------------------------------------
 	void handleAppCmd( struct android_app* app, int32_t cmd )
 	{
 		Engine* engine = (Engine*) app->userData;
@@ -330,11 +492,14 @@ namespace mage
 	//    LOGI("AMotionEvent_getTouchMinor=%f", AMotionEvent_getTouchMinor(pEvent, 0));
 
 		Engine* engine = (Engine*) app->userData;
+
 		int sourceId = AInputEvent_getSource( pEvent );
+		bool wasHandled = false;
+
 		if ( sourceId == AINPUT_SOURCE_TOUCHPAD )
 		{
 			// Gamepad or something
-			return 1;
+			wasHandled = true;
 		}
 		else if ( sourceId == AINPUT_SOURCE_TOUCHSCREEN )
 		{
@@ -343,70 +508,41 @@ namespace mage
 			{
 				const int action = AMotionEvent_getAction( pEvent );
 
-			//	DebugPrintf("AMotionEvent_getAction=%d", AMotionEvent_getAction(pEvent));
+				// Get the pointer index.
+				const size_t pointerIndex = ( action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK ) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
+
+				wasHandled = true;
+
 				switch ( action & AMOTION_EVENT_ACTION_MASK )
 				{
 					case AMOTION_EVENT_ACTION_DOWN:
-					{
-						// A single finger has touched the screen
-						//DebugPrintf( "Touch Down!" );
-						const size_t pointerIndex = 0;
-						const float x = AMotionEvent_getX( pEvent, pointerIndex );
-						const float y = AMotionEvent_getY( pEvent, pointerIndex );
+						processPointerDown( pEvent, pointerIndex );
+						break;
 
-						if ( gOnPointerDown )
-							gOnPointerDown( x, y, pointerIndex );
-
-						gLastTouchX = x;
-						gLastTouchY = y;
-						gActivePointerId = pointerIndex;
-
-						return 1;
-					}
-					case AMOTION_EVENT_ACTION_UP:
-					{
-						// The last finger has left the screen
-						//DebugPrintf( "Touch Up!" );
-						if ( gOnPointerUp )
-							gOnPointerUp( gLastTouchX, gLastTouchY, gActivePointerId );
-						gActivePointerId = INVALID_POINTER_ID;
-						return 1;
-					}
 					case AMOTION_EVENT_ACTION_POINTER_DOWN:
-					{
-			//			DebugPrintf( "Touch Pointer Down!" );
-						return 1;
-					}
+						processPointerDown( pEvent, pointerIndex );
+						break;
+
+					case AMOTION_EVENT_ACTION_UP:
+						processPointerUp( pEvent, pointerIndex );
+						break;
+
 					case AMOTION_EVENT_ACTION_POINTER_UP:
-					{
-			//			DebugPrintf( "Touch Pointer Up!" );
-						return 1;
-					}
+						processPointerUp( pEvent, pointerIndex );
+						break;
+
 					case AMOTION_EVENT_ACTION_MOVE:
-					{
-						// A finger or fingers have moved on the screen
-						const size_t pointerIndex = 0;
-						const float x = AMotionEvent_getX( pEvent, pointerIndex );
-						const float y = AMotionEvent_getY( pEvent, pointerIndex );
-
-						if ( gOnPointerMotionFn )
-						{
-							gOnPointerMotionFn( x, y, gLastTouchX - x, gLastTouchY - y, pointerIndex );
-						}
-
-						gLastTouchX = x;
-						gLastTouchY = y;
-						return 1;
-					}
+						updatePointers( pEvent );
+						break;
 
 					case AMOTION_EVENT_ACTION_CANCEL:
-					{
-			//			DebugPrintf( "Touch Cancel" );
-						return 1;
-					}
+						// TODO
+						break;
 
 					default:
-						return 0;
+						// Don't handle the event.
+						wasHandled = false;
+						break;
 				}
 			}
 
@@ -458,11 +594,13 @@ namespace mage
 					if ( gOnVolumeChangedFn )
 						gOnVolumeChangedFn( gEngine.volume );
 				}
-				return 0;
+
+				wasHandled = false;
 			}
 		}
+
 		// System event
-		return 0;
+		return wasHandled;
 	}
 	//---------------------------------------
 	void OnDraw()

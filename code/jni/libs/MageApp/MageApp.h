@@ -18,6 +18,21 @@
 
 namespace mage
 {
+	struct Pointer
+	{
+		Pointer();
+
+		bool IsActivePointer() const;
+
+		bool hasMoved;
+		bool isMoving;
+		int id;
+		Vec2f startPosition;
+		Vec2f lastPosition;
+		Vec2f position;
+	};
+
+	const std::map< int, Pointer >& GetPointers();
 
 	typedef void(*UpdateFn)( float );
 	typedef void(*RenderFn)( void );
@@ -26,9 +41,9 @@ namespace mage
 	typedef void(*OnDestroyFn)( void );
 	typedef void(*OnScreenSizeChangedFn)( int32 w, int32 h );
 	typedef void(*OnWindowShownFn)( void );
-	typedef void(*OnPointerDownFn)( float x, float y, size_t which );
-	typedef void(*OnPointerUpFn)( float x, float y, size_t which );
-	typedef void(*OnPointerMotionFn)( float x, float y, float dx, float dy, size_t which );
+	typedef void(*OnPointerDownFn)( const Pointer& pointer );
+	typedef void(*OnPointerUpFn)( const Pointer& pointer );
+	typedef void(*OnPointerMotionFn)();
 	typedef void(*OnFocusLostFn)( void );
 	typedef void(*OnFocusGainedFn)( void );
 	typedef void(*OnVolumeChangedFn)( float volume );
@@ -69,5 +84,4 @@ namespace mage
 	void RegisterOnFocusLostFn( OnFocusLostFn fn );
 	void RegisterOnFocusGainedFn( OnFocusGainedFn fn );
 	void RegisterOnVolumeChangedFn( OnVolumeChangedFn fn );
-
 }

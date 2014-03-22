@@ -96,32 +96,48 @@ void OnSaveStateRestore( const void* state )
 }
 
 
-void OnPointerDown( float x, float y, size_t which )
+void OnPointerDown( const Pointer& pointer )
 {
-	DebugPrintf( "Touch at %f %f\n", x, y );
+	DebugPrintf( "Pointer %d: Down at (%.3f,%.3f).", pointer.id, pointer.position.x, pointer.position.y );
 
 	if( gGameStateManager )
 	{
-		gGameStateManager->OnPointerDown( x, y, which );
+		// TODO: Update this.
+		gGameStateManager->OnPointerDown( pointer.position.x, pointer.position.y, pointer.id );
 	}
 }
 
-void OnPointerUp( float x, float y, size_t which )
+void OnPointerUp( const Pointer& pointer )
 {
+	DebugPrintf( "Pointer %d: Up at (%.3f,%.3f).", pointer.id, pointer.position.x, pointer.position.y );
+
 	if( gGameStateManager )
 	{
-		gGameStateManager->OnPointerUp( x, y, which );
+		// TODO: Update this.
+		gGameStateManager->OnPointerUp( pointer.position.x, pointer.position.y, pointer.id );
 	}
 }
 
 
-void OnPointerMotion( float x, float y, float dx, float dy, size_t which )
+void OnPointerMotion()
 {
-	// DebugPrintf( "Motion (%3.f %.3f) d(%3.f %.3f) ", x, y, dx, dy );
+	const std::map< int, Pointer >& pointersByID = GetPointers();
 
-	if( gGameStateManager )
+	for( auto it = pointersByID.begin(); it != pointersByID.end(); ++it )
 	{
-		gGameStateManager->OnPointerMotion( x, y, dx, dy, which );
+		const Pointer& pointer = it->second;
+
+		if( pointer.isMoving )
+		{
+			DebugPrintf( "Pointer %d: Motion from (%.3f,%.3f) to (%.3f,%.3f).", pointer.id, pointer.lastPosition.x, pointer.lastPosition.y, pointer.position.x, pointer.position.y );
+
+			if( gGameStateManager )
+			{
+				// TODO: Update this.
+				Vec2f displacement = ( pointer.position - pointer.lastPosition );
+				gGameStateManager->OnPointerMotion( pointer.position.x, pointer.position.y, displacement.x, displacement.y, pointer.id );
+			}
+		}
 	}
 }
 
