@@ -56,32 +56,32 @@ void GameStateManager::OnScreenSizeChanged( int32 w, int32 h )
 }
 
 
-void GameStateManager::OnPointerDown( float x, float y, size_t which )
+void GameStateManager::OnPointerDown( const Pointer& pointer )
 {
 	if( HasActiveState() )
 	{
 		// Pass the event to the active state (if any).
-		mActiveState->OnPointerDown( x, y, which );
+		mActiveState->OnPointerDown( pointer );
 	}
 }
 
 
-void GameStateManager::OnPointerUp( float x, float y, size_t which )
+void GameStateManager::OnPointerUp( const Pointer& pointer )
 {
 	if( HasActiveState() )
 	{
 		// Pass the event to the active state (if any).
-		mActiveState->OnPointerUp( x, y, which );
+		mActiveState->OnPointerUp( pointer );
 	}
 }
 
 
-void GameStateManager::OnPointerMotion( float x, float y, float dx, float dy, size_t which )
+void GameStateManager::OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID )
 {
 	if( HasActiveState() )
 	{
 		// Pass the event to the active state (if any).
-		mActiveState->OnPointerMotion( x, y, dx, dy, which );
+		mActiveState->OnPointerMotion( activePointer, pointersByID );
 	}
 }
 

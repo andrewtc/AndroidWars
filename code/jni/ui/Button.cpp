@@ -33,10 +33,10 @@ void Button::OnInit()
 	Widget::OnInit();
 }
 //---------------------------------------
-bool Button::OnPointerDown( float x, float y )
+bool Button::OnPointerDown( const Pointer& pointer )
 {
 	bool wasHandled = false;
-	Widget::OnPointerDown( x, y );
+	Widget::OnPointerDown( pointer );
 
 	if( mIsEnabled )
 	{
@@ -48,10 +48,10 @@ bool Button::OnPointerDown( float x, float y )
 	return wasHandled;
 }
 //---------------------------------------
-bool Button::OnPointerUp( float x, float y )
+bool Button::OnPointerUp( const Pointer& pointer )
 {
 	bool wasHandled = false;
-	Widget::OnPointerUp( x, y );
+	Widget::OnPointerUp( pointer );
 
 	if( mIsPressed )
 	{
@@ -63,7 +63,7 @@ bool Button::OnPointerUp( float x, float y )
 		if( mOnClick.IsValid() )
 		{
 			// Fire the click callback.
-			mOnClick.Invoke( x, y );
+			mOnClick.Invoke();
 		}
 	}
 

@@ -21,9 +21,9 @@ namespace mage
 		virtual void OnExit() = 0;
 
 		virtual void OnScreenSizeChanged( int32 width, int32 height ) { }
-		virtual bool OnPointerDown( float x, float y, size_t which ) { return false; }
-		virtual bool OnPointerUp( float x, float y, size_t which ) { return false; }
-		virtual bool OnPointerMotion( float x, float y, float dx, float dy, size_t which ) { return false; }
+		virtual bool OnPointerDown( const Pointer& pointer ) { return false; }
+		virtual bool OnPointerUp( const Pointer& pointer ) { return false; }
+		virtual bool OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID ) { return false; }
 
 	private:
 		void Enter( const Dictionary& parameters );

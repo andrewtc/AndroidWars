@@ -37,9 +37,9 @@ namespace mage
 
 		void Update( float elapsedTime );
 		void Draw( const Camera& camera );
-		bool PointerDown( float x, float y, size_t which );
-		bool PointerUp( float x, float y, size_t which );
-		bool PointerMotion( float x, float y, float dx, float dy, size_t which );
+		bool PointerDown( const Pointer& pointer );
+		bool PointerUp( const Pointer& pointer );
+		bool PointerMotion( const Pointer& activePointer, const PointersByID& pointersByID );
 
 		void LoadTheme( const char* file );
 		WidgetTemplate* CreateTemplate( const HashString& name );

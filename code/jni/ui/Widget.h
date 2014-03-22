@@ -45,8 +45,8 @@ namespace mage
 
 		virtual void OnUpdate( float elapsedTime );
 		virtual void OnDraw( const Camera& camera );
-		virtual bool OnPointerDown( float x, float y );
-		virtual bool OnPointerUp( float x, float y );
+		virtual bool OnPointerDown( const Pointer& pointer );
+		virtual bool OnPointerUp( const Pointer& pointer );
 
 	public:
 		static const HashString HORIZONTAL_ALIGN_LEFT_NAME;
@@ -80,8 +80,8 @@ namespace mage
 
 		void Update( float elapsedTime );
 		void Draw( const Camera& camera );
-		bool PointerDown( float x, float y );
-		bool PointerUp( float x, float y );
+		bool PointerDown( const Pointer& pointer );
+		bool PointerUp( const Pointer& pointer );
 
 		WidgetManager* GetManager() const;
 

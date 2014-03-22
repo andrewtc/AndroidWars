@@ -32,7 +32,7 @@ namespace mage
 	static const int INVALID_POINTER_ID = -1;
 	static int gActivePointerID = INVALID_POINTER_ID;
 	static bool gPointerMoved = false;
-	static std::map< int, Pointer > gPointersByID;
+	static PointersByID gPointersByID;
 
 	static UpdateFn gUpdateFn = DefaultUpdateFn;
 	static RenderFn gRenderFn = DefaultRenderFn;
@@ -255,9 +255,25 @@ namespace mage
 		return ( id == gActivePointerID );
 	}
 	//---------------------------------------
-	const std::map< int, Pointer >& GetPointers()
+	Vec2f Pointer::GetDisplacement() const
+	{
+		return ( position - lastPosition );
+	}
+	//---------------------------------------
+	const PointersByID& GetPointers()
 	{
 		return gPointersByID;
+	}
+	//---------------------------------------
+	const Pointer& GetActivePointer()
+	{
+		assertion( gActivePointerID >= 0, "Cannot get active Pointer because no active Pointer exists!" );
+		return getPointerByID( gActivePointerID );
+	}
+	//---------------------------------------
+	size_t GetPointerCount()
+	{
+		return gPointersByID.size();
 	}
 	//---------------------------------------
 	static Vec2f getPointerPositionFromEvent( const AInputEvent* event, size_t pointerIndex )
@@ -336,7 +352,7 @@ namespace mage
 		if( gPointerMoved && gOnPointerMotionFn )
 		{
 			// Let the app handle the move event.
-			gOnPointerMotionFn();
+			gOnPointerMotionFn( GetActivePointer(), gPointersByID );
 		}
 	}
 	//---------------------------------------

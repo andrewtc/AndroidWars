@@ -23,6 +23,7 @@ namespace mage
 		Pointer();
 
 		bool IsActivePointer() const;
+		Vec2f GetDisplacement() const;
 
 		bool hasMoved;
 		bool isMoving;
@@ -32,7 +33,11 @@ namespace mage
 		Vec2f position;
 	};
 
-	const std::map< int, Pointer >& GetPointers();
+	typedef std::map< int, Pointer > PointersByID;
+
+	const PointersByID& GetPointers();
+	const Pointer& GetActivePointer();
+	size_t GetPointerCount();
 
 	typedef void(*UpdateFn)( float );
 	typedef void(*RenderFn)( void );
@@ -43,7 +48,7 @@ namespace mage
 	typedef void(*OnWindowShownFn)( void );
 	typedef void(*OnPointerDownFn)( const Pointer& pointer );
 	typedef void(*OnPointerUpFn)( const Pointer& pointer );
-	typedef void(*OnPointerMotionFn)();
+	typedef void(*OnPointerMotionFn)( const Pointer& activePointer, const PointersByID& pointersByID );
 	typedef void(*OnFocusLostFn)( void );
 	typedef void(*OnFocusGainedFn)( void );
 	typedef void(*OnVolumeChangedFn)( float volume );

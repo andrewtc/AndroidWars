@@ -31,20 +31,20 @@ void BrushToolInputState::OnExit()
 }
 
 
-bool BrushToolInputState::OnPointerDown( float x, float y, size_t which )
+bool BrushToolInputState::OnPointerDown( const Pointer& pointer )
 {
-	return false; //InputState::OnPointerDown( x, y, which );
+	return false; //InputState::OnPointerDown( pointer );
 }
 
 
-bool BrushToolInputState::OnPointerMotion( float x, float y, float dx, float dy, size_t which )
+bool BrushToolInputState::OnPointerUp( const Pointer& pointer )
 {
-	bool wasHandled = false; //InputState::OnPointerMotion( x, y, dx, dy, which );
+	bool wasHandled = false; //InputState::OnPointerUp( pointer );
 
 	if( !wasHandled )
 	{
 		// Paint a tile.
-		GetOwnerDerived()->PaintTileAt( x, y, mTileTemplate );
+		GetOwnerDerived()->PaintTileAt( pointer.position.x, pointer.position.y, mTileTemplate );
 		wasHandled = true;
 	}
 
@@ -52,14 +52,14 @@ bool BrushToolInputState::OnPointerMotion( float x, float y, float dx, float dy,
 }
 
 
-bool BrushToolInputState::OnPointerUp( float x, float y, size_t which )
+bool BrushToolInputState::OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID )
 {
-	bool wasHandled = false; //InputState::OnPointerUp( x, y, which );
+	bool wasHandled = false; //InputState::OnPointerMotion( activePointer, pointersByID );
 
 	if( !wasHandled )
 	{
 		// Paint a tile.
-		GetOwnerDerived()->PaintTileAt( x, y, mTileTemplate );
+		GetOwnerDerived()->PaintTileAt( activePointer.position.x, activePointer.position.y, mTileTemplate );
 		wasHandled = true;
 	}
 
@@ -97,20 +97,20 @@ void EraserToolInputState::OnExit()
 }
 
 
-bool EraserToolInputState::OnPointerDown( float x, float y, size_t which )
+bool EraserToolInputState::OnPointerDown( const Pointer& pointer )
 {
-	return false; //InputState::OnPointerDown( x, y, which );
+	return false; //InputState::OnPointerDown( pointer );
 }
 
 
-bool EraserToolInputState::OnPointerMotion( float x, float y, float dx, float dy, size_t which )
+bool EraserToolInputState::OnPointerUp( const Pointer& pointer )
 {
-	bool wasHandled = false; //InputState::OnPointerMotion( x, y, dx, dy, which );
+	bool wasHandled = false; //InputState::OnPointerUp( pointer );
 
 	if( !wasHandled )
 	{
 		// Paint a tile.
-		GetOwnerDerived()->PaintTileAt( x, y, mTileTemplate );
+		GetOwnerDerived()->PaintTileAt( pointer.position.x, pointer.position.y, mTileTemplate );
 		wasHandled = true;
 	}
 
@@ -118,14 +118,14 @@ bool EraserToolInputState::OnPointerMotion( float x, float y, float dx, float dy
 }
 
 
-bool EraserToolInputState::OnPointerUp( float x, float y, size_t which )
+bool EraserToolInputState::OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID )
 {
-	bool wasHandled = false; //InputState::OnPointerUp( x, y, which );
+	bool wasHandled = false; //InputState::OnPointerMotion( activePointer, pointersByID );
 
 	if( !wasHandled )
 	{
 		// Paint a tile.
-		GetOwnerDerived()->PaintTileAt( x, y, mTileTemplate );
+		GetOwnerDerived()->PaintTileAt( activePointer.position.x, activePointer.position.y, mTileTemplate );
 		wasHandled = true;
 	}
 

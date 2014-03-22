@@ -109,26 +109,27 @@ void GameplayState::OnScreenSizeChanged( int32 w, int32 h )
 }
 
 
-bool GameplayState::OnPointerDown( float x, float y, size_t which )
+bool GameplayState::OnPointerDown( const Pointer& pointer )
 {
-	mWasMotion = false;
-	return GameState::OnPointerDown( x, y, which );
+	//mWasMotion = false;
+	return GameState::OnPointerDown( pointer );
 }
 
 
-bool GameplayState::OnPointerUp( float x, float y, size_t which )
+bool GameplayState::OnPointerUp( const Pointer& pointer )
 {
-	if( mGame && mGame->IsInProgress() && !mWasMotion )
+	/*if( mGame && mGame->IsInProgress() && !mWasMotion )
 	{
 		mGame->OnTouchEvent( x, y );
 	}
-	mWasMotion = false;
+	mWasMotion = false;*/
+	return true;
 }
 
 
-bool GameplayState::OnPointerMotion( float x, float y, float dx, float dy, size_t which )
+bool GameplayState::OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID )
 {
-	mCameraVelocity.Set( dx, dy );
+	/*mCameraVelocity.Set( dx, dy );
 
 	Vec2f d( dx, dy );
 
@@ -136,7 +137,8 @@ bool GameplayState::OnPointerMotion( float x, float y, float dx, float dy, size_
 	if( d.LengthSqr() > 5 )
 	{
 		mWasMotion = true;
-	}
+	}*/
+	return true;
 }
 
 

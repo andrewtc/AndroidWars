@@ -20,6 +20,8 @@ namespace mage
 		virtual ~Camera();
 
 		void SetPosition( const Vec2f& pos );
+		void Translate( const Vec2f& translation );
+		void TranslateLookAt( const Vec2f& translation );
 		void SetViewport( float width, float height );
 		void LookAt( const Vec2f& pos );
 		void LookAtClamp( Vec2f& pos );

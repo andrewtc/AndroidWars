@@ -8,7 +8,8 @@ EditorState::EditorState() :
 	mWorld( &mMap ),
 	mBrushToolInputState( nullptr ),
 	mEraserToolInputState( nullptr ),
-	mToolPalette( nullptr )
+	mToolPalette( nullptr ),
+	mIsTranslatingCamera( false )
 { }
 
 
@@ -114,18 +115,20 @@ void EditorState::OnEnter( const Dictionary& parameters )
 
 	if( brushToolButton )
 	{
-		brushToolButton->SetOnClickDelegate( [ this ]( float x, float y )
+		brushToolButton->SetOnClickDelegate( [ this ]()
 		{
 			// Switch to the brush tool.
+			DebugPrintf( "Switching to brush tool." );
 			ChangeState( mBrushToolInputState );
 		});
 	}
 
 	if( eraserToolButton )
 	{
-		eraserToolButton->SetOnClickDelegate( [ this ]( float x, float y )
+		eraserToolButton->SetOnClickDelegate( [ this ]()
 		{
 			// Switch to the eraser tool.
+			DebugPrintf( "Switching to eraser tool." );
 			ChangeState( mEraserToolInputState );
 		});
 	}
@@ -184,19 +187,53 @@ void EditorState::OnScreenSizeChanged( int32 width, int32 height )
 }
 
 
-bool EditorState::OnPointerDown( float x, float y, size_t which )
+bool EditorState::OnPointerDown( const Pointer& pointer )
 {
-	return GameState::OnPointerDown( x, y, which );
+	if( GetPointerCount() > 1 )
+	{
+		// Start translating the Camera if multi-touch.
+		mIsTranslatingCamera = true;
+	}
+
+	return GameState::OnPointerDown( pointer );
 }
 
 
-bool EditorState::OnPointerUp( float x, float y, size_t which )
+bool EditorState::OnPointerUp( const Pointer& pointer )
 {
-	return GameState::OnPointerUp( x, y, which );
+	bool wasHandled = false;
+
+	if( GetPointerCount() == 1 )
+	{
+		// If the last pointer is being removed, stop panning the camera.
+		mIsTranslatingCamera = false;
+	}
+
+	if( !mIsTranslatingCamera )
+	{
+		// Let the state handle the event.
+		wasHandled = GameState::OnPointerUp( pointer );
+	}
+
+	return wasHandled;
 }
 
 
-bool EditorState::OnPointerMotion( float x, float y, float dx, float dy, size_t which )
+bool EditorState::OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID )
 {
-	return GameState::OnPointerMotion( x, y, dx, dy, which );
+	bool wasHandled = false;
+
+	if( mIsTranslatingCamera && activePointer.isMoving )
+	{
+		// If multiple pointers are down, pan the Camera.
+		mWorld.GetCamera()->TranslateLookAt( -activePointer.GetDisplacement() );
+		wasHandled = true;
+	}
+	else
+	{
+		// Otherwise, let the active state handle the event.
+		wasHandled = GameState::OnPointerMotion( activePointer, pointersByID );
+	}
+
+	return wasHandled;
 }

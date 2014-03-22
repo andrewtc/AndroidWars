@@ -57,9 +57,6 @@ void World::Draw()
 				tileSprite->OnDraw( mCamera );
 			}
 		}
-
-		// Debug draw.
-		DrawRectOutline( worldPos.x, worldPos.y, TILE_WORLD_SCALE, TILE_WORLD_SCALE, Color::WHITE, 1.0f );
 	});
 }
 

@@ -20,9 +20,9 @@ namespace mage
 		virtual void OnExit();
 
 		virtual void OnScreenSizeChanged( int32 w, int32 h );
-		virtual bool OnPointerDown( float x, float y, size_t which );
-		virtual bool OnPointerUp( float x, float y, size_t which );
-		virtual bool OnPointerMotion( float x, float y, float dx, float dy, size_t which );
+		virtual bool OnPointerDown( const Pointer& pointer );
+		virtual bool OnPointerUp( const Pointer& pointer );
+		virtual bool OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID );
 
 		bool mWasMotion;
 		Game* mGame;

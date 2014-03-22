@@ -103,43 +103,43 @@ void WidgetManager::Draw( const Camera& camera )
 	mRootWidget->Draw( camera );
 }
 //---------------------------------------
-bool WidgetManager::PointerDown( float x, float y, size_t which )
+bool WidgetManager::PointerDown( const Pointer& pointer )
 {
 	bool wasHandled = false;
 
-	for( Widget* widget = FindWidgetUnderPointer( x, y );
+	for( Widget* widget = FindWidgetUnderPointer( pointer.position.x, pointer.position.y );
 		 widget != nullptr && widget != mRootWidget && wasHandled == false;
 		 widget = widget->GetParent() )
 	{
 		// If a widget was found under the pointer, let the topmost widget process the event.
 		// If the widget didn't handle the event, let each ancestor process the event until
 		// the event is handled or the last ancestor is reached.
-		wasHandled = widget->PointerDown( x, y );
+		wasHandled = widget->PointerDown( pointer );
 	}
 
 	return wasHandled;
 }
 //---------------------------------------
-bool WidgetManager::PointerUp( float x, float y, size_t which )
+bool WidgetManager::PointerUp( const Pointer& pointer )
 {
 	bool wasHandled = false;
 
-	for( Widget* widget = FindWidgetUnderPointer( x, y );
+	for( Widget* widget = FindWidgetUnderPointer( pointer.position.x, pointer.position.y );
 		 widget != nullptr && widget != mRootWidget && wasHandled == false;
 		 widget = widget->GetParent() )
 	{
 		// If a widget was found under the pointer, let the topmost widget process the event.
 		// If the widget didn't handle the event, let each ancestor process the event until
 		// the event is handled or the last ancestor is reached.
-		wasHandled = widget->PointerUp( x, y );
+		wasHandled = widget->PointerUp( pointer );
 	}
 
 	return wasHandled;
 }
 //---------------------------------------
-bool WidgetManager::PointerMotion( float x, float y, float dx, float dy, size_t which )
+bool WidgetManager::PointerMotion( const Pointer& activePointer, const PointersByID& pointersByID )
 {
-	//TODO return mRootWidget->OnPointerMotion( x, y, dx, dy );
+	//TODO return mRootWidget->OnPointerMotion( activePointer, pointersByID );
 	return false;
 }
 //---------------------------------------

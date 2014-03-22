@@ -129,9 +129,9 @@ void GameState::OnScreenSizeChanged( int32 width, int32 height )
 };
 
 
-bool GameState::OnPointerDown( float x, float y, size_t which )
+bool GameState::OnPointerDown( const Pointer& pointer )
 {
-	bool wasHandled = gWidgetManager->PointerDown( x, y, which );
+	bool wasHandled = gWidgetManager->PointerDown( pointer );
 
 	if( !wasHandled )
 	{
@@ -140,7 +140,7 @@ bool GameState::OnPointerDown( float x, float y, size_t which )
 		if( activeState )
 		{
 			// Let the current InputState handle the event.
-			wasHandled = activeState->OnPointerDown( x, y, which );
+			wasHandled = activeState->OnPointerDown( pointer );
 		}
 	}
 
@@ -148,9 +148,9 @@ bool GameState::OnPointerDown( float x, float y, size_t which )
 };
 
 
-bool GameState::OnPointerUp( float x, float y, size_t which )
+bool GameState::OnPointerUp( const Pointer& pointer )
 {
-	bool wasHandled = gWidgetManager->PointerUp( x, y, which );
+	bool wasHandled = gWidgetManager->PointerUp( pointer );
 
 	if( !wasHandled )
 	{
@@ -159,7 +159,7 @@ bool GameState::OnPointerUp( float x, float y, size_t which )
 		if( activeState )
 		{
 			// Let the current InputState handle the event.
-			wasHandled = activeState->OnPointerUp( x, y, which );
+			wasHandled = activeState->OnPointerUp( pointer );
 		}
 	}
 
@@ -167,10 +167,10 @@ bool GameState::OnPointerUp( float x, float y, size_t which )
 };
 
 
-bool GameState::OnPointerMotion( float x, float y, float dx, float dy, size_t which )
+bool GameState::OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID )
 {
 	// Let the Widget manager handle the event first.
-	bool wasHandled = gWidgetManager->PointerMotion( x, y, dx, dy, which );
+	bool wasHandled = gWidgetManager->PointerMotion( activePointer, pointersByID );
 
 	if( !wasHandled )
 	{
@@ -179,7 +179,7 @@ bool GameState::OnPointerMotion( float x, float y, float dx, float dy, size_t wh
 		if( activeState )
 		{
 			// Let the current InputState handle the event.
-			wasHandled = activeState->OnPointerMotion( x, y, dx, dy, which );
+			wasHandled = activeState->OnPointerMotion( activePointer, pointersByID );
 		}
 	}
 

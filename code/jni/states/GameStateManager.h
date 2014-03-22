@@ -22,9 +22,9 @@ namespace mage
 		void Draw();
 
 		void OnScreenSizeChanged( int32 w, int32 h );
-		void OnPointerDown( float x, float y, size_t which );
-		void OnPointerUp( float x, float y, size_t which );
-		void OnPointerMotion( float x, float y, float dx, float dy, size_t which );
+		void OnPointerDown( const Pointer& pointer );
+		void OnPointerUp( const Pointer& pointer );
+		void OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID );
 
 		GameState* GetActiveState() const;
 		bool HasActiveState() const;

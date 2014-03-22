@@ -33,8 +33,18 @@ Camera::~Camera()
 void Camera::SetPosition( const Vec2f& pos )
 {
 	mPosition = pos;
-	mViewportRect.Left = pos.x;
-	mViewportRect.Top = pos.y;
+	mViewportRect.Left = mPosition.x;
+	mViewportRect.Top = mPosition.y;
+}
+//---------------------------------------
+void Camera::Translate( const Vec2f& translation )
+{
+	SetPosition( mPosition + translation );
+}
+//---------------------------------------
+void Camera::TranslateLookAt( const Vec2f& translation )
+{
+	LookAt( mPosition + Vec2f( 0.5f * mViewWidth, 0.5f * mViewHeight ) + translation );
 }
 //---------------------------------------
 void Camera::SetViewport( float width, float height )
@@ -57,7 +67,7 @@ void Camera::LookAt( const Vec2f& pos )
 	DebugPrintf( "Clamped look-at position: (%.3f,%.3f)", topLeft.x, topLeft.y );
 
 	// Set the new position of the Camera.
-	mPosition.Set( topLeft.x, topLeft.y );
+	SetPosition( topLeft );
 }
 //---------------------------------------
 void Camera::LookAtClamp( Vec2f& pos )

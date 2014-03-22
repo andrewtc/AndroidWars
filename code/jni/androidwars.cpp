@@ -127,8 +127,8 @@ void OnPointerDown( const Pointer& pointer )
 
 	if( gGameStateManager )
 	{
-		// TODO: Update this.
-		gGameStateManager->OnPointerDown( pointer.position.x, pointer.position.y, pointer.id );
+		// Pass the input event to the GameStateManager.
+		gGameStateManager->OnPointerDown( pointer );
 	}
 }
 
@@ -138,31 +138,24 @@ void OnPointerUp( const Pointer& pointer )
 
 	if( gGameStateManager )
 	{
-		// TODO: Update this.
-		gGameStateManager->OnPointerUp( pointer.position.x, pointer.position.y, pointer.id );
+		// Pass the input event to the GameStateManager.
+		gGameStateManager->OnPointerUp( pointer );
 	}
 }
 
 
-void OnPointerMotion()
+void OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID )
 {
-	const std::map< int, Pointer >& pointersByID = GetPointers();
-
 	for( auto it = pointersByID.begin(); it != pointersByID.end(); ++it )
 	{
 		const Pointer& pointer = it->second;
+		DebugPrintf( "Pointer %d: Motion from (%.3f,%.3f) to (%.3f,%.3f).", pointer.id, pointer.lastPosition.x, pointer.lastPosition.y, pointer.position.x, pointer.position.y );
+	}
 
-		if( pointer.isMoving )
-		{
-			DebugPrintf( "Pointer %d: Motion from (%.3f,%.3f) to (%.3f,%.3f).", pointer.id, pointer.lastPosition.x, pointer.lastPosition.y, pointer.position.x, pointer.position.y );
-
-			if( gGameStateManager )
-			{
-				// TODO: Update this.
-				Vec2f displacement = ( pointer.position - pointer.lastPosition );
-				gGameStateManager->OnPointerMotion( pointer.position.x, pointer.position.y, displacement.x, displacement.y, pointer.id );
-			}
-		}
+	if( gGameStateManager )
+	{
+		// Pass the input event to the GameStateManager.
+		gGameStateManager->OnPointerMotion( activePointer, pointersByID );
 	}
 }
 

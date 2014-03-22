@@ -16,7 +16,7 @@ namespace mage
 		DECLARE_RTTI;
 
 	public:
-		typedef Callback< void, float, float > OnClickDelegate;
+		typedef Callback< void > OnClickDelegate;
 
 		Button( WidgetManager* manager, const HashString& name );
 
@@ -42,8 +42,8 @@ namespace mage
 		virtual void OnLoadFromTemplate( const WidgetTemplate& widgetTemplate );
 		virtual void OnInit();
 
-		virtual bool OnPointerDown( float x, float y );
-		virtual bool OnPointerUp( float x, float y );
+		virtual bool OnPointerDown( const Pointer& pointer );
+		virtual bool OnPointerUp( const Pointer& pointer );
 
 	private:
 		bool mIsEnabled;

@@ -164,24 +164,24 @@ void Widget::OnDraw( const Camera& camera )
 	}
 }
 //---------------------------------------
-bool Widget::PointerDown( float x, float y )
+bool Widget::PointerDown( const Pointer& pointer )
 {
 	DebugPrintf( "Firing PointerDown event for \"%s\".", GetFullName().c_str() );
-	return OnPointerDown( x, y );
+	return OnPointerDown( pointer );
 }
 //---------------------------------------
-bool Widget::OnPointerDown( float x, float y )
+bool Widget::OnPointerDown( const Pointer& pointer )
 {
 	return false;
 }
 //---------------------------------------
-bool Widget::PointerUp( float x, float y )
+bool Widget::PointerUp( const Pointer& pointer )
 {
 	DebugPrintf( "Firing PointerUp event for \"%s\".", GetFullName().c_str() );
-	return OnPointerUp( x, y );
+	return OnPointerUp( pointer );
 }
 //---------------------------------------
-bool Widget::OnPointerUp( float x, float y )
+bool Widget::OnPointerUp( const Pointer& pointer )
 {
 	return false;
 }

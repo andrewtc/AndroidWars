@@ -163,7 +163,7 @@ void LogInInputState::OnEnter( const Dictionary& parameters )
 		if( loginButton )
 		{
 			// Register callbacks.
-			loginButton->SetOnClickDelegate( [this]( float x, float y )
+			loginButton->SetOnClickDelegate( [this]()
 			{
 				OnLogInButtonPressed();
 			});
@@ -303,7 +303,7 @@ void DashboardInputState::OnEnter( const Dictionary& parameters )
 
 		if( logOutButton )
 		{
-			logOutButton->SetOnClickDelegate( [this]( float x, float y )
+			logOutButton->SetOnClickDelegate( [this]()
 			{
 				OnLogOutButtonPressed();
 			});
@@ -311,7 +311,7 @@ void DashboardInputState::OnEnter( const Dictionary& parameters )
 
 		if( refreshButton )
 		{
-			refreshButton->SetOnClickDelegate( [this]( float x, float y )
+			refreshButton->SetOnClickDelegate( [this]()
 			{
 				OnRefreshButtonPressed();
 			});
@@ -319,7 +319,7 @@ void DashboardInputState::OnEnter( const Dictionary& parameters )
 
 		if( newGameButton )
 		{
-			newGameButton->SetOnClickDelegate( [this]( float x, float y )
+			newGameButton->SetOnClickDelegate( [this]()
 			{
 				OnNewGameButtonPressed();
 			});
@@ -444,7 +444,7 @@ void DashboardInputState::SetGamesList( const std::vector< OnlineGameListData >&
 				std::string gameID = it->id;
 
 				// Set the callback for each list item.
-				listItem->SetOnClickDelegate( [this, gameID]( float x, float y )
+				listItem->SetOnClickDelegate( [this, gameID]()
 				{
 					MainMenuState* owner = GetOwnerDerived();
 
