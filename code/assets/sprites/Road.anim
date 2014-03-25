@@ -36,4 +36,24 @@
       <spr name="/Road_EastNorth" x="0" y="-16" z="0"/>
     </cell>
   </anim>
+  <anim name="EastNorthSouth" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Road_EastNorthSouth" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
+  <anim name="EastNorthWest" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Road_EastNorthWest" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
+  <anim name="NorthWestSouth" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Road_NorthWestSouth" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
+  <anim name="EastWestSouth" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Road_EastWestSouth" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
 </animations>

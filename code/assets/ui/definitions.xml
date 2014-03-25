@@ -16,6 +16,7 @@
     <Sprite file="ui/dashboard.anim" />
     <Sprite file="ui/tool_button.anim" />
     <Sprite file="ui/tool_icon.anim" />
+    <Sprite file="ui/tile_selector.anim" />
     
     <!-- Sounds used in UI -->
     <Sound file="sfx/super_mario_jump.wav" name="click.sfx"/>
@@ -38,5 +39,7 @@
 	<Template name="UnitDialog"     file="ui/unit_dialog.xml"      />
 	<Template name="ToolButton"     file="ui/tool_button.xml"      />
     <Template name="ToolPalette"    file="ui/tool_palette.xml"     />
+    <Template name="TileSelector"   file="ui/tile_selector.xml"    />
+    <Template name="TilePalette"    file="ui/tile_palette.xml"     />
         
 </Theme>

@@ -43,52 +43,60 @@ namespace mage
 	};
 
 
+#define MAGE_MAP_BASIC_ITERATOR_TEMPLATE \
+	template< class IteratorType, class MapType, class TileType >
+
+#define MAGE_MAP_BASIC_ITERATOR \
+	Map::BasicIterator< IteratorType, MapType, TileType >
+
+
 	/**
 	 * Holds information about each tile on the map and allows tile data to be manipulated.
 	 */
 	class Map
 	{
-	public:
-		class ConstIterator
+	private:
+		MAGE_MAP_BASIC_ITERATOR_TEMPLATE
+		class BasicIterator
 		{
 		public:
-			ConstIterator( const Map* map );
-			ConstIterator( const Map* map, const Vec2s& tilePos );
-			ConstIterator( const Map* map, short x, short y );
-			~ConstIterator();
+			BasicIterator( MapType* map, const Vec2s& tilePos = Vec2s( -1, -1 ) );
+			~BasicIterator();
 
-			ConstIterator GetAdjacent( CardinalDirection direction ) const;
+			IteratorType GetAdjacent( CardinalDirection direction ) const;
 
-			const Tile& operator*() const;
-			const Tile* operator->() const;
+			TileType& operator*() const;
+			TileType* operator->() const;
+
+			void operator+=( const Vec2s& tileOffset );
+			void operator-=( const Vec2s& tileOffset );
+
+			IteratorType operator+( const Vec2s& tileOffset ) const;
+			IteratorType operator-( const Vec2s& tileOffset ) const;
 
 			Vec2s GetTilePos() const;
 			bool IsValid() const;
 
 		private:
-			const Map* mMap;
+			MapType* mMap;
 			Vec2s mTilePos;
 		};
 
-		class Iterator
+	public:
+		class ConstIterator : public BasicIterator< ConstIterator, const Map, const Tile >
 		{
 		public:
-			Iterator( Map* map );
-			Iterator( Map* map, const Vec2s& tilePos );
-			Iterator( Map* map, short x, short y );
-			~Iterator();
+			ConstIterator( const Map* map ) : BasicIterator( map ) { };
+			ConstIterator( const Map* map, const Vec2s& tilePos ) : BasicIterator( map, tilePos ) { };
+			ConstIterator( const Map* map, short x, short y ) : BasicIterator( map, Vec2s( x, y ) ) { };
+		};
 
-			Iterator GetAdjacent( CardinalDirection direction ) const;
-
-			Tile& operator*() const;
-			Tile* operator->() const;
-
-			Vec2s GetTilePos() const;
-			bool IsValid() const;
-
-		private:
-			Map* mMap;
-			Vec2s mTilePos;
+		class Iterator : public BasicIterator< Iterator, Map, Tile >
+		{
+		public:
+			Iterator( Map* map ) : BasicIterator( map ) { };
+			Iterator( Map* map, const Vec2s& tilePos ) : BasicIterator( map, tilePos ) { };
+			Iterator( Map* map, short x, short y ) : BasicIterator( map, Vec2s( x, y ) ) { };
 		};
 
 		static const short MAX_SIZE_EXPONENT = 10;
@@ -165,4 +173,79 @@ namespace mage
 		std::vector< Unit* > mUnits;
 		Tile mTiles[ MAX_TILES ];
 	};
+
+
+	MAGE_MAP_BASIC_ITERATOR_TEMPLATE
+	MAGE_MAP_BASIC_ITERATOR::BasicIterator( MapType* map, const Vec2s& tilePos ) :
+		mMap( map ), mTilePos( tilePos )
+	{
+		assertion( mMap, "Cannot create Map iterator without a Map reference!" );
+	}
+
+
+	MAGE_MAP_BASIC_ITERATOR_TEMPLATE
+	MAGE_MAP_BASIC_ITERATOR::~BasicIterator() { }
+
+
+	MAGE_MAP_BASIC_ITERATOR_TEMPLATE
+	IteratorType MAGE_MAP_BASIC_ITERATOR::GetAdjacent( CardinalDirection direction ) const
+	{
+		return IteratorType( mMap, GetAdjacentTilePos( mTilePos, direction ) );
+	}
+
+
+	MAGE_MAP_BASIC_ITERATOR_TEMPLATE
+	TileType& MAGE_MAP_BASIC_ITERATOR::operator*() const
+	{
+		return mMap->mTiles[ mMap->GetTileIndex( mTilePos ) ];
+	}
+
+
+	MAGE_MAP_BASIC_ITERATOR_TEMPLATE
+	TileType* MAGE_MAP_BASIC_ITERATOR::operator->() const
+	{
+		return &( operator*() );
+	}
+
+
+	MAGE_MAP_BASIC_ITERATOR_TEMPLATE
+	void MAGE_MAP_BASIC_ITERATOR::operator+=( const Vec2s& tileOffset )
+	{
+		mTilePos += tileOffset;
+	}
+
+
+	MAGE_MAP_BASIC_ITERATOR_TEMPLATE
+	void MAGE_MAP_BASIC_ITERATOR::operator-=( const Vec2s& tileOffset )
+	{
+		mTilePos -= tileOffset;
+	}
+
+
+	MAGE_MAP_BASIC_ITERATOR_TEMPLATE
+	IteratorType MAGE_MAP_BASIC_ITERATOR::operator+( const Vec2s& tileOffset ) const
+	{
+		return IteratorType( mMap, mTilePos + tileOffset );
+	}
+
+
+	MAGE_MAP_BASIC_ITERATOR_TEMPLATE
+	IteratorType MAGE_MAP_BASIC_ITERATOR::operator-( const Vec2s& tileOffset ) const
+	{
+		return IteratorType( mMap, mTilePos - tileOffset );
+	}
+
+
+	MAGE_MAP_BASIC_ITERATOR_TEMPLATE
+	Vec2s MAGE_MAP_BASIC_ITERATOR::GetTilePos() const
+	{
+		return mTilePos;
+	}
+
+
+	MAGE_MAP_BASIC_ITERATOR_TEMPLATE
+	bool MAGE_MAP_BASIC_ITERATOR::IsValid() const
+	{
+		return ( mMap->IsValidTilePos( mTilePos ) && ( *this )->HasTerrainType() );
+	}
 }

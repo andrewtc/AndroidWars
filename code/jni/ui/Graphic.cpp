@@ -169,7 +169,7 @@ void Graphic::SetSprite( const HashString& animationSetName, const HashString& i
 	}
 	else
 	{
-		WarnFail( "Failed to create widget sprite '%s'\n", animationSetName.GetString().c_str() );
+		WarnFail( "Failed to create sprite \"%s\" for Graphic \"%s\"!", animationSetName.GetString().c_str(), GetFullName().c_str() );
 	}
 }
 
@@ -187,6 +187,12 @@ void Graphic::ClearSprite()
 Sprite* Graphic::GetSprite() const
 {
 	return mSprite;
+}
+
+
+bool Graphic::HasSprite() const
+{
+	return ( mSprite != nullptr );
 }
 
 
@@ -230,11 +236,12 @@ Vec2f Graphic::GetDrawOffset() const
 
 void Graphic::UpdateSprite()
 {
-	assertion( mSprite, "Cannot update Sprite for Graphic \"%s\" because it does not have a valid Sprite!", GetName().GetCString() );
+	if( mSprite )
+	{
+		// If the sprite should scale to fit, set the fixed size property.
+		mSprite->FixedSize = ( mDrawMode == DRAW_MODE_SCALE );
 
-	// If the sprite should scale to fit, set the fixed size property.
-	mSprite->FixedSize = ( mDrawMode == DRAW_MODE_SCALE );
-
-	// Set the draw color of the Sprite.
-	mSprite->DrawColor = mDrawColor;
+		// Set the draw color of the Sprite.
+		mSprite->DrawColor = mDrawColor;
+	}
 }

@@ -9,7 +9,8 @@ EditorState::EditorState() :
 	mBrushToolInputState( nullptr ),
 	mEraserToolInputState( nullptr ),
 	mToolPalette( nullptr ),
-	mIsTranslatingCamera( false )
+	mTilePalette( nullptr ),
+	mIsPanningCamera( false )
 { }
 
 
@@ -75,6 +76,12 @@ void EditorState::PaintTileAt( float x, float y, const Tile& tile )
 }
 
 
+ListLayout* EditorState::GetTilePalette() const
+{
+	return mTilePalette;
+}
+
+
 void EditorState::OnEnter( const Dictionary& parameters )
 {
 	// Create the database.
@@ -106,8 +113,24 @@ void EditorState::OnEnter( const Dictionary& parameters )
 
 	// Create the tool palette Widget and show it.
 	mToolPalette = gWidgetManager->CreateWidgetFromTemplate( "ToolPalette" );
-	gWidgetManager->GetRootWidget()->AddChild( mToolPalette );
-	mToolPalette->Show();
+
+	if( mToolPalette )
+	{
+		gWidgetManager->GetRootWidget()->AddChild( mToolPalette );
+		mToolPalette->Show();
+	}
+
+	// Create the tile palette Widget and hide it.
+	mTilePalette = gWidgetManager->CreateWidgetFromTemplate< ListLayout >( "TilePalette" );
+
+	if( mTilePalette )
+	{
+		gWidgetManager->GetRootWidget()->AddChild( mTilePalette );
+		mTilePalette->Hide();
+
+		// Add all tile type selectors to the palette.
+		BuildTilePalette();
+	}
 
 	// Bind callbacks for tool palette buttons.
 	Button* brushToolButton = mToolPalette->GetChildByName< Button >( "brushToolButton" );
@@ -135,17 +158,12 @@ void EditorState::OnEnter( const Dictionary& parameters )
 
 	// Create input states.
 	mBrushToolInputState = CreateState< BrushToolInputState >();
-	TerrainType* cityTerrainType = mScenario.TerrainTypes.FindByName( "City" );
-	mBrushToolInputState->SetTileTemplate( CreateTileTemplate( cityTerrainType ) );
+	mBrushToolInputState->SetTileTemplate( CreateDefaultTileTemplate() );
 
 	mEraserToolInputState = CreateState< EraserToolInputState >();
 
 	// Allow the user to paint tiles.
-
-	Dictionary dictionary;
-	dictionary.Set( "tileTemplate", CreateTileTemplate( cityTerrainType ) );
-
-	ChangeState( mBrushToolInputState, dictionary );
+	ChangeState( mBrushToolInputState );
 }
 
 
@@ -192,7 +210,7 @@ bool EditorState::OnPointerDown( const Pointer& pointer )
 	if( GetPointerCount() > 1 )
 	{
 		// Start translating the Camera if multi-touch.
-		mIsTranslatingCamera = true;
+		mIsPanningCamera = true;
 	}
 
 	return GameState::OnPointerDown( pointer );
@@ -203,15 +221,17 @@ bool EditorState::OnPointerUp( const Pointer& pointer )
 {
 	bool wasHandled = false;
 
-	if( GetPointerCount() == 1 )
+	if( mIsPanningCamera )
 	{
-		// If the last pointer is being removed, stop panning the camera.
-		mIsTranslatingCamera = false;
+		if( GetPointerCount() == 1 )
+		{
+			// If the last pointer is being removed, stop panning the camera.
+			mIsPanningCamera = false;
+		}
 	}
-
-	if( !mIsTranslatingCamera )
+	else
 	{
-		// Let the state handle the event.
+		// Otherwise, let the state handle the event.
 		wasHandled = GameState::OnPointerUp( pointer );
 	}
 
@@ -223,11 +243,14 @@ bool EditorState::OnPointerMotion( const Pointer& activePointer, const PointersB
 {
 	bool wasHandled = false;
 
-	if( mIsTranslatingCamera && activePointer.isMoving )
+	if( mIsPanningCamera )
 	{
-		// If multiple pointers are down, pan the Camera.
-		mWorld.GetCamera()->TranslateLookAt( -activePointer.GetDisplacement() );
-		wasHandled = true;
+		if( activePointer.isMoving )
+		{
+			// If multiple pointers are down, pan the Camera.
+			mWorld.GetCamera()->TranslateLookAt( -activePointer.GetDisplacement() );
+			wasHandled = true;
+		}
 	}
 	else
 	{
@@ -236,4 +259,57 @@ bool EditorState::OnPointerMotion( const Pointer& activePointer, const PointersB
 	}
 
 	return wasHandled;
+}
+
+
+void EditorState::BuildTilePalette()
+{
+	if( mTilePalette )
+	{
+		// Clear all items in the tile palette.
+		mTilePalette->DestroyAllItems();
+
+		// Get the WidgetTemplate for the tile selector.
+		WidgetTemplate* tileSelectorTemplate = gWidgetManager->GetTemplate( "TileSelector" );
+
+		if( tileSelectorTemplate )
+		{
+			const TerrainTypesTable::RecordsByHashedName& terrainTypes = mScenario.TerrainTypes.GetRecords();
+			for( auto it = terrainTypes.begin(); it != terrainTypes.end(); ++it )
+			{
+				// Add a button for each TerrainType in the Scenario.
+				TerrainType* terrainType = it->second;
+				Button* selector = mTilePalette->CreateItem< Button >( *tileSelectorTemplate );
+
+				if( selector )
+				{
+					// Get the icon for this selector.
+					Graphic* icon = selector->GetChildByName< Graphic >( "icon" );
+
+					if( icon )
+					{
+						// Use the TerrainType sprite as the image for the selector.
+						icon->SetSprite( terrainType->GetAnimationSetName(), "Idle" );
+					}
+					else
+					{
+						WarnFail( "Could not set icon for tile selector button \"%s\" because no \"icon\" Graphic was found!", selector->GetFullName().c_str() );
+					}
+
+					selector->SetOnClickDelegate( [ this, terrainType ]()
+					{
+						// Build a template tile.
+						Tile tile = CreateTileTemplate( terrainType );
+
+						// Change the selected tile type.
+						mBrushToolInputState->SetTileTemplate( tile );
+					});
+				}
+			}
+		}
+		else
+		{
+			WarnFail( "Could not build tile palette because no tile selector template was found!" );
+		}
+	}
 }

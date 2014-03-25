@@ -30,13 +30,13 @@ void DebugDrawPointers()
 		const Pointer& pointer = it->second;
 
 		// Change the color of the Pointer debug drawing based on whether the pointer is moving.
-		Color drawColor = ( pointer.isMoving ? Color::RED : Color::WHITE );
+		Color drawColor = ( pointer.hasMoved ? ( pointer.isMoving ? Color::RED : Color::CYAN ) : Color::WHITE );
 
 		// Draw a line from the Pointer to its original location.
-		DrawLine( pointer.startPosition.x, pointer.startPosition.y, pointer.position.x, pointer.position.y, 1.0f, drawColor );
+		//DrawLine( pointer.startPosition.x, pointer.startPosition.y, pointer.position.x, pointer.position.y, 1.0f, drawColor );
 
 		// Draw a circle around the Pointer.
-		DrawCircle( pointer.position.x, pointer.position.y, DEBUG_POINTER_DRAW_RADIUS, drawColor );
+		DrawCircle( pointer.position.x, pointer.position.y, DEBUG_POINTER_DRAW_RADIUS, drawColor, 2.0f );
 	}
 }
 
@@ -123,7 +123,7 @@ void OnSaveStateRestore( const void* state )
 
 void OnPointerDown( const Pointer& pointer )
 {
-	DebugPrintf( "Pointer %d: Down at (%.3f,%.3f).", pointer.id, pointer.position.x, pointer.position.y );
+	//DebugPrintf( "Pointer %d: Down at (%.3f,%.3f).", pointer.id, pointer.position.x, pointer.position.y );
 
 	if( gGameStateManager )
 	{
@@ -134,7 +134,7 @@ void OnPointerDown( const Pointer& pointer )
 
 void OnPointerUp( const Pointer& pointer )
 {
-	DebugPrintf( "Pointer %d: Up at (%.3f,%.3f).", pointer.id, pointer.position.x, pointer.position.y );
+	//DebugPrintf( "Pointer %d: Up at (%.3f,%.3f).", pointer.id, pointer.position.x, pointer.position.y );
 
 	if( gGameStateManager )
 	{
@@ -149,7 +149,7 @@ void OnPointerMotion( const Pointer& activePointer, const PointersByID& pointers
 	for( auto it = pointersByID.begin(); it != pointersByID.end(); ++it )
 	{
 		const Pointer& pointer = it->second;
-		DebugPrintf( "Pointer %d: Motion from (%.3f,%.3f) to (%.3f,%.3f).", pointer.id, pointer.lastPosition.x, pointer.lastPosition.y, pointer.position.x, pointer.position.y );
+		//DebugPrintf( "Pointer %d: Motion from (%.3f,%.3f) to (%.3f,%.3f).", pointer.id, pointer.lastPosition.x, pointer.lastPosition.y, pointer.position.x, pointer.position.y );
 	}
 
 	if( gGameStateManager )

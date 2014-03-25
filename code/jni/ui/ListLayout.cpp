@@ -5,12 +5,38 @@ using namespace mage;
 
 MAGE_IMPLEMENT_RTTI( Widget, ListLayout );
 
+const char* const ListLayout::DIRECTION_HORIZONTAL_NAME = "horizontal";
+const char* const ListLayout::DIRECTION_VERTICAL_NAME   = "vertical";
+
 const std::string ListLayout::ITEM_PREFIX = "item";
+
+
+ListLayout::Direction ListLayout::GetDirectionByName( const HashString& name )
+{
+	// Use a vertical layout, by default.
+	Direction direction = DIRECTION_VERTICAL;
+
+	if( name == DIRECTION_HORIZONTAL_NAME )
+	{
+		direction = DIRECTION_HORIZONTAL;
+	}
+	else if( name == DIRECTION_VERTICAL_NAME )
+	{
+		direction = DIRECTION_VERTICAL;
+	}
+	else
+	{
+		WarnFail( "Invalid ListLayout direction name \"%s\"!", name.GetCString() );
+	}
+
+	return direction;
+}
 
 
 ListLayout::ListLayout( WidgetManager* manager, const HashString& name ) :
 	Widget( manager, name ),
-	mNextItemID( 0 )
+	mNextItemID( 0 ),
+	mDirection( DIRECTION_VERTICAL )
 { }
 
 
@@ -114,6 +140,17 @@ size_t ListLayout::GetItemCount() const
 }
 
 
+void ListLayout::OnLoadFromTemplate( const WidgetTemplate& widgetTemplate )
+{
+	// Allow the Widget to load itself.
+	Widget::OnLoadFromTemplate( widgetTemplate );
+
+	// Load the direction for the layout.
+	HashString directionName = widgetTemplate.GetProperty( "direction", "vertical", false );
+	mDirection = GetDirectionByName( directionName );
+}
+
+
 void ListLayout::OnDraw( const Camera& camera )
 {
 	// Update the list item positions.
@@ -144,8 +181,16 @@ void ListLayout::UpdateListItems()
 			// Reposition the item.
 			item->SetOffset( nextListItemOffset );
 
-			// Add the height of the item to the next position.
-			nextListItemOffset.y += item->GetHeight();
+			if( mDirection == DIRECTION_HORIZONTAL )
+			{
+				// Add the width of the item to the next position.
+				nextListItemOffset.x += item->GetWidth();
+			}
+			else if( mDirection == DIRECTION_VERTICAL )
+			{
+				// Add the height of the item to the next position.
+				nextListItemOffset.y += item->GetHeight();
+			}
 		}
 	}
 }

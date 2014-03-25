@@ -10,8 +10,19 @@ namespace mage
 		DECLARE_RTTI;
 
 	public:
+		static const char* const DIRECTION_HORIZONTAL_NAME;
+		static const char* const DIRECTION_VERTICAL_NAME;
+
+		enum Direction
+		{
+			DIRECTION_HORIZONTAL,
+			DIRECTION_VERTICAL
+		};
+
+		static Direction GetDirectionByName( const HashString& name );
+
 		ListLayout( WidgetManager* manager, const HashString& name );
-		~ListLayout();
+		virtual ~ListLayout();
 
 		template< class WidgetSubclass = Widget >
 		WidgetSubclass* CreateItem( const WidgetTemplate& widgetTemplate );
@@ -29,6 +40,7 @@ namespace mage
 	protected:
 		static const std::string ITEM_PREFIX;
 
+		virtual void OnLoadFromTemplate( const WidgetTemplate& widgetTemplate );
 		virtual void OnDraw( const Camera& camera );
 
 		void InvalidateListItems();
@@ -42,6 +54,7 @@ namespace mage
 
 		bool mNeedsListUpdate;
 		size_t mNextItemID;
+		Direction mDirection;
 		std::vector< HashString > mItems;
 	};
 

@@ -123,7 +123,7 @@ namespace mage
 	template< class WidgetSubclass >
 	WidgetSubclass* WidgetManager::CreateWidgetFromTemplate( const HashString& templateName )
 	{
-		return WidgetManager::CreateWidgetFromTemplate( templateName, HashString() );
+		return WidgetManager::CreateWidgetFromTemplate< WidgetSubclass >( templateName, HashString() );
 	}
 	//---------------------------------------
 	template< class WidgetSubclass >

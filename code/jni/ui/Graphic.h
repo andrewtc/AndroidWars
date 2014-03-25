@@ -27,6 +27,7 @@ namespace mage
 		void SetSprite( const HashString& animationSetName, const HashString& initialAnimationName );
 		void ClearSprite();
 		Sprite* GetSprite() const;
+		bool HasSprite() const;
 
 		void SetDrawColor( const Color& color );
 		Color GetDrawColor() const;

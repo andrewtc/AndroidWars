@@ -27,6 +27,8 @@ namespace mage
 		static const char* const TABLE_NAME;
 		static const char* const RECORD_NAME;
 
+		typedef HashMap< RecordType* > RecordsByHashedName;
+
 		/**
 		 * Abstract base class for basic Record type that can be indexed by a unique name.
 		 */
@@ -63,6 +65,7 @@ namespace mage
 		RecordType* CreateRecord( const HashString& name );
 		void AddRecord( RecordType* record );
 		void DeleteAllRecords();
+		const RecordsByHashedName& GetRecords() const;
 
 		RecordType* FindByName( const HashString& name );
 		const RecordType* FindByName( const HashString& name ) const;
@@ -76,8 +79,6 @@ namespace mage
 
 		virtual void OnLoadRecordFromXml( RecordType* record, XmlReader::XmlReaderIterator elementIterator ) = 0;
 		virtual void OnLoadRecordFromJSON( RecordType* record, const rapidjson::Value& object ) = 0;
-
-		typedef HashMap< RecordType* > RecordsByHashedName;
 
 		Scenario* mDatabase;
 		RecordsByHashedName mRecords;
@@ -228,6 +229,13 @@ namespace mage
 
 		// Clear the list of records.
 		mRecords.clear();
+	}
+
+
+	MAGE_TABLE_TEMPLATE
+	const typename MAGE_TABLE::RecordsByHashedName& MAGE_TABLE::GetRecords() const
+	{
+		return mRecords;
 	}
 
 

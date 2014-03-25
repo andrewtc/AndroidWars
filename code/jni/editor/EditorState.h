@@ -21,6 +21,8 @@ namespace mage
 		Tile CreateDefaultTileTemplate();
 		void PaintTileAt( float x, float y, const Tile& tile );
 
+		ListLayout* GetTilePalette() const;
+
 	private:
 		virtual void OnEnter( const Dictionary& parameters );
 		virtual void OnUpdate( float elapsedTime );
@@ -32,11 +34,14 @@ namespace mage
 		virtual bool OnPointerUp( const Pointer& pointer );
 		virtual bool OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID );
 
-		bool mIsTranslatingCamera;
+		void BuildTilePalette();
+
+		bool mIsPanningCamera;
 
 		BrushToolInputState* mBrushToolInputState;
 		EraserToolInputState* mEraserToolInputState;
 		Widget* mToolPalette;
+		ListLayout* mTilePalette;
 
 		Camera mCamera;
 		World mWorld;

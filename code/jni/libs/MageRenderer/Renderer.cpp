@@ -557,7 +557,7 @@ void DrawPolygonOutlined( float* points, size_t nPoints, unsigned int color, flo
 	DrawPolyLine( points, nPoints, outlineWidth, outlineColor, true );
 }
 
-void DrawCircle( float cx, float cy, float r, const mage::Color& color )
+void DrawCircle( float cx, float cy, float r, const mage::Color& color, float lineWidth )
 {
 	const int segments = 20;
 	const float inc = Mathf::TWO_PI / segments;
@@ -572,10 +572,10 @@ void DrawCircle( float cx, float cy, float r, const mage::Color& color )
 		polyLine.push_back( px );
 		polyLine.push_back( py );
 	}
-	DrawPolyLine( &polyLine[0], polyLine.size() / 2, 1.0f, color.bgra, true );
+	DrawPolyLine( &polyLine[0], polyLine.size() / 2, lineWidth, color.bgra, true );
 }
 
-void DrawPartialCircle( float cx, float cy, float r, float minAngle, float maxAngle, const mage::Color& color )
+void DrawPartialCircle( float cx, float cy, float r, float minAngle, float maxAngle, const mage::Color& color, float lineWidth )
 {
 	const int segments = 20;
 	const float inc = maxAngle / segments;
@@ -590,7 +590,7 @@ void DrawPartialCircle( float cx, float cy, float r, float minAngle, float maxAn
 		polyLine.push_back( px );
 		polyLine.push_back( py );
 	}
-	DrawPolyLine( &polyLine[0], polyLine.size() / 2, 1.0f, color.bgra, true );
+	DrawPolyLine( &polyLine[0], polyLine.size() / 2, lineWidth, color.bgra, true );
 }
 
 void DrawText( float x, float y, mage::BitmapFont* bmpFont, const mage::Color& color, float scale, int maxLineLength, const char* text )

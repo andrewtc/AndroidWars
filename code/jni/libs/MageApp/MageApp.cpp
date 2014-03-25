@@ -358,6 +358,9 @@ namespace mage
 	//---------------------------------------
 	static void resetPointers()
 	{
+		// Mark that no pointers have moved yet this frame.
+		gPointerMoved = false;
+
 		for( auto it = gPointersByID.begin(); it != gPointersByID.end(); ++it )
 		{
 			Pointer& pointer = it->second;

@@ -64,8 +64,8 @@ namespace mage
 	void DrawPolygon( float* points, size_t nPoints, unsigned int color );
 	void DrawPolygonOutlined( float* points, size_t nPoints, unsigned int color, float outlineWidth, unsigned int outlineColor );
 
-	void DrawCircle( float cx, float cy, float r, const mage::Color& color );
-	void DrawPartialCircle( float cx, float cy, float r, float minAngle, float maxAngle, const mage::Color& color );
+	void DrawCircle( float cx, float cy, float r, const mage::Color& color, float lineWidth = 1.0f );
+	void DrawPartialCircle( float cx, float cy, float r, float minAngle, float maxAngle, const mage::Color& color, float lineWidth = 1.0f );
 
 	// Draw text
 	void DrawText( float x, float y, mage::BitmapFont* bmpFont, const mage::Color& color, float scale, int maxLineLength, const char* text );

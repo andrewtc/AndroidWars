@@ -1,0 +1,12 @@
+<Button size="100,100">
+    <Graphic
+        name="background"
+        layer="-1"
+        animationSet="tile_selector.anim"
+        />
+    <Graphic
+        name="icon"
+        drawMode="clip"
+        position="18,18"
+        />
+</Button>

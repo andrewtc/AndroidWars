@@ -14,6 +14,8 @@ BrushToolInputState::~BrushToolInputState() { }
 
 void BrushToolInputState::OnEnter( const Dictionary& parameters )
 {
+	EditorState* owner = GetOwnerDerived();
+
 	// Get the selected Tile template (if specified).
 	Tile tileTemplate;
 	Dictionary::DictionaryError error = parameters.Get( "tileTemplate", tileTemplate );
@@ -23,11 +25,18 @@ void BrushToolInputState::OnEnter( const Dictionary& parameters )
 		// Set the selected Tile template.
 		SetTileTemplate( tileTemplate );
 	}
+
+	// Show the tile palette.
+	owner->GetTilePalette()->Show();
 }
 
 
 void BrushToolInputState::OnExit()
 {
+	EditorState* owner = GetOwnerDerived();
+
+	// Hide the tile palette.
+	owner->GetTilePalette()->Hide();
 }
 
 
@@ -41,7 +50,7 @@ bool BrushToolInputState::OnPointerUp( const Pointer& pointer )
 {
 	bool wasHandled = false; //InputState::OnPointerUp( pointer );
 
-	if( !wasHandled )
+	if( !wasHandled && !pointer.hasMoved )
 	{
 		// Paint a tile.
 		GetOwnerDerived()->PaintTileAt( pointer.position.x, pointer.position.y, mTileTemplate );
@@ -55,6 +64,7 @@ bool BrushToolInputState::OnPointerUp( const Pointer& pointer )
 bool BrushToolInputState::OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID )
 {
 	bool wasHandled = false; //InputState::OnPointerMotion( activePointer, pointersByID );
+	EditorState* owner = GetOwnerDerived();
 
 	if( !wasHandled )
 	{
