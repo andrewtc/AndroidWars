@@ -118,9 +118,9 @@ namespace mage
 		template< class WidgetSubclass = Widget >
 		void FindDescendants( std::vector< WidgetSubclass* >& results );
 		template< class WidgetSubclass = Widget >
-		void FindChildrenMatching( Callback< bool, WidgetSubclass* > test, std::vector< WidgetSubclass* >& results );
+		void FindChildrenMatching( Delegate< bool, WidgetSubclass* > test, std::vector< WidgetSubclass* >& results );
 		template< class WidgetSubclass = Widget >
-		void FindDescendantsMatching( Callback< bool, WidgetSubclass* > test, std::vector< WidgetSubclass* >& results );
+		void FindDescendantsMatching( Delegate< bool, WidgetSubclass* > test, std::vector< WidgetSubclass* >& results );
 		template< class WidgetSubclass = Widget >
 		void FindChildrenAt( float x, float y, std::vector< WidgetSubclass* >& results );
 		template< class WidgetSubclass = Widget >
@@ -252,7 +252,7 @@ namespace mage
 	}
 	//---------------------------------------
 	template< class WidgetSubclass >
-	void Widget::FindChildrenMatching( Callback< bool, WidgetSubclass* > test, std::vector< WidgetSubclass* >& results )
+	void Widget::FindChildrenMatching( Delegate< bool, WidgetSubclass* > test, std::vector< WidgetSubclass* >& results )
 	{
 		assertion( test.IsValid(), "Cannot query children of Widget \"%s\" because no valid callback function was supplied!", mName.GetCString() );
 
@@ -279,7 +279,7 @@ namespace mage
 	}
 	//---------------------------------------
 	template< class WidgetSubclass >
-	void Widget::FindDescendantsMatching( Callback< bool, WidgetSubclass* > test, std::vector< WidgetSubclass* >& results )
+	void Widget::FindDescendantsMatching( Delegate< bool, WidgetSubclass* > test, std::vector< WidgetSubclass* >& results )
 	{
 		assertion( test.IsValid(), "Cannot query descendants of Widget \"%s\" because no valid callback function was supplied!", mName.GetCString() );
 

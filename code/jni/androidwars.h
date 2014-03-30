@@ -23,10 +23,13 @@ extern mage::OnlineGameClient* gOnlineGameClient;
 extern mage::int32 gWindowWidth;
 extern mage::int32 gWindowHeight;
 
+const size_t MAP_SIZE_POWER_OF_TWO = 10;
+
 #include <MageApp.h>
 
 #include "util/JNI.h"
-#include "util/Callback.h"
+#include "util/Delegate.h"
+#include "util/Grid.h"
 
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/document.h"
@@ -65,6 +68,7 @@ extern mage::int32 gWindowHeight;
 #include "data/Scenario.h"
 
 #include "game/Map.h"
+#include "game/TileSprite.h"
 #include "game/World.h"
 #include "game/GameplayState.h"
 #include "game/Player.h"

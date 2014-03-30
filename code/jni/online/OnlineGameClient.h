@@ -1,7 +1,5 @@
 #pragma once
 
-#include "util/Callback.h"
-
 
 namespace mage
 {
@@ -36,22 +34,22 @@ namespace mage
 	/**
 	 * Accepts any function or lambda with the signature: void (*)( const OnlineRequestResult& result )
 	 */
-	typedef Callback< void, const OnlineRequestResult& > OnlineRequestCallback;
+	typedef Delegate< void, const OnlineRequestResult& > OnlineRequestCallback;
 
 	/**
 	 * Accepts any function or lambda with the signature: void (*)( bool success )
 	 */
-	typedef Callback< void, bool > OnlineLoginCallback;
+	typedef Delegate< void, bool > OnlineLoginCallback;
 
 	/**
 	 * Accepts any function or lambda with the signature: void (*)( bool success, const std::vector< OnlineGameListData >& onlineGameList )
 	 */
-	typedef Callback< void, bool, const std::vector< OnlineGameListData >& > OnlineGameListCallback;
+	typedef Delegate< void, bool, const std::vector< OnlineGameListData >& > OnlineGameListCallback;
 
 	/**
 	 * Accepts any function or lambda with the signature: void (*)( bool success, OnlineGameData )
 	 */
-	typedef Callback< void, bool, OnlineGameData > OnlineGameCallback;
+	typedef Delegate< void, bool, OnlineGameData > OnlineGameCallback;
 
 	/**
 	 * Holds a single parameter to send with a GET request.

@@ -44,8 +44,8 @@ namespace mage
 		ListLayout* mTilePalette;
 
 		Camera mCamera;
-		World mWorld;
 		Scenario mScenario;
 		Map mMap;
+		World mWorld;
 	};
 }

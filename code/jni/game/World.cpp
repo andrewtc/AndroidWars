@@ -8,55 +8,76 @@ const float World::INVERSE_TILE_WORLD_SCALE = ( 1.0f / TILE_WORLD_SCALE );
 const float World::MAP_BORDER_SCALE = ( TILE_WORLD_SCALE * 5.0f );
 
 
-World::World( Map* map ) :
-	mMap( map ),
+World::World() :
+	mMap( nullptr ),
 	mCamera( gWindowWidth, gWindowHeight )
-{
-
-}
+{ }
 
 
 World::~World()
 {
+	if( IsInitialized() )
+	{
+		Destroy();
+	}
+}
 
+
+void World::Init( Map* map )
+{
+	assertion( !IsInitialized(), "Cannot initialize World that has already been initialized!" );
+
+	// Set the Map.
+	mMap = map;
+	assertion( mMap, "Cannot create World without a valid Map!" );
+
+	// Resize to fill the whole tile buffer (for initialization).
+	// TODO: Allow this without resizing.
+	mTileSprites.ForEachTileInMaxArea( [this]( const TileSpritesGrid::Iterator& tileSprite )
+	{
+		// Initialize all TileSprites.
+		tileSprite->Init( this, tileSprite.GetTilePos() );
+	});
+
+	// Create initial tile sprites.
+	MapResized( Vec2s::ZERO, mMap->GetSize() );
+
+	// Listen for when the Map is resized.
+	mMap->OnResize.AddCallback( this, &World::MapResized );
+
+	// Listen for when the Map is changed.
+	mMap->OnTileChanged.AddCallback( this, &World::TileChanged );
+}
+
+
+void World::Destroy()
+{
+	assertion( !IsInitialized(), "Cannot destroy World that is not initialized!" );
+
+	// Remove the resize callback.
+	mMap->OnResize.RemoveCallback( this, &World::MapResized );
+
+	// Reset the Map reference.
+	mMap = nullptr;
 }
 
 
 void World::Update( float elapsedTime )
 {
-	for( auto it = mTileSpritesByName.begin(); it != mTileSpritesByName.end(); ++it )
+	mTileSprites.ForEachTile( [ this, elapsedTime ]( const TileSpritesGrid::Iterator& tileSprite )
 	{
-		// Update all sprites.
-		it->second->OnUpdate( elapsedTime );
-	}
+		// Update the TileSprite that represents this Tile.
+		tileSprite->Update( elapsedTime );
+	});
 }
 
 
 void World::Draw()
 {
-	mMap->ForEachTile( [ this ]( const Map::Iterator& tile )
+	mTileSprites.ForEachTile( [ this ]( const TileSpritesGrid::Iterator& tileSprite )
 	{
-		// Get the tile position.
-		Vec2s tilePos = tile.GetTilePos();
-
-		// Calculate the world position of the tile.
-		Vec2f worldPos = ( tilePos * TILE_WORLD_SCALE );
-
-		// Draw the tile.
-		TerrainType* terrainType = tile->GetTerrainType();
-
-		if( terrainType )
-		{
-			// Look up the Sprite for this TerrainType (if it exists).
-			Sprite* tileSprite = CreateOrGetSprite( terrainType->GetAnimationSetName() );
-
-			if( tileSprite )
-			{
-				// Draw the Sprite for the tile.
-				tileSprite->Position = worldPos;
-				tileSprite->OnDraw( mCamera );
-			}
-		}
+		// Draw the TileSprite that represents this Tile.
+		tileSprite->Draw();
 	});
 }
 
@@ -155,26 +176,41 @@ Vec2f World::TileToWorldCoords( short tileX, short tileY ) const
 }
 
 
-Sprite* World::CreateOrGetSprite( const HashString& animationSetName )
+bool World::IsInitialized() const
 {
-	Sprite* result = nullptr;
+	return ( mMap != nullptr );
+}
 
-	// Look up an existing sprite for the animation set (if any).
-	auto it = mTileSpritesByName.find( animationSetName );
 
-	if( it == mTileSpritesByName.end() )
+void World::MapResized( const Vec2s& oldSize, const Vec2s& newSize )
+{
+	DebugPrintf( "Resized map from (%d,%d) to (%d,%d).", oldSize.x, oldSize.y, newSize.x, newSize.y );
+
+	// Determine the area of TileSprites affected by the resize.
+	short refreshWidth  = std::max( oldSize.x, newSize.x );
+	short refreshHeight = std::max( oldSize.y, newSize.y );
+	RectS area( 0, 0, refreshWidth, refreshHeight );
+
+	mTileSprites.ForEachTileInArea( area, []( const TileSpritesGrid::Iterator& tileSprite )
 	{
-		// If no existing Sprite was found, create one.
-		result = SpriteManager::CreateSprite( animationSetName, Vec2f::ZERO, "Idle" );
+		// Update the sprites of all TileSprites in the refresh area.
+		tileSprite->UpdateSprite();
+	});
 
-		// Store the Sprite by name.
-		mTileSpritesByName[ animationSetName ] = result;
-	}
-	else
+	// Resize the TileSprites grid.
+	mTileSprites.Resize( newSize );
+}
+
+
+void World::TileChanged( const Map::Iterator& tile )
+{
+	// Update the TileSprite for this tile.
+	TileSpritesGrid::Iterator tileSprite = mTileSprites.GetTile( tile.GetTilePos() );
+	tileSprite->UpdateSprite();
+
+	tileSprite.ForEachAdjacent( []( const TileSpritesGrid::Iterator& adjacent )
 	{
-		// Otherwise, use the existing Sprite.
-		result = it->second;
-	}
-
-	return result;
+		// Update adjacent TileSprites.
+		adjacent->UpdateSprite();
+	});
 }

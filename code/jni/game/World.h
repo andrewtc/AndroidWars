@@ -10,8 +10,11 @@ namespace mage
 
 		static const float MAP_BORDER_SCALE;
 
-		World( Map* map );
+		World();
 		~World();
+
+		void Init( Map* map );
+		void Destroy();
 
 		void Update( float elapsedTime );
 		void Draw();
@@ -34,11 +37,16 @@ namespace mage
 		Vec2f TileToWorldCoords( const Vec2s& tileCoords ) const;
 		Vec2f TileToWorldCoords( short tileX, short tileY ) const;
 
+		bool IsInitialized() const;
+
 	private:
-		Sprite* CreateOrGetSprite( const HashString& animationSetName );
+		typedef Grid< TileSprite, MAP_SIZE_POWER_OF_TWO > TileSpritesGrid;
+
+		void MapResized( const Vec2s& oldSize, const Vec2s& newSize );
+		void TileChanged( const Map::Iterator& tile );
 
 		Map* mMap;
 		Camera mCamera;
-		HashMap< Sprite* > mTileSpritesByName;
+		TileSpritesGrid mTileSprites;
 	};
 }

@@ -5,7 +5,6 @@ using namespace mage;
 
 EditorState::EditorState() :
 	mCamera( gWindowWidth, gWindowHeight ),
-	mWorld( &mMap ),
 	mBrushToolInputState( nullptr ),
 	mEraserToolInputState( nullptr ),
 	mToolPalette( nullptr ),
@@ -90,26 +89,29 @@ void EditorState::OnEnter( const Dictionary& parameters )
 	// Create a new Map.
 	mMap.Resize( 16, 12 );
 
-	// Set camera bounds.
-	// TODO: Move this elsewhere.
-	mWorld.GetCamera()->SetWorldBounds( mWorld.GetCameraBounds() );
-
-	// Center the Camera.
-	mWorld.CenterCamera();
-
 	// Paint the Map with default tiles.
 	TerrainType* defaultTerrainType = mScenario.GetDefaultTerrainType();
 	assertion( defaultTerrainType != nullptr, "No default TerrainType found for this Scenario!" );
 
 	Tile tile;
 	tile.SetTerrainType( defaultTerrainType );
-	mMap.Fill( tile );
+	mMap.FillMaxArea( tile );
 
 	TerrainType* seaTerrainType = mScenario.TerrainTypes.FindByName( "Sea" );
 	tile.SetTerrainType( seaTerrainType );
 	mMap.Fill( tile, RectS( 2, 2, 4, 4 ) );
 
 	mMap.Init( &mScenario );
+
+	// Initialize the World.
+	mWorld.Init( &mMap );
+
+	// Set camera bounds.
+	// TODO: Move this elsewhere.
+	mWorld.GetCamera()->SetWorldBounds( mWorld.GetCameraBounds() );
+
+	// Center the Camera.
+	mWorld.CenterCamera();
 
 	// Create the tool palette Widget and show it.
 	mToolPalette = gWidgetManager->CreateWidgetFromTemplate( "ToolPalette" );

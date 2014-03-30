@@ -143,7 +143,7 @@ void Scenario::LoadDataFromJSON( const rapidjson::Value& object )
 	UnitTypes.LoadRecordsFromJSON( object );
 	MovementTypes.LoadRecordsFromJSON( object );
 
-	DebugPrintData();
+	//DebugPrintData();
 }
 
 

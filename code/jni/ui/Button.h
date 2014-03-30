@@ -16,7 +16,7 @@ namespace mage
 		DECLARE_RTTI;
 
 	public:
-		typedef Callback< void > OnClickDelegate;
+		typedef Delegate< void > OnClickDelegate;
 
 		Button( WidgetManager* manager, const HashString& name );
 
