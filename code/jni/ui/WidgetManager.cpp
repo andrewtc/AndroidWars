@@ -156,8 +156,8 @@ void WidgetManager::LoadTheme( const char* file )
 		{
 			const char* file = itr.GetAttributeAsCString( "file" );
 			const char* name = itr.GetAttributeAsCString( "name" );
-			BitmapFont* fnt = new BitmapFont( file );
-			mFonts[ name ] = fnt;
+			BitmapFont* font = new BitmapFont( file );
+			mFonts[ name ] = font;
 		}
 		// Sprites to load
 		else if( itr.ElementNameEquals( "Sprite" ) )

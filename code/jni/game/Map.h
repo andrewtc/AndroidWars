@@ -16,19 +16,29 @@ namespace mage
 		TerrainType* GetTerrainType() const;
 		bool HasTerrainType() const;
 
-		void SetOwner( Player* player );
+		void SetOwner( Faction* player );
 		void ClearOwner();
-		Player* GetOwner() const;
+		Faction* GetOwner() const;
 		bool HasOwner() const;
+
+		Unit* GetUnit() const;
+		bool IsOccupied() const;
+		bool IsEmpty() const;
 
 		bool IsCapturable() const;
 
 	private:
+		void SetUnit( Unit* unit );
+		void ClearUnit();
+
 		TerrainType* mTerrainType;
-		Player* mOwner;
+		Faction* mOwner;
+		Unit* mUnit;
 
 	public:
 		Event<> OnChanged;
+
+		friend class Map;
 	};
 
 
@@ -38,14 +48,22 @@ namespace mage
 	class Map : public Grid< Tile, MAP_SIZE_POWER_OF_TWO >
 	{
 	public:
+		static const char* const MAPS_FOLDER_PATH;
+		static const char* const MAP_FILE_EXTENSION;
+
+		typedef std::vector< Faction* > Factions;
+		typedef std::vector< Unit* > Units;
+		typedef std::vector< Iterator > Tiles;
+
 		typedef Delegate< void, const Map::Iterator& > OnTileChangedCallback;
 
+		typedef Delegate< void, Player* > ForEachPlayerCallback;
+		typedef Delegate< void, const Player* > ForEachConstPlayerCallback;
 		typedef Delegate< void, Unit* > ForEachUnitCallback;
 		typedef Delegate< void, const Unit* > ForEachConstUnitCallback;
+		typedef Delegate< void, const Iterator&, const Unit* > ForEachReachableTileCallback;
 
-		static Vec2s GetAdjacentTilePos( short x, short y, CardinalDirection direction );
-		static Vec2s GetAdjacentTilePos( const Vec2s& tilePos, CardinalDirection direction );
-		static CardinalDirection GetOppositeDirection( CardinalDirection direction );
+		static std::string FormatMapPath( const std::string& mapName );
 
 		Map();
 		~Map();
@@ -58,24 +76,52 @@ namespace mage
 		void LoadFromFile( const std::string& filePath );
 		void LoadFromJSON( const rapidjson::Value& object );
 
-		Unit* SpawnUnit();
+		void FillWithDefaultTerrainType();
+
+		Faction* CreateFaction();
+		Faction* GetFactionByIndex( size_t index ) const;
+		const Factions& GetFactions() const;
+		size_t GetFactionCount() const;
+		void DestroyFaction( Faction* faction );
+		void DestroyAllFaction();
+
+		void ForEachPlayer( ForEachPlayerCallback callback );
+		void ForEachPlayer( ForEachConstPlayerCallback callback ) const;
+
+		Unit* CreateUnit( UnitType* unitType, Faction* owner, short tileX, short tileY, int health = -1, int ammo = -1 );
+		Unit* CreateUnit( UnitType* unitType, Faction* owner, const Vec2s& tilePos, int health = -1, int ammo = -1 );
+		const Units& GetUnits() const;
+		size_t GetUnitCount() const;
 		void DestroyUnit( Unit* unit );
+		void DestroyAllUnits();
 
 		void ForEachUnit( ForEachUnitCallback callback );
 		void ForEachUnit( ForEachConstUnitCallback callback ) const;
+
+		void FindReachableTiles( const Unit* unit, Tiles& result );
+		void ForEachReachableTile( const Unit* unit, ForEachReachableTileCallback callback );
+		void FindBestPathToTile( const Vec2i& tilePos, Path& result ) const;
+		Event< Unit*, const Path& > OnUnitMoved;
 
 		Scenario* GetScenario() const;
 
 	private:
 		void TileChanged( const Iterator& tile );
+		void UnitMoved( Unit* unit, const Path& path );
+		void UnitDied( Unit* unit );
+
+		void FindReachableTilesRecursive( const Unit* unit, const Vec2i& tilePos, int costToEnter, PrimaryDirection previousTileDirection, int movementRange, Tiles& result );
 
 		bool mIsInitialized;
+		int mNextPathIndex;
 		Scenario* mScenario;
-		std::vector< Unit* > mUnits;
+		Units mUnits;
+		Factions mFactions;
 
 	public:
 		Event< const Iterator& > OnTileChanged;
 
 		friend class Tile;
+		friend class Unit;
 	};
 }

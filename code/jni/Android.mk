@@ -158,9 +158,10 @@ $(aw_data_path)/Scenario.cpp \
 $(aw_game_path)/GameplayState.cpp \
 $(aw_game_path)/Game.cpp \
 $(aw_game_path)/Player.cpp \
+$(aw_game_path)/Faction.cpp \
 $(aw_game_path)/Unit.cpp \
 $(aw_game_path)/Map.cpp \
-$(aw_game_path)/World.cpp \
+$(aw_game_path)/MapView.cpp \
 $(aw_game_path)/TileSprite.cpp \
 $(aw_editor_path)/EditorState.cpp \
 $(aw_editor_path)/EditorInputStates.cpp \
@@ -175,7 +176,7 @@ $(aw_editor_path)/EditorInputStates.cpp \
  sound/SoundManager.cpp \
  online/OnlineGameClient.cpp \
  util/JNI.cpp \
- util/Grid.cpp
+ util/PrimaryDirection.cpp
 
 LOCAL_LDLIBS := -llog -landroid -lEGL -lGLESv2 -lOpenSLES
 LOCAL_STATIC_LIBRARIES := android_native_app_glue _magemath _magecore _magerenderer png _mageapp

@@ -22,6 +22,6 @@ void UnitType::LoadAnimation()
 
 MovementType* UnitType::GetMovementType() const
 {
-	// Look up the MovementType from the Database.
+	// Look up the MovementType from the Scenario.
 	return GetScenario()->MovementTypes.FindByName( mMovementTypeName );
 }

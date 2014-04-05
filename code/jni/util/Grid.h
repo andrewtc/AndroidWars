@@ -2,25 +2,6 @@
 
 namespace mage
 {
-	/**
-	 * Represents a tile direction (i.e. north, south, east, or west).
-	 */
-	enum CardinalDirection
-	{
-		CARDINAL_DIRECTION_NONE,
-		CARDINAL_DIRECTION_EAST,
-		CARDINAL_DIRECTION_NORTH,
-		CARDINAL_DIRECTION_WEST,
-		CARDINAL_DIRECTION_SOUTH
-	};
-
-	static const CardinalDirection FIRST_VALID_DIRECTION = CARDINAL_DIRECTION_EAST;
-	static const CardinalDirection LAST_VALID_DIRECTION = CARDINAL_DIRECTION_SOUTH;
-	static const int NUM_DIRECTIONS = ( LAST_VALID_DIRECTION - FIRST_VALID_DIRECTION + 1 );
-
-	const char* const GetDirectionName( CardinalDirection direction );
-
-
 #define MAGE_GRID_TEMPLATE \
 	template< typename TileType, size_t MaxSizePowerOfTwo >
 
@@ -59,11 +40,18 @@ namespace mage
 		public:
 			typedef Delegate< void, const IteratorType& > ForEachAdjacentCallback;
 
-			IteratorType GetAdjacent( CardinalDirection direction ) const;
+			IteratorType GetAdjacent( PrimaryDirection direction ) const;
 			void ForEachAdjacent( ForEachAdjacentCallback callback ) const;
 
 			DataType& operator*() const;
 			DataType* operator->() const;
+
+			bool operator==( const IteratorType& other ) const;
+			bool operator!=( const IteratorType& other ) const;
+			bool operator>( const IteratorType& other ) const;
+			bool operator>=( const IteratorType& other ) const;
+			bool operator<( const IteratorType& other ) const;
+			bool operator<=( const IteratorType& other ) const;
 
 			void operator+=( const Vec2s& tileOffset );
 			void operator-=( const Vec2s& tileOffset );
@@ -72,7 +60,9 @@ namespace mage
 			IteratorType operator-( const Vec2s& tileOffset ) const;
 
 			GridType* GetGrid() const;
-			Vec2s GetTilePos() const;
+			Vec2s GetPosition() const;
+			short GetX() const;
+			short GetY() const;
 			size_t GetIndex() const;
 			bool IsValid() const;
 
@@ -98,7 +88,7 @@ namespace mage
 			ConstIterator( const MAGE_GRID* grid ) : MAGE_GRID_CONST_ITERATOR_BASE( grid ) { }
 			ConstIterator( const MAGE_GRID* grid, const Vec2s& tilePos ) : MAGE_GRID_CONST_ITERATOR_BASE( grid, tilePos ) { }
 			ConstIterator( const MAGE_GRID* grid, short x, short y ) : MAGE_GRID_CONST_ITERATOR_BASE( grid, Vec2s( x, y ) ) { }
-			ConstIterator( const Iterator& iterator ) : MAGE_GRID_CONST_ITERATOR_BASE( iterator.GetGrid(), iterator.GetTilePos() ) { }
+			ConstIterator( const Iterator& iterator ) : MAGE_GRID_CONST_ITERATOR_BASE( iterator.GetGrid(), iterator.GetPosition() ) { }
 		};
 
 		static const size_t MAX_SIZE_POWER_OF_TWO = MaxSizePowerOfTwo;
@@ -109,9 +99,8 @@ namespace mage
 		typedef Delegate< void, const Iterator& > ForEachTileCallback;
 		typedef Delegate< void, const ConstIterator& > ForEachConstTileCallback;
 
-		static Vec2s GetAdjacentTilePos( short x, short y, CardinalDirection direction );
-		static Vec2s GetAdjacentTilePos( const Vec2s& tilePos, CardinalDirection direction );
-		static CardinalDirection GetOppositeDirection( CardinalDirection direction );
+		static Vec2s GetAdjacentTilePos( short x, short y, PrimaryDirection direction );
+		static Vec2s GetAdjacentTilePos( const Vec2s& tilePos, PrimaryDirection direction );
 
 		Grid();
 		~Grid();
@@ -180,7 +169,7 @@ namespace mage
 
 
 	MAGE_GRID_BASIC_ITERATOR_TEMPLATE
-	IteratorType MAGE_GRID_BASIC_ITERATOR::GetAdjacent( CardinalDirection direction ) const
+	IteratorType MAGE_GRID_BASIC_ITERATOR::GetAdjacent( PrimaryDirection direction ) const
 	{
 		return IteratorType( mGrid, GetAdjacentTilePos( mTilePos, direction ) );
 	}
@@ -189,10 +178,10 @@ namespace mage
 	MAGE_GRID_BASIC_ITERATOR_TEMPLATE
 	void MAGE_GRID_BASIC_ITERATOR::ForEachAdjacent( ForEachAdjacentCallback callback ) const
 	{
-		for( int i = 0; i < NUM_DIRECTIONS; ++i )
+		for( size_t i = 0; i < PRIMARY_DIRECTION_COUNT; ++i )
 		{
-			// For each CardinalDirection, get the adjacent tile.
-			CardinalDirection direction = (CardinalDirection) ( FIRST_VALID_DIRECTION + i );
+			// For each PrimaryDirection, get the adjacent tile.
+			PrimaryDirection direction = PRIMARY_DIRECTIONS[ i ];
 			IteratorType adjacent = GetAdjacent( direction );
 
 			if( adjacent.IsValid() )
@@ -216,6 +205,48 @@ namespace mage
 	DataType* MAGE_GRID_BASIC_ITERATOR::operator->() const
 	{
 		return &( operator*() );
+	}
+
+
+	MAGE_GRID_BASIC_ITERATOR_TEMPLATE
+	bool MAGE_GRID_BASIC_ITERATOR::operator==( const IteratorType& other ) const
+	{
+		return ( mGrid == other.mGrid ) && ( mTilePos == other.mTilePos );
+	}
+
+
+	MAGE_GRID_BASIC_ITERATOR_TEMPLATE
+	bool MAGE_GRID_BASIC_ITERATOR::operator!=( const IteratorType& other ) const
+	{
+		return ( mGrid != other.mGrid ) || ( mTilePos != other.mTilePos );
+	}
+
+
+	MAGE_GRID_BASIC_ITERATOR_TEMPLATE
+	bool MAGE_GRID_BASIC_ITERATOR::operator>( const IteratorType& other ) const
+	{
+		return ( mGrid == other.mGrid ) && ( mTilePos > other.mTilePos );
+	}
+
+
+	MAGE_GRID_BASIC_ITERATOR_TEMPLATE
+	bool MAGE_GRID_BASIC_ITERATOR::operator>=( const IteratorType& other ) const
+	{
+		return ( mGrid == other.mGrid ) && ( mTilePos >= other.mTilePos );
+	}
+
+
+	MAGE_GRID_BASIC_ITERATOR_TEMPLATE
+	bool MAGE_GRID_BASIC_ITERATOR::operator<( const IteratorType& other ) const
+	{
+		return ( mGrid == other.mGrid ) && ( mTilePos < other.mTilePos );
+	}
+
+
+	MAGE_GRID_BASIC_ITERATOR_TEMPLATE
+	bool MAGE_GRID_BASIC_ITERATOR::operator<=( const IteratorType& other ) const
+	{
+		return ( mGrid == other.mGrid ) && ( mTilePos <= other.mTilePos );
 	}
 
 
@@ -255,9 +286,23 @@ namespace mage
 
 
 	MAGE_GRID_BASIC_ITERATOR_TEMPLATE
-	Vec2s MAGE_GRID_BASIC_ITERATOR::GetTilePos() const
+	Vec2s MAGE_GRID_BASIC_ITERATOR::GetPosition() const
 	{
 		return mTilePos;
+	}
+
+
+	MAGE_GRID_BASIC_ITERATOR_TEMPLATE
+	short MAGE_GRID_BASIC_ITERATOR::GetX() const
+	{
+		return mTilePos.x;
+	}
+
+
+	MAGE_GRID_BASIC_ITERATOR_TEMPLATE
+	short MAGE_GRID_BASIC_ITERATOR::GetY() const
+	{
+		return mTilePos.y;
 	}
 
 
@@ -276,65 +321,16 @@ namespace mage
 
 
 	MAGE_GRID_TEMPLATE
-	Vec2s MAGE_GRID::GetAdjacentTilePos( short x, short y, CardinalDirection direction )
+	Vec2s MAGE_GRID::GetAdjacentTilePos( short x, short y, PrimaryDirection direction )
 	{
-		Vec2s result( x, y );
-
-		switch( direction )
-		{
-		case CARDINAL_DIRECTION_EAST:
-			result.x += 1;
-			break;
-
-		case CARDINAL_DIRECTION_WEST:
-			result.x -= 1;
-			break;
-
-		case CARDINAL_DIRECTION_SOUTH:
-			result.y += 1;
-			break;
-
-		case CARDINAL_DIRECTION_NORTH:
-			result.y -= 1;
-			break;
-		}
-
-		return result;
+		return GetAdjacentTilePos( Vec2s( x, y ), direction );
 	}
 
 
 	MAGE_GRID_TEMPLATE
-	Vec2s MAGE_GRID::GetAdjacentTilePos( const Vec2s& tilePos, CardinalDirection direction )
+	Vec2s MAGE_GRID::GetAdjacentTilePos( const Vec2s& tilePos, PrimaryDirection direction )
 	{
-		return GetAdjacentTilePos( tilePos.x, tilePos.y, direction );
-	}
-
-
-	MAGE_GRID_TEMPLATE
-	CardinalDirection MAGE_GRID::GetOppositeDirection( CardinalDirection direction )
-	{
-		CardinalDirection result = CARDINAL_DIRECTION_NONE;
-
-		switch( direction )
-		{
-		case CARDINAL_DIRECTION_EAST:
-			result = CARDINAL_DIRECTION_WEST;
-			break;
-
-		case CARDINAL_DIRECTION_WEST:
-			result = CARDINAL_DIRECTION_EAST;
-			break;
-
-		case CARDINAL_DIRECTION_SOUTH:
-			result = CARDINAL_DIRECTION_NORTH;
-			break;
-
-		case CARDINAL_DIRECTION_NORTH:
-			result = CARDINAL_DIRECTION_SOUTH;
-			break;
-		}
-
-		return result;
+		return ( tilePos + direction.GetOffset() );
 	}
 
 

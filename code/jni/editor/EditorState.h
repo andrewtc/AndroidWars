@@ -14,8 +14,8 @@ namespace mage
 		Map* GetMap();
 		const Map* GetMap() const;
 
-		World* GetWorld();
-		const World* GetWorld() const;
+		MapView* GetMapView();
+		const MapView* GetMapView() const;
 
 		Tile CreateTileTemplate( TerrainType* terrainType );
 		Tile CreateDefaultTileTemplate();
@@ -43,9 +43,9 @@ namespace mage
 		Widget* mToolPalette;
 		ListLayout* mTilePalette;
 
-		Camera mCamera;
+		//Camera mCamera;
 		Scenario mScenario;
 		Map mMap;
-		World mWorld;
+		MapView mMapView;
 	};
 }

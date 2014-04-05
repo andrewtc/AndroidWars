@@ -3,52 +3,24 @@
 using namespace mage;
 
 
-Player::Player()
-	: mIndex( -1 )
-	, mGame( nullptr )
-	, CitiesOwned( 0 )
-	, mFunds( 0 )
-	, mUnits( 0 )
-	, mIsControllable( true )
-{ }
+Player::Player( Game* game, Faction* faction ) :
+	mGame( game ), mFaction( faction )
+{
+	assertion( mGame, "Cannot create Player without a valid Game!" );
+	assertion( mFaction, "Cannot create Player without a valid Faction!" );
+}
 
 
 Player::~Player() { }
 
-Color Player::GetPlayerColor() const
-{
-	switch ( mIndex )
-	{
-	case 0:
-		return Color::RED;
-	case 1:
-		return Color::BLUE;
-	default:
-		return Color::WHITE;
-	}
-}
 
-void Player::GenerateFunds()
+Game* Player::GetGame() const
 {
-	int gain = CitiesOwned * 10;
-	mFunds += gain;
-	//gGame->PostMessageFormat( GetPlayerColor(), "+$%d", gain );
-};
-
-
-bool Player::HasLost() const
-{
-	return mUnits == 0;
+	return mGame;
 }
 
 
-void Player::OnGainUnit( Unit* unit )
+Faction* Player::GetFaction() const
 {
-	mUnits++;
-}
-
-
-void Player::OnLoseUnit( Unit* unit )
-{
-	mUnits--;
+	return mFaction;
 }

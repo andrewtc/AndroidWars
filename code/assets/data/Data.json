@@ -18,12 +18,94 @@
             "name":         "City",
             "animationSet": "City",
             "coverBonus":   3,
-            "isCapturable": true
+            "isCapturable": true,
+            "income":       100
         },
         {
             "name":         "Road",
             "animationSet": "Road",
-            "isPath":       true
+            "variations":
+            [
+                {
+                    "animation": "EastWest",
+                    "conditions":
+                    [
+                        { "east": "Road" },
+                        { "west": "Road" }
+                    ]
+                },
+                {
+                    "animation": "NorthSouth",
+                    "conditions":
+                    [
+                        { "north": "Road" },
+                        { "south": "Road" }
+                    ]
+                },
+                {
+                    "animation": "EastNorth",
+                    "conditions":
+                    [
+                        { "east": "Road", "north": "Road" }
+                    ]
+                },
+                {
+                    "animation": "NorthWest",
+                    "conditions":
+                    [
+                        { "north": "Road", "west": "Road" }
+                    ]
+                },
+                {
+                    "animation": "WestSouth",
+                    "conditions":
+                    [
+                        { "west": "Road", "south": "Road" }
+                    ]
+                },
+                {
+                    "animation": "EastSouth",
+                    "conditions":
+                    [
+                        { "east": "Road", "south": "Road" }
+                    ]
+                },
+                {
+                    "animation": "EastNorthSouth",
+                    "conditions":
+                    [
+                        { "east": "Road", "north": "Road", "south": "Road" }
+                    ]
+                },
+                {
+                    "animation": "EastNorthWest",
+                    "conditions":
+                    [
+                        { "east": "Road", "north": "Road", "west": "Road" }
+                    ]
+                },
+                {
+                    "animation": "NorthWestSouth",
+                    "conditions":
+                    [
+                        { "north": "Road", "west": "Road", "south": "Road" }
+                    ]
+                },
+                {
+                    "animation": "EastWestSouth",
+                    "conditions":
+                    [
+                        { "east": "Road", "west": "Road", "south": "Road" }
+                    ]
+                },
+                {
+                    "animation": "Idle",
+                    "conditions":
+                    [
+                        { "east": "Road", "north": "Road", "west": "Road", "south": "Road" }
+                    ]
+                }
+            ]
         }
     ],
     
@@ -66,7 +148,7 @@
             "movementType":  "Boots",
             "movementRange": 3,
             "attackRange":   "1~1",
-            "hp":            10,
+            "cost":          100,
             "weapons":
             [
                 {
@@ -95,8 +177,8 @@
             "movementType":  "Boots",
             "movementRange": 2,
             "attackRange":   "1~1",
-            "hp":            10,
             "ammo":          3,
+            "cost":          250,
             "weapons":
             [
                 {
@@ -140,7 +222,7 @@
             "movementType":  "Tires",
             "movementRange": 6,
             "attackRange":   "1~1",
-            "hp":            10
+            "cost":          400
         },
         {
             "name":          "APC",
@@ -148,7 +230,7 @@
             "movementType":  "Treads",
             "movementRange": 6,
             "attackRange":   "1~1",
-            "hp":            10
+            "cost":          500
         },
         {
             "name":          "Artillery",
@@ -156,15 +238,7 @@
             "movementType":  "Treads",
             "movementRange": 6,
             "attackRange":   "1~1",
-            "hp":            10
-        },
-        {
-            "name":          "Tank",
-            "animationSet":  "Tank",
-            "movementType":  "Treads",
-            "movementRange": 6,
-            "attackRange":   "1~1",
-            "hp":            10
+            "cost":          600
         },
         {
             "name":          "AntiAir",
@@ -172,15 +246,15 @@
             "movementType":  "Treads",
             "movementRange": 6,
             "attackRange":   "1~1",
-            "hp":            10
+            "cost":          700
         },
         {
-            "name":          "Rockets",
+            "name":          "Tank",
             "animationSet":  "Tank",
-            "movementType":  "Tires",
+            "movementType":  "Treads",
             "movementRange": 6,
             "attackRange":   "1~1",
-            "hp":            10
+            "cost":          800
         },
         {
             "name":          "Missiles",
@@ -188,7 +262,15 @@
             "movementType":  "Tires",
             "movementRange": 6,
             "attackRange":   "1~1",
-            "hp":            10
+            "cost":          1000
+        },
+        {
+            "name":          "Rockets",
+            "animationSet":  "Tank",
+            "movementType":  "Tires",
+            "movementRange": 6,
+            "attackRange":   "1~1",
+            "cost":          1200
         },
         {
             "name":            "MediumTank",
@@ -197,7 +279,7 @@
             "movementType":    "Tires",
             "movementRange":   6,
             "attackRange":     "1~1",
-            "hp":              10,
+            "cost":            1500,
             "weapons":
             [
                 {

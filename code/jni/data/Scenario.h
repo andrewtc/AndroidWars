@@ -17,8 +17,8 @@ namespace mage
 		Scenario();
 		~Scenario();
 
-		void LoadDataFromFile( const std::string& filePath );
-		void LoadDataFromFile( const char* filePath );
+		bool LoadDataFromFile( const std::string& filePath );
+		bool LoadDataFromFile( const char* filePath );
 		void LoadDataFromString( const std::string& data );
 		void LoadDataFromString( const char* data );
 		void LoadDataFromXML( XmlReader::XmlReaderIterator rootIterator );

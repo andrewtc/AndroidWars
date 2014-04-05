@@ -3,184 +3,87 @@
 using namespace mage;
 
 
-const int Unit::MAX_HP;
+const int Unit::MAX_HEALTH;
 
 
 MAGE_IMPLEMENT_RTTI( MapObject, Unit );
 
 
-Unit::Unit( const std::string& name )
-	: MapObject( name )
-	, mGame( nullptr )
-	, mUnitType( nullptr )
-	, mSprite( nullptr )
-	, mOwner( nullptr )
-	, mOwnerIndex( -1 )
-	, mHP( 0 )
-	, mAP( 0 )
-	, mAmmo( -1 )
-	, mWasLoadedByMap( false )
+Unit::Unit() :
+	mMap( nullptr ),
+	mUnitType( nullptr ),
+	mOwner( nullptr ),
+	mHealth( MAX_HEALTH ),
+	mAmmo( 0 ),
+	mSupplies( 0 ),
+	mIsAlive( true ),
+	mIsActive( true )
 { }
 
 
-Unit::~Unit() { }
-
-
-/** Load the Xml properties from the MapObject */
-void Unit::OnLoadProperty( const std::string& name, const std::string& value )
+Unit::~Unit()
 {
-	bool parseWasSuccessful = false;
-
-	if ( name == "UnitType" )
+	if( IsInitialized() )
 	{
-		// Read in the name of the UnitType to use for this Unit.
-		parseWasSuccessful = true;
-		mUnitTypeName = value;
+		Destroy();
 	}
-	else if ( name == "Owner" )
-	{
-		// Read the Player index from the property.
-		parseWasSuccessful = StringUtil::StringToType( value, &mOwnerIndex );
-	}
-	else if ( name == "Ammo" )
-	{
-		// Read in ammo amount.
-		parseWasSuccessful = StringUtil::StringToType( value, &mAmmo );
-	}
-
-	assertion( parseWasSuccessful, "Could not parse %s value for %s! (\"%s\" specified.)", name.c_str(), ToString(), value.c_str() );
 }
 
 
-void Unit::OnLoadFinished()
+void Unit::Init( Map* map, const Map::Iterator& tile )
 {
-	// Mark that this Unit was loaded by the TileMap.
-	mWasLoadedByMap = true;
-}
-
-
-void Unit::Init( Game* game )
-{
-	DebugPrintf( "Initializing Unit \"%s\".", mDebugName.c_str() );
+	assertion( !IsInitialized(), "Cannot initialize Unit that has already been initialized!" );
 
 	// Keep track of the Game that spawned this Unit.
-	mGame = game;
+	mMap = map;
+	assertion( mMap, "Cannot initialize Unit because it is no Map was specified!" );
 
-	// Make sure a valid Game was specified.
-	assertion( mGame, "Cannot initialize Unit because it is not associated with a valid Game!" );
+	// Make sure a valid UnitType was specified for this Unit.
+	assertion( mUnitType, "Could not initialize Unit because no UnitType was specified!" );
 
-	if( mUnitType == nullptr )
-	{
-		// Load the UnitType for this Unit (if necessary).
-		mUnitType = mGame->GetScenario()->UnitTypes.FindByName( mUnitTypeName );
-		assertion( mUnitType, "UnitType \"%s\" not found!", mUnitTypeName.GetCString() );
-	}
+	// Make sure a valid owner was specified.
+	assertion( mOwner, "Could not initialize Unit because no owning Faction was specified!" );
 
-	// Format debug name string.
-	static const size_t BUFFER_SIZE = 256;
-	char buffer[ BUFFER_SIZE ];
-
-	snprintf( buffer, BUFFER_SIZE, "%s \"%s\"", mUnitType->GetName().GetCString(), mName.GetCString() );
-	mDebugName = buffer;
-
-	if( mOwner == nullptr )
-	{
-		// If the player does not have  the owning player.
-		Player* owner = mGame->GetPlayer( mOwnerIndex );
-		assertion( owner, "Invalid Player index %d specified for %s!", mOwnerIndex, ToString() );
-		SetOwner( owner );
-	}
-
-	if( mWasLoadedByMap )
-	{
-		// Determine the tile location of the unit.
-		Vec2i tilePos = mGame->GetMap()->WorldToTile( Position );
-
-		// Snap the unit to the tile grid.
-		SetTilePos( tilePos );
-	}
-
-	// Create a sprite for this Unit.
-	mSprite = SpriteManager::CreateSprite( mUnitType->GetAnimationSetName(), Position, "Idle" );
-	BoundingRect = mSprite->GetClippingRectForCurrentAnimation();
-	mSprite->DrawColor = mOwner->GetPlayerColor();
-	mSelectionColor = mSprite->DrawColor;
-	mDefaultColor = mSelectionColor;
-	mDefaultColor.r /= 2;
-	mDefaultColor.g /= 2;
-	mDefaultColor.b /= 2;
-	Deselect();
-
-	// Set initial resources.
-	mHP = mUnitType->GetMaxHP();
-
-	if( mAmmo >= 0 )
-	{
-		// Make sure ammo value is valid.
-		SetAmmo( mAmmo );
-	}
-	else
-	{
-		// If the ammo value is uninitialized, set it to the maximum amount.
-		mAmmo = mUnitType->GetMaxAmmo();
-	}
-
-	mDestination = Position;
-
-	mAP = 2;
-
-	DebugPrintf( "%s initialized!", ToString() );
+	// Keep track of the Unit's current tile.
+	mTile = tile;
+	assertion( mTile.IsValid(), "Cannot initialize Unit at invalid Map tile (%d,%d)!", mTile.GetX(), mTile.GetY() );
+	assertion( mTile->IsEmpty(), "Cannot initialize Unit at Map tile (%d,%d) because a Unit already exists at that location!", mTile.GetX(), mTile.GetY() );
 }
 
 
 bool Unit::IsInitialized() const
 {
-	return ( mGame != nullptr );
+	return ( mMap != nullptr );
 }
 
 
-void Unit::OnDraw( const Camera& camera ) const
+void Unit::Destroy()
 {
-	assertion( IsInitialized(), "Cannot draw Unit because it is not initialized!", ToString() );
+	assertion( IsInitialized(), "Cannot destroy Unit that has not been initialized!" );
 
-	if ( mSprite )
-	{
-		// Draw the sprite at the location of the Unit.
-		mSprite->Position = Position;
-		mSprite->OnDraw( camera );
-	}
-	// Fallback to debugdraw on missing graphics
-	else
-	{
-		MapObject::OnDraw( camera );
-	}
+	// Run the destroyed event.
+	OnDestroyed.Invoke();
 
-	// Draw HP
-	Game* game = mOwner->GetGame();
-	BitmapFont* fnt = game->GetDefaultFont();
-	Vec2f textPos = Position - camera.GetPosition();
-	float h = mSprite ? mSprite->GetClippingRectForCurrentAnimation().Height() / 2 : 0;
-	DrawTextFormat( textPos.x, textPos.y + h - fnt->GetLineHeight(), fnt, "%d", mHP );
+	// Disassociate the Unit from its current Tile.
+	mTile = Map::Iterator();
+
+	// Disassociate the Unit from the Map.
+	mMap = nullptr;
 }
 
 
-void Unit::OnUpdate( float dt )
+void Unit::OnTurnStart( int turnIndex )
 {
-	assertion( IsInitialized(), "Cannot update Unit because it is not initialized!", ToString() );
-
-	float delta = ( Position - mDestination ).LengthSqr();
-	if ( delta > 1 )
-	{
-		Vec2f vel = mDestination - Position;
-		vel.Normalize();
-		vel *= 100;
-		Position += vel * dt;
-
-		delta = ( Position - mDestination ).LengthSqr();
-		if ( delta < 1 )
-			mGame->OnUnitReachedDestination( this );
-	}
+	// Consume supplies.
 }
+
+
+void Unit::OnTurnEnd( int turnIndex )
+{
+	// Reactivate this Unit.
+	Activate();
+}
+
 
 void Unit::SaveToJSON( rapidjson::Document& document, rapidjson::Value& object )
 {
@@ -193,20 +96,21 @@ void Unit::SaveToJSON( rapidjson::Document& document, rapidjson::Value& object )
 	object.AddMember( "unitType", unitTypeValue, allocator );
 
 	// Save owner Player index.
-	rapidjson::Value ownerIndexValue;
-	ownerIndexValue.SetInt( mOwner->GetIndex() );
-	object.AddMember( "owner", ownerIndexValue, allocator );
+	// TODO: Save Units organized by Faction.
+	//rapidjson::Value ownerIndexValue;
+	//ownerIndexValue.SetInt( mOwner->GetIndex() );
+	//object.AddMember( "owner", ownerIndexValue, allocator );
 
 	// Save position.
 	Vec2i tilePosition = GetTilePos();
 
-	rapidjson::Value xValue;
-	xValue.SetInt( tilePosition.x );
-	object.AddMember( "x", xValue, allocator );
+	rapidjson::Value valueX;
+	valueX.SetInt( tilePosition.x );
+	object.AddMember( "x", valueX, allocator );
 
-	rapidjson::Value yValue;
-	yValue.SetInt( tilePosition.y );
-	object.AddMember( "y", yValue, allocator );
+	rapidjson::Value valueY;
+	valueY.SetInt( tilePosition.y );
+	object.AddMember( "y", valueY, allocator );
 }
 
 
@@ -227,30 +131,40 @@ void Unit::SetUnitType( UnitType* unitType )
 }
 
 
-void Unit::SetTilePos( const Vec2i& tilePos )
+UnitType* Unit::GetUnitType() const
 {
-	// Update the tile position.
-	mTilePos = tilePos;
-
-	// Update the position of the object in the world.
-	Position = mGame->GetMap()->TileToWorld( tilePos );
-
-	// Update the destination.
-	mDestination = Position;
+	return mUnitType;
 }
 
 
-void Unit::SetDestination( const Vec2i& tilePos )
+Map::Iterator Unit::GetTile() const
 {
-	mDestination = mGame->GetMap()->TileToWorld( tilePos );
-	mTilePos = mGame->GetMap()->WorldToTile( mDestination );
+	return mTile;
 }
 
 
-void Unit::SetOwner( Player* owner )
+Vec2s Unit::GetTilePos() const
+{
+	return mTile.GetPosition();
+}
+
+
+short Unit::GetTileX() const
+{
+	return mTile.GetX();
+}
+
+
+short Unit::GetTileY() const
+{
+	return mTile.GetY();
+}
+
+
+void Unit::SetOwner( Faction* owner )
 {
 	// Give the Unit to the new owner.
-	Player* formerOwner = mOwner;
+	Faction* formerOwner = mOwner;
 	mOwner = owner;
 
 	if( IsInitialized() )
@@ -260,18 +174,24 @@ void Unit::SetOwner( Player* owner )
 		if( formerOwner != nullptr )
 		{
 			// If there was a previous owner, notify it that it no longer owns this Unit.
-			formerOwner->OnLoseUnit( this );
+			formerOwner->UnitLost( this );
 		}
 
 		// Notify the new player that it gained a Unit.
-		mOwner->OnGainUnit( this );
+		mOwner->UnitGained( this );
 	}
 }
 
 
-Player* Unit::GetOwner() const
+Faction* Unit::GetOwner() const
 {
 	return mOwner;
+}
+
+
+MovementType* Unit::GetMovementType() const
+{
+	return mUnitType->GetMovementType();
 }
 
 
@@ -287,37 +207,44 @@ int Unit::GetMovementRange() const
 }
 
 
-void Unit::Select()
+int Unit::GetMovementCostAcrossTerrain( TerrainType* terrainType ) const
 {
-	//mSprite->DrawColor = mSelectionColor;
-	mSprite->Scale.Set( 1.15f, 1.15f );
+	assertion( terrainType, "Cannot get movement cost because null TerrainType was specified!" );
+	assertion( mUnitType, "No UnitType found for Unit!" );
+	return mUnitType->GetMovementCostAcrossTerrain( terrainType );
 }
 
-void Unit::Deselect()
+
+bool Unit::CanMoveAcrossTerrain( TerrainType* terrainType ) const
 {
-	//mSprite->DrawColor = mDefaultColor;
-	mSprite->Scale.Set( 1.0f, 1.0f );
+	return ( GetMovementCostAcrossTerrain( terrainType ) > -1 );
+}
+
+
+bool Unit::IsOwnedBy( Faction* faction ) const
+{
+	return ( mOwner == faction );
 }
 
 
 bool Unit::CanAttack( const Unit& target ) const
 {
-	DebugPrintf( "Checking whether %s can attack %s...", ToString(), target.ToString() );
+	DebugPrintf( "Checking whether %s can attack %s...", ToString().c_str(), target.ToString().c_str() );
 
 	// Make sure this Unit is still alive.
 	bool isAlive = IsAlive();
-	DebugPrintf( "%s is %s.", ToString(), ( isAlive ? "ALIVE" : "DEAD" ) );
+	DebugPrintf( "%s is %s.", ToString().c_str(), ( isAlive ? "ALIVE" : "DEAD" ) );
 
 	// Check whether the target is in range.
 	bool isInRange = IsInRange( target );
-	DebugPrintf( "%s %s in range.", target.ToString(), ( isInRange ? "IS" : "IS NOT" ) );
+	DebugPrintf( "%s %s in range.", target.ToString().c_str(), ( isInRange ? "IS" : "IS NOT" ) );
 
 	// Check whether this Unit can target the other Unit.
 	bool canTarget = CanTarget( target );
-	DebugPrintf( "%s %s target %s.", ToString(), ( isInRange ? "CAN" : "CANNOT" ), target.ToString() );
+	DebugPrintf( "%s %s target %s.", ToString().c_str(), ( isInRange ? "CAN" : "CANNOT" ), target.ToString().c_str() );
 
 	bool result = ( isAlive && isInRange && canTarget );
-	DebugPrintf( "RESULT: %s %s attack %s.", ToString(), ( result ? "CAN" : "CANNOT" ), target.ToString() );
+	DebugPrintf( "RESULT: %s %s attack %s.", ToString().c_str(), ( result ? "CAN" : "CANNOT" ), target.ToString().c_str() );
 
 	return result;
 }
@@ -325,7 +252,7 @@ bool Unit::CanAttack( const Unit& target ) const
 
 void Unit::Attack( Unit& target )
 {
-	DebugPrintf( "%s attacks %s.", ToString(), target.ToString() );
+	DebugPrintf( "%s attacks %s.", ToString().c_str(), target.ToString().c_str() );
 
 	// Get the best weapon to use against the target.
 	int bestWeaponIndex = GetBestAvailableWeaponAgainst( target );
@@ -371,9 +298,6 @@ void Unit::Attack( Unit& target )
 		ConsumeAmmo( ammoConsumed );
 		DebugPrintf( "Weapon consumed %d ammo. (%d ammo remaining)", ammoConsumed, mAmmo );
 	}
-
-	// TODO: Replace AP system with single move + action system.
-	ConsumeAP( 1 );
 }
 
 
@@ -384,7 +308,7 @@ int Unit::CalculateDamagePercentage( const Unit& target, int weaponIndex ) const
 	// Get the best weapon to use against the target.
 	const Weapon& weapon = mUnitType->GetWeaponByIndex( weaponIndex );
 
-	DebugPrintf( "Calculating damage of %s against %s with weapon %d (%s)...", ToString(), target.ToString(),
+	DebugPrintf( "Calculating damage of %s against %s with weapon %d (%s)...", ToString().c_str(), target.ToString().c_str(),
 				 weaponIndex, weapon.GetName().GetCString() );
 
 	// Get the base amount of damage to apply.
@@ -414,10 +338,10 @@ float Unit::GetDefenseBonus() const
 {
 	float result;
 
-	DebugPrintf( "Calculating defense bonus for %s...", ToString() );
+	DebugPrintf( "Calculating defense bonus for %s...", ToString().c_str() );
 
 	// Get the defensive bonus supplied by the current tile.
-	TerrainType* terrainType = mGame->GetTerrainTypeOfTile( GetTilePos() );
+	TerrainType* terrainType = mTile->GetTerrainType();
 	int coverBonus = terrainType->GetCoverBonus();
 	float coverBonusScale = ( coverBonus * 0.1f );
 	DebugPrintf( "Cover bonus: %d (%f)", coverBonus, coverBonusScale );
@@ -443,20 +367,30 @@ bool Unit::CanTarget( const Unit& target ) const
 
 bool Unit::IsInRange( const Unit& target ) const
 {
+	return IsInRangeFromTile( target, mTile );
+}
+
+
+bool Unit::IsInRangeFromTile( const Unit& target, const Map::ConstIterator& tile ) const
+{
+	// Get the range of the Unit's unit type.
 	UnitType* type = GetUnitType();
 	const IntRange& range = type->GetAttackRange();
-	DebugPrintf( "Unit pos (%d, %d) : trg pos (%d %d) d=%d r=[%d,%d]",
-			mTilePos.x, mTilePos.y,
-			target.mTilePos.x, target.mTilePos.y,
-			GetDistanceToUnit( target ),
-			range.Min, range.Max );
-	return range.IsValueInRange( GetDistanceToUnit( target ) );
+
+	// Find the distance from the tile to the target.
+	short distanceToTarget = tile.GetPosition().GetManhattanDistanceTo( target.GetTilePos() );
+
+	// Determine whether this Unit is in range.
+	bool isInRange = range.IsValueInRange( distanceToTarget );
+	DebugPrintf( "%s %s in range of %s from tile (%d,%d).", target.ToString().c_str(), ( isInRange ? "is" : "is NOT" ), ToString().c_str(), tile.GetX(), tile.GetY() );
+
+	return isInRange;
 }
 
 
 int Unit::GetDistanceToUnit( const Unit& target ) const
 {
-	return mTilePos.GetManhattanDistanceTo( target.mTilePos );
+	return GetTilePos().GetManhattanDistanceTo( target.GetTilePos() );
 }
 
 
@@ -467,6 +401,12 @@ bool Unit::CanFireWeapon( int weaponIndex ) const
 }
 
 
+int Unit::GetBestAvailableWeaponAgainst( const Unit& target ) const
+{
+	return GetBestAvailableWeaponAgainst( target.GetUnitType() );
+}
+
+
 int Unit::GetBestAvailableWeaponAgainst( const UnitType* unitType ) const
 {
 	assertion( unitType, "Cannot get best available weapon against NULL UnitType!" );
@@ -474,7 +414,7 @@ int Unit::GetBestAvailableWeaponAgainst( const UnitType* unitType ) const
 	int bestDamagePercentage = 0;
 	int bestWeaponIndex = -1;
 
-	DebugPrintf( "Choosing best weapon for %s against %s...", ToString(), unitType->ToString() );
+	DebugPrintf( "Choosing best weapon for %s against %s...", ToString().c_str(), unitType->ToString() );
 
 	for( int i = 0; i < mUnitType->GetNumWeapons(); ++i )
 	{
@@ -511,64 +451,178 @@ int Unit::GetBestAvailableWeaponAgainst( const UnitType* unitType ) const
 }
 
 
-void Unit::SetHP( int hp )
+void Unit::SetHealth( int health )
 {
 	// Set the current HP of the Unit.
-	mHP = Mathi::Clamp( hp, 0, MAX_HP );
+	mHealth = Mathi::Clamp( health, 0, MAX_HEALTH );
 
-	if( IsDead() )
+	if( IsInitialized() && mHealth == 0 )
 	{
-		// Run the destroyed event.
-		OnDestroyed();
-
-		// If the Unit is now dead, schedule it for removal from the Game.
-		mGame->RemoveUnit( this );
+		// If the Unit runs out of health, kill it.
+		Die();
 	}
+}
+
+
+void Unit::ResetHealth()
+{
+	// Reset the Unit's health to maximum.
+	SetHealth( MAX_HEALTH );
 }
 
 
 void Unit::TakeDamage( int damageAmount, Unit* instigator )
 {
-	if( instigator != nullptr )
-	{
-		DebugPrintf( "%s took %d damage from %s.", ToString(), damageAmount, instigator->ToString() );
-	}
-	else
-	{
-		DebugPrintf( "%s took %d damage.", ToString(), damageAmount );
-	}
+	assertion( IsInitialized(), "Unit cannot take damage because it has not been initialized!" );
+
+	// Fire the damaged event.
+	OnTakeDamage.Invoke( damageAmount, instigator );
 
 	// Reduce the HP of this Unit.
-	SetHP( mHP - damageAmount );
+	SetHealth( mHealth - damageAmount );
 }
 
 
-void Unit::OnDestroyed()
+void Unit::Die()
 {
-	DebugPrintf( "%s has been destroyed!", ToString() );
-	mGame->PostMessageFormat( mOwner->GetPlayerColor(), "%s has been destroyed", ToString() );
-	mOwner->OnLoseUnit( this );
-	mGame->CheckVictory();
-}
+	assertion( IsInitialized(), "Cannot kill Unit that has not been initialized!" );
 
-
-void Unit::ResetAP()
-{
-	mAP = 2;
-	mSprite->DrawColor = mSelectionColor;
-}
-
-void Unit::ConsumeAP( int ap )
-{
-	mAP -= ap;
-	if ( mAP <= 0 )
+	if( mIsAlive )
 	{
-		mAP = 0;
-		mSprite->DrawColor = mDefaultColor;
+		// Mark the Unit as dead.
+		mIsAlive = false;
+
+		// Run the death event.
+		OnDeath.Invoke();
+
+		// Notify the Map that this Unit died.
+		mMap->UnitDied( this );
 	}
 }
 
-int Unit::GetTotalHP() const
+
+int Unit::GetHealth() const
 {
-	return mUnitType->GetMaxHP();
+	return mHealth;
+}
+
+
+bool Unit::IsAlive() const
+{
+	return mIsAlive;
+}
+
+
+bool Unit::IsDead() const
+{
+	return !mIsAlive;
+}
+
+
+float Unit::GetHealthScale() const
+{
+	return ( (float) mHealth / MAX_HEALTH );
+}
+
+
+void Unit::SetAmmo( int ammo )
+{
+	mAmmo = Mathi::Clamp( ammo, 0, mUnitType->GetMaxAmmo() );
+}
+
+
+void Unit::ResetAmmo()
+{
+	mAmmo = mUnitType->GetMaxAmmo();
+}
+
+
+void Unit::ConsumeAmmo( int ammo )
+{
+	SetAmmo( mAmmo - ammo );
+}
+
+
+int Unit::GetAmmo() const
+{
+	return mAmmo;
+}
+
+
+bool Unit::HasAmmo() const
+{
+	return ( mAmmo > 0 );
+}
+
+
+void Unit::SetSupplies( int supplies )
+{
+	mSupplies = Mathi::Clamp( supplies, 0, mUnitType->GetMaxSupplies() );
+
+	if( IsInitialized() )
+	{
+		MovementType* movementType = GetMovementType();
+
+		if( movementType->RequiresSuppliesToSurvive() && !HasSupplies() )
+		{
+			// If the Unit runs out of supplies and it needs them to survive, kill it.
+			Die();
+		}
+	}
+}
+
+
+void Unit::ResetSupplies()
+{
+	mSupplies = mUnitType->GetMaxSupplies();
+}
+
+
+void Unit::ConsumeSupplies( int supplies )
+{
+	SetSupplies( mSupplies - supplies );
+}
+
+
+int Unit::GetSupplies() const
+{
+	return mSupplies;
+}
+
+
+bool Unit::HasSupplies() const
+{
+	return ( mSupplies > 0 );
+}
+
+
+void Unit::SetActive( bool active )
+{
+	mIsActive = active;
+}
+
+
+void Unit::Activate()
+{
+	SetActive( true );
+}
+
+
+void Unit::Deactivate()
+{
+	SetActive( false );
+}
+
+
+bool Unit::IsActive() const
+{
+	return mIsActive;
+}
+
+
+std::string Unit::ToString() const
+{
+	std::stringstream formatter;
+	formatter << mUnitType->GetName().GetString() << " (" << mTile.GetX() << "," << mTile.GetY() << ")";
+	return formatter.str();
 }

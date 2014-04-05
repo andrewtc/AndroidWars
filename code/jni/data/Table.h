@@ -80,16 +80,16 @@ namespace mage
 		virtual void OnLoadRecordFromXml( RecordType* record, XmlReader::XmlReaderIterator elementIterator ) = 0;
 		virtual void OnLoadRecordFromJSON( RecordType* record, const rapidjson::Value& object ) = 0;
 
-		Scenario* mDatabase;
+		Scenario* mScenario;
 		RecordsByHashedName mRecords;
 	};
 
 
 	MAGE_TABLE_TEMPLATE
 	MAGE_TABLE::Table( Scenario* scenario ) :
-		mDatabase( scenario )
+		mScenario( scenario )
 	{
-		assertion( mDatabase, "Cannot create table without Database!" );
+		assertion( mScenario, "Cannot create table without a valid Scenario!" );
 	}
 
 
@@ -219,7 +219,7 @@ namespace mage
 	MAGE_TABLE_TEMPLATE
 	void MAGE_TABLE::DeleteAllRecords()
 	{
-		DebugPrintf( "Deleting all Database records..." );
+		DebugPrintf( "Deleting all Scenario records..." );
 
 		for( auto it = mRecords.begin(); it != mRecords.end(); ++it )
 		{
@@ -293,7 +293,7 @@ namespace mage
 	MAGE_TABLE_TEMPLATE
 	Scenario* MAGE_TABLE::GetScenario() const
 	{
-		return mDatabase;
+		return mScenario;
 	}
 
 

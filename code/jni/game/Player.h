@@ -9,68 +9,16 @@ namespace mage
 	class Player
 	{
 	public:
-		Player();
-		~Player();
-
 		Game* GetGame() const;
-		bool HasGame() const;
-		int GetIndex() const;
-		int GetFunds() const;
-		Color GetPlayerColor() const;
-		void GenerateFunds();
-		bool HasLost() const;
-		void OnGainUnit( Unit* unit );
-		void OnLoseUnit( Unit* unit );
-		void AddFunds( int funds ) { mFunds -= funds; if ( mFunds < 0 ) mFunds = 0; }
-
-		void SetControllable( bool isControllable );
-		bool IsControllable() const;
-
-		int CitiesOwned;
+		Faction* GetFaction() const;
 
 	protected:
-		bool mIsControllable;
-		int mIndex;
-		int mFunds;
-		int mUnits;
+		Player( Game* game, Faction* faction );
+		~Player();
+
 		Game* mGame;
+		Faction* mFaction;
 
 		friend class Game;
 	};
-
-
-	inline Game* Player::GetGame() const
-	{
-		return mGame;
-	}
-
-
-	inline bool Player::HasGame() const
-	{
-		return ( mGame != nullptr );
-	}
-
-
-	inline int Player::GetIndex() const
-	{
-		return mIndex;
-	}
-
-
-	inline int Player::GetFunds() const
-	{
-		return mFunds;
-	}
-
-
-	inline void Player::SetControllable( bool isControllable )
-	{
-		mIsControllable = isControllable;
-	}
-
-
-	inline bool Player::IsControllable() const
-	{
-		return mIsControllable;
-	}
 }

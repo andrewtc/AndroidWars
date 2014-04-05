@@ -283,13 +283,23 @@ namespace mage
 		{
 			return !(*this == other);
 		}
-		bool operator< (const Vector2& other ) const
+		bool operator< ( const Vector2& other ) const
 		{
-			return x < other.x && y < other.y;
+			//return x < other.x && y < other.y;
+			return ( y < other.y ) || ( ( y == other.y ) && ( x < other.x ) );
 		}
-		bool operator> (const Vector2& other ) const
+		bool operator> ( const Vector2& other ) const
 		{
-			return x > other.x && y > other.y;
+			//return x > other.x && y > other.y;
+			return ( y > other.y ) || ( ( y == other.y ) && ( x > other.x ) );
+		}
+		bool operator<=( const Vector2& other ) const
+		{
+			return ( y < other.y ) || ( ( y == other.y ) && ( x <= other.x ) );
+		}
+		bool operator>=( const Vector2& other ) const
+		{
+			return ( y > other.y ) || ( ( y == other.y ) && ( x >= other.x ) );
 		}
 		//---------------------------------------
 

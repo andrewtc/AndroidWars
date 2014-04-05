@@ -2,19 +2,21 @@
 
 using namespace mage;
 
-const float World::TILE_WORLD_SCALE = 64.0f;
-const float World::INVERSE_TILE_WORLD_SCALE = ( 1.0f / TILE_WORLD_SCALE );
+const float MapView::TILE_WORLD_SCALE = 64.0f;
+const float MapView::INVERSE_TILE_WORLD_SCALE = ( 1.0f / TILE_WORLD_SCALE );
 
-const float World::MAP_BORDER_SCALE = ( TILE_WORLD_SCALE * 5.0f );
+const float MapView::MAP_BORDER_SCALE = ( TILE_WORLD_SCALE * 5.0f );
 
 
-World::World() :
+MapView::MapView() :
 	mMap( nullptr ),
-	mCamera( gWindowWidth, gWindowHeight )
+	mDefaultFont( nullptr ),
+	mCamera( gWindowWidth, gWindowHeight ),
+	mSelectedUnitSprite( nullptr )
 { }
 
 
-World::~World()
+MapView::~MapView()
 {
 	if( IsInitialized() )
 	{
@@ -23,46 +25,51 @@ World::~World()
 }
 
 
-void World::Init( Map* map )
+void MapView::Init( Map* map )
 {
-	assertion( !IsInitialized(), "Cannot initialize World that has already been initialized!" );
+	assertion( !IsInitialized(), "Cannot initialize " STRINGIFY( MapView ) " that has already been initialized!" );
 
 	// Set the Map.
 	mMap = map;
-	assertion( mMap, "Cannot create World without a valid Map!" );
+	assertion( mMap, "Cannot initialize MapView without a valid Map!" );
+
+	// Make sure a default Font was loaded.
+	assertion( mDefaultFont, "Cannot initialize " STRINGIFY( MapView ) " without a valid default Font!" );
 
 	// Resize to fill the whole tile buffer (for initialization).
-	// TODO: Allow this without resizing.
 	mTileSprites.ForEachTileInMaxArea( [this]( const TileSpritesGrid::Iterator& tileSprite )
 	{
 		// Initialize all TileSprites.
-		tileSprite->Init( this, tileSprite.GetTilePos() );
+		tileSprite->Init( this, tileSprite.GetPosition() );
 	});
 
 	// Create initial tile sprites.
 	MapResized( Vec2s::ZERO, mMap->GetSize() );
 
+	// Center the Camera initially.
+	CenterCamera();
+
 	// Listen for when the Map is resized.
-	mMap->OnResize.AddCallback( this, &World::MapResized );
+	mMap->OnResize.AddCallback( this, &MapView::MapResized );
 
 	// Listen for when the Map is changed.
-	mMap->OnTileChanged.AddCallback( this, &World::TileChanged );
+	mMap->OnTileChanged.AddCallback( this, &MapView::TileChanged );
 }
 
 
-void World::Destroy()
+void MapView::Destroy()
 {
-	assertion( !IsInitialized(), "Cannot destroy World that is not initialized!" );
+	assertion( !IsInitialized(), "Cannot destroy MapView that is not initialized!" );
 
 	// Remove the resize callback.
-	mMap->OnResize.RemoveCallback( this, &World::MapResized );
+	mMap->OnResize.RemoveCallback( this, &MapView::MapResized );
 
 	// Reset the Map reference.
 	mMap = nullptr;
 }
 
 
-void World::Update( float elapsedTime )
+void MapView::Update( float elapsedTime )
 {
 	mTileSprites.ForEachTile( [ this, elapsedTime ]( const TileSpritesGrid::Iterator& tileSprite )
 	{
@@ -72,7 +79,7 @@ void World::Update( float elapsedTime )
 }
 
 
-void World::Draw()
+void MapView::Draw()
 {
 	mTileSprites.ForEachTile( [ this ]( const TileSpritesGrid::Iterator& tileSprite )
 	{
@@ -82,19 +89,19 @@ void World::Draw()
 }
 
 
-Map* World::GetMap() const
+Map* MapView::GetMap() const
 {
 	return mMap;
 }
 
 
-RectF World::GetMapBounds() const
+RectF MapView::GetMapBounds() const
 {
 	return RectF( 0.0f, 0.0f, mMap->GetWidth() * TILE_WORLD_SCALE, mMap->GetHeight() * TILE_WORLD_SCALE );
 }
 
 
-RectF World::GetCameraBounds() const
+RectF MapView::GetCameraBounds() const
 {
 	RectF cameraBounds = GetMapBounds();
 
@@ -107,82 +114,93 @@ RectF World::GetCameraBounds() const
 }
 
 
-Camera* World::GetCamera()
+Camera* MapView::GetCamera()
 {
 	return &mCamera;
 }
 
 
-const Camera* World::GetCamera() const
+const Camera* MapView::GetCamera() const
 {
 	return &mCamera;
 }
 
 
-void World::CenterCamera()
+void MapView::CenterCamera()
 {
-	// Set the position of the Camera to the center of the World.
+	// Set the position of the Camera to the center of the MapView.
 	RectF bounds = GetCameraBounds();
 	mCamera.LookAt( Vec2f( bounds.CenterX(), bounds.CenterY() ) );
 }
 
 
+void MapView::SetDefaultFont( BitmapFont* font )
+{
+	mDefaultFont = font;
+}
 
-Vec2f World::WorldToScreenCoords( const Vec2f& worldCoords ) const
+
+BitmapFont* MapView::GetDefaultFont() const
+{
+	return mDefaultFont;
+}
+
+
+Vec2f MapView::WorldToScreenCoords( const Vec2f& worldCoords ) const
 {
 	return WorldToScreenCoords( worldCoords.x, worldCoords.y );
 }
 
 
-Vec2f World::WorldToScreenCoords( float worldX, float worldY ) const
+Vec2f MapView::WorldToScreenCoords( float worldX, float worldY ) const
 {
 	return Vec2f( worldX, worldY ) - mCamera.GetPosition();
 }
 
 
-Vec2f World::ScreenToWorldCoords( const Vec2f& screenCoords ) const
+Vec2f MapView::ScreenToWorldCoords( const Vec2f& screenCoords ) const
 {
 	return ScreenToWorldCoords( screenCoords.x, screenCoords.y );
 }
 
 
-Vec2f World::ScreenToWorldCoords( float screenX, float screenY ) const
+Vec2f MapView::ScreenToWorldCoords( float screenX, float screenY ) const
 {
 	return Vec2f( screenX, screenY ) + mCamera.GetPosition();
 }
 
 
-Vec2s World::WorldToTileCoords( const Vec2f& worldCoords ) const
+Vec2s MapView::WorldToTileCoords( const Vec2f& worldCoords ) const
 {
 	return WorldToTileCoords( worldCoords.x, worldCoords.y );
 }
 
 
-Vec2s World::WorldToTileCoords( float worldX, float worldY ) const
+Vec2s MapView::WorldToTileCoords( float worldX, float worldY ) const
 {
 	return Vec2s( worldX * INVERSE_TILE_WORLD_SCALE, worldY * INVERSE_TILE_WORLD_SCALE );
 }
 
 
-Vec2f World::TileToWorldCoords( const Vec2s& tileCoords ) const
+Vec2f MapView::TileToWorldCoords( const Vec2s& tileCoords ) const
 {
 	return TileToWorldCoords( tileCoords.x, tileCoords.y );
 }
 
 
-Vec2f World::TileToWorldCoords( short tileX, short tileY ) const
+Vec2f MapView::TileToWorldCoords( short tileX, short tileY ) const
 {
 	return Vec2f( tileX * TILE_WORLD_SCALE, tileY * TILE_WORLD_SCALE );
 }
 
 
-bool World::IsInitialized() const
+bool MapView::IsInitialized() const
 {
 	return ( mMap != nullptr );
 }
 
 
-void World::MapResized( const Vec2s& oldSize, const Vec2s& newSize )
+void MapView::MapResized( const Vec2s& oldSize, const Vec2s& newSize )
 {
 	DebugPrintf( "Resized map from (%d,%d) to (%d,%d).", oldSize.x, oldSize.y, newSize.x, newSize.y );
 
@@ -199,13 +217,16 @@ void World::MapResized( const Vec2s& oldSize, const Vec2s& newSize )
 
 	// Resize the TileSprites grid.
 	mTileSprites.Resize( newSize );
+
+	// Refresh the Camera bounds.
+	mCamera.SetWorldBounds( GetCameraBounds() );
 }
 
 
-void World::TileChanged( const Map::Iterator& tile )
+void MapView::TileChanged( const Map::Iterator& tile )
 {
 	// Update the TileSprite for this tile.
-	TileSpritesGrid::Iterator tileSprite = mTileSprites.GetTile( tile.GetTilePos() );
+	TileSpritesGrid::Iterator tileSprite = mTileSprites.GetTile( tile.GetPosition() );
 	tileSprite->UpdateSprite();
 
 	tileSprite.ForEachAdjacent( []( const TileSpritesGrid::Iterator& adjacent )
@@ -213,4 +234,18 @@ void World::TileChanged( const Map::Iterator& tile )
 		// Update adjacent TileSprites.
 		adjacent->UpdateSprite();
 	});
+}
+
+
+void MapView::UnitSpriteSelected( UnitSprite* unitSprite )
+{
+	// TODO
+	if( unitSprite )
+	{
+
+	}
+	else
+	{
+
+	}
 }

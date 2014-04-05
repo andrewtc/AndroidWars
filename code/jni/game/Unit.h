@@ -5,41 +5,37 @@ namespace mage
 	/**
 	 * Represents a Unit on the game board.
 	 */
-	class Unit : public MapObject
+	class Unit
 	{
 		DECLARE_RTTI;
-	public:
-		static const int MAX_HP = 10;
 
-		Unit( const std::string& name = "Unit" );
+	public:
+		static const int MAX_HEALTH = 10;
+
+		Unit();
 		virtual ~Unit();
 
-		void Init( Game* game );
 		bool IsInitialized() const;
-
-		virtual void OnLoadProperty( const std::string& name, const std::string& value );
-		virtual void OnLoadFinished();
-		virtual void OnDraw( const Camera& camera ) const;
-		virtual void OnUpdate( float dt );
 
 		void SaveToJSON( rapidjson::Document& document, rapidjson::Value& object );
 		void LoadFromJSON( const rapidjson::Value& object );
 
 		void SetUnitType( UnitType* unitType );
 		UnitType* GetUnitType() const;
-		void SetTilePos( int x, int y );
-		void SetTilePos( const Vec2i& tilePos );
-		Vec2i GetTilePos() const;
 
-		void SetOwner( Player* player );
-		Player* GetOwner() const;
+		Map::Iterator GetTile() const;
+		Vec2s GetTilePos() const;
+		short GetTileX() const;
+		short GetTileY() const;
+
+		void SetOwner( Faction* faction );
+		Faction* GetOwner() const;
+
+		MovementType* GetMovementType() const;
 		int GetMovementRange() const;
 		int GetMovementCostAcrossTerrain( TerrainType* terrainType ) const;
 		bool CanMoveAcrossTerrain( TerrainType* terrainType ) const;
-		bool IsOwnedBy( Player* player ) const { return mOwner == player; }
-		void Select();
-		void Deselect();
-		void SetDestination( const Vec2i& tilePos );
+		bool IsOwnedBy( Faction* faction ) const;
 
 		bool CanAttack( const Unit& target ) const;
 		void Attack( Unit& target );
@@ -47,146 +43,65 @@ namespace mage
 		float GetDefenseBonus() const;
 		bool CanTarget( const Unit& target ) const;
 		bool IsInRange( const Unit& target ) const;
+		bool IsInRangeFromTile( const Unit& target, const Map::ConstIterator& tile ) const;
 		int GetDistanceToUnit( const Unit& target ) const;
 		bool CanFireWeapon( int weaponIndex ) const;
 		int GetBestAvailableWeaponAgainst( const UnitType* unitType ) const;
 		int GetBestAvailableWeaponAgainst( const Unit& target ) const;
 
-		void SetHP( int hp );
-		int GetHP() const;
+		void SetHealth( int health );
+		void ResetHealth();
 		void TakeDamage( int damageAmount, Unit* instigator = nullptr );
+		void Die();
+		int GetHealth() const;
 		bool IsAlive() const;
 		bool IsDead() const;
 		float GetHealthScale() const;
-		void OnDestroyed();
 
 		void SetAmmo( int ammo );
-		void ConsumeAmmo( int ammo );
 		void ResetAmmo();
+		void ConsumeAmmo( int ammo );
 		int GetAmmo() const;
 		bool HasAmmo() const;
 
-		void ConsumeAP( int ap );
-		void ResetAP();
-		int GetRemainingAP() const { return mAP; }
-		int GetTotalAP() const { return 2; }
-		int GetTotalHP() const;
+		void SetSupplies( int supplies );
+		void ResetSupplies();
+		void ConsumeSupplies( int supplies );
+		int GetSupplies() const;
+		bool HasSupplies() const;
 
-		const char* ToString() const;
+		void SetActive( bool active );
+		void Activate();
+		void Deactivate();
+		bool IsActive() const;
 
-	protected:
-		Game* mGame;
-		std::string mDebugName;
-		HashString mUnitTypeName;
-		UnitType* mUnitType;
-		Vec2i mTilePos;
-		Sprite* mSprite;
-		int mOwnerIndex;
-		Player* mOwner;
-		Color mSelectionColor;
-		Color mDefaultColor;
-		int mHP;
-		Vec2f mDestination;
-		int mAP;
+		Map* GetMap() const;
+
+		std::string ToString() const;
+
+	private:
+		void Init( Map* map, const Map::Iterator& tile );
+		void Destroy();
+
+		void OnTurnStart( int turnIndex );
+		void OnTurnEnd( int turnIndex );
+
+		bool mIsAlive;
+		bool mIsActive;
+		int mHealth;
 		int mAmmo;
-		bool mWasLoadedByMap;
+		int mSupplies;
+		Map* mMap;
+		UnitType* mUnitType;
+		Faction* mOwner;
+		Map::Iterator mTile;
+
+	public:
+		Event< int, Unit* > OnTakeDamage;
+		Event<> OnDeath;
+		Event<> OnDestroyed;
+
+		friend class Map;
+		friend class Faction;
 	};
-
-
-	inline UnitType* Unit::GetUnitType() const
-	{
-		return mUnitType;
-	}
-
-
-	inline void Unit::SetTilePos( int x, int y )
-	{
-		SetTilePos( Vec2i( x, y ) );
-	}
-
-
-	inline Vec2i Unit::GetTilePos() const
-	{
-		return mTilePos;
-	}
-
-
-	inline int Unit::GetMovementCostAcrossTerrain( TerrainType* terrainType ) const
-	{
-		assertion( terrainType, "Cannot get movement cost because null TerrainType was specified!" );
-		assertion( mUnitType, "No UnitType found for %s!", ToString() );
-		return mUnitType->GetMovementCostAcrossTerrain( terrainType );
-	}
-
-
-	inline bool Unit::CanMoveAcrossTerrain( TerrainType* terrainType ) const
-	{
-		return ( GetMovementCostAcrossTerrain( terrainType ) > -1 );
-	}
-
-
-	inline int Unit::GetBestAvailableWeaponAgainst( const Unit& target ) const
-	{
-		return GetBestAvailableWeaponAgainst( target.GetUnitType() );
-	}
-
-
-	inline int Unit::GetHP() const
-	{
-		return mHP;
-	}
-
-
-	inline bool Unit::IsAlive() const
-	{
-		return ( mHP > 0 );
-	}
-
-
-	inline bool Unit::IsDead() const
-	{
-		return !IsAlive();
-	}
-
-
-	inline float Unit::GetHealthScale() const
-	{
-		return ( (float) mHP / MAX_HP );
-	}
-
-
-	inline void Unit::SetAmmo( int ammo )
-	{
-		mAmmo = Mathi::Clamp( ammo, 0, mUnitType->GetMaxAmmo() );
-	}
-
-
-	inline void Unit::ConsumeAmmo( int ammo )
-	{
-		SetAmmo( mAmmo - ammo );
-	}
-
-
-	inline void Unit::ResetAmmo()
-	{
-		mAmmo = mUnitType->GetMaxAmmo();
-	}
-
-
-	inline int Unit::GetAmmo() const
-	{
-		return mAmmo;
-	}
-
-
-	inline bool Unit::HasAmmo() const
-	{
-		return ( mAmmo > 0 );
-	}
-
-
-	inline const char* Unit::ToString() const
-	{
-		return mDebugName.c_str();
-	}
 }

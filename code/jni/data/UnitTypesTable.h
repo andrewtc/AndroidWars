@@ -14,7 +14,7 @@ namespace mage
 		static const char* const WEAPONS_JSON_PROPERTY_NAME;
 		static const char* const DAMAGE_JSON_PROPERTY_NAME;
 
-		UnitTypesTable( Scenario* database );
+		UnitTypesTable( Scenario* scenario );
 		virtual ~UnitTypesTable();
 
 	protected:

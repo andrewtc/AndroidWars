@@ -9,8 +9,8 @@ const char* const UnitTypesTable::WEAPONS_JSON_PROPERTY_NAME = "weapons";
 const char* const UnitTypesTable::DAMAGE_JSON_PROPERTY_NAME = "damage";
 
 
-UnitTypesTable::UnitTypesTable( Scenario* database )
-	: Table( database )
+UnitTypesTable::UnitTypesTable( Scenario* scenario )
+	: Table( scenario )
 { }
 
 
@@ -31,7 +31,6 @@ void UnitTypesTable::OnLoadRecordFromXml( UnitType* unitType, XmlReader::XmlRead
 	unitType->mMovementRange    = xmlIterator.GetAttributeAsInt( "movementRange", 0 );
 	unitType->mMovementTypeName = xmlIterator.GetAttributeAsString( "movementType" );
 	unitType->mAttackRange      = xmlIterator.GetAttributeAsIntRange( "attackRange" );
-	unitType->mMaxHP            = xmlIterator.GetAttributeAsInt( "hp", 1 );
 	unitType->mMaxAmmo          = xmlIterator.GetAttributeAsInt( "ammo", 0 );
 	unitType->mMaxSupplies      = xmlIterator.GetAttributeAsInt( "supplies", UnitType::DEFAULT_MAX_SUPPLIES );
 
@@ -70,7 +69,6 @@ void UnitTypesTable::OnLoadRecordFromJSON( UnitType* unitType, const rapidjson::
 	unitType->mMovementRange    = GetJSONIntValue( object, "movementRange", 0 );
 	unitType->mMovementTypeName = GetJSONStringValue( object, "movementType", "" );
 	StringUtil::ParseIntRange( GetJSONStringValue( object, "attackRange", "" ), IntRange( 0, 0 ), unitType->mAttackRange );
-	unitType->mMaxHP            = GetJSONIntValue( object, "hp", 1 );
 	unitType->mMaxAmmo          = GetJSONIntValue( object, "ammo", 0 );
 	unitType->mMaxSupplies      = GetJSONIntValue( object, "supplies", UnitType::DEFAULT_MAX_SUPPLIES );
 

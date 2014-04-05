@@ -2,6 +2,7 @@
 
 namespace mage
 {
+	class Variation;
 	class TerrainType;
 
 	/**
@@ -10,11 +11,14 @@ namespace mage
 	class TerrainTypesTable : public Table< TerrainTypesTable, TerrainType >
 	{
 	public:
-		TerrainTypesTable( Scenario* database );
+		TerrainTypesTable( Scenario* scenario );
 		virtual ~TerrainTypesTable();
 
 	protected:
 		virtual void OnLoadRecordFromXml( TerrainType* terrainType, XmlReader::XmlReaderIterator xmlIterator );
 		virtual void OnLoadRecordFromJSON( TerrainType* terrainType, const rapidjson::Value& object );
+
+		void LoadVariationFromJSON( TerrainType* terrainType, const rapidjson::Value& object );
+		void LoadVariationConditionFromJSON( Variation* variation, const rapidjson::Value& object );
 	};
 }

@@ -11,7 +11,12 @@ namespace mage
 		GameplayState();
 		virtual ~GameplayState();
 
-		Game* GetGame() const;
+		Game* GetGame();
+		const Game* GetGame() const;
+		Map* GetMap();
+		const Map* GetMap() const;
+		MapView* GetMapView();
+		const MapView* GetMapView() const;
 
 	private:
 		virtual void OnEnter( const Dictionary& parameters );
@@ -24,10 +29,10 @@ namespace mage
 		virtual bool OnPointerUp( const Pointer& pointer );
 		virtual bool OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID );
 
-		bool mWasMotion;
-		Game* mGame;
-		Camera* mCamera;
-		Vec2f mCameraTarget;
-		Vec2f mCameraVelocity;
+		bool mIsNetworkGame;
+		Scenario mScenario;
+		Game mGame;
+		Map mMap;
+		MapView mMapView;
 	};
 }

@@ -2,7 +2,7 @@
 
 namespace mage
 {
-	class World;
+	class MapView;
 
 	/**
 	 * The visual representation of a Tile on the Map.
@@ -15,7 +15,7 @@ namespace mage
 		TileSprite();
 		~TileSprite();
 
-		void Init( World* world, const Vec2s& tilePos );
+		void Init( MapView* mapView, const Vec2s& tilePos );
 
 		void Update( float elapsedTime );
 		void Draw();
@@ -23,11 +23,16 @@ namespace mage
 		void UpdateSprite();
 
 		Map::Iterator GetTile() const;
+		Vec2s GetTilePos() const;
+		short GetTileX() const;
+		short GetTileY() const;
 
 	private:
 		void DestroySprite();
 
-		World* mWorld;
+		static bool TileMatchesVariation( const Map::ConstIterator& tile, const Variation* variation );
+
+		MapView* mMapView;
 		Sprite* mSprite;
 		Map::Iterator mTile;
 	};

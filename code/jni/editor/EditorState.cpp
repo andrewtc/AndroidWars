@@ -4,7 +4,7 @@ using namespace mage;
 
 
 EditorState::EditorState() :
-	mCamera( gWindowWidth, gWindowHeight ),
+	//mCamera( gWindowWidth, gWindowHeight ),
 	mBrushToolInputState( nullptr ),
 	mEraserToolInputState( nullptr ),
 	mToolPalette( nullptr ),
@@ -30,15 +30,15 @@ const Map* EditorState::GetMap() const
 }
 
 
-World* EditorState::GetWorld()
+MapView* EditorState::GetMapView()
 {
-	return &mWorld;
+	return &mMapView;
 }
 
 
-const World* EditorState::GetWorld() const
+const MapView* EditorState::GetMapView() const
 {
-	return &mWorld;
+	return &mMapView;
 }
 
 
@@ -64,8 +64,8 @@ Tile EditorState::CreateDefaultTileTemplate()
 void EditorState::PaintTileAt( float x, float y, const Tile& tile )
 {
 	// Find the Tile the user pressed.
-	Vec2f worldCoords = mWorld.ScreenToWorldCoords( x, y );
-	Vec2s tilePos = mWorld.WorldToTileCoords( worldCoords );
+	Vec2f worldCoords = mMapView.ScreenToWorldCoords( x, y );
+	Vec2s tilePos = mMapView.WorldToTileCoords( worldCoords );
 
 	if( mMap.IsValidTilePos( tilePos ) )
 	{
@@ -83,35 +83,21 @@ ListLayout* EditorState::GetTilePalette() const
 
 void EditorState::OnEnter( const Dictionary& parameters )
 {
-	// Create the database.
-	mScenario.LoadDataFromFile( "data/Data.json" );
+	// Load the default Scenario.
+	// TODO: Allow this to change.
+	bool success = mScenario.LoadDataFromFile( "data/Data.json" );
+	assertion( success, "The Scenario file \"%s\" could not be opened!" );
 
-	// Create a new Map.
-	mMap.Resize( 16, 12 );
-
-	// Paint the Map with default tiles.
-	TerrainType* defaultTerrainType = mScenario.GetDefaultTerrainType();
-	assertion( defaultTerrainType != nullptr, "No default TerrainType found for this Scenario!" );
-
-	Tile tile;
-	tile.SetTerrainType( defaultTerrainType );
-	mMap.FillMaxArea( tile );
-
-	TerrainType* seaTerrainType = mScenario.TerrainTypes.FindByName( "Sea" );
-	tile.SetTerrainType( seaTerrainType );
-	mMap.Fill( tile, RectS( 2, 2, 4, 4 ) );
-
+	// Create a new Map and paint it with default tiles.
 	mMap.Init( &mScenario );
+	mMap.Resize( 16, 12 );
+	mMap.FillWithDefaultTerrainType();
 
-	// Initialize the World.
-	mWorld.Init( &mMap );
+	// Set the default font for the MapView.
+	mMapView.SetDefaultFont( gWidgetManager->GetFontByName( "default_s.fnt" ) );
 
-	// Set camera bounds.
-	// TODO: Move this elsewhere.
-	mWorld.GetCamera()->SetWorldBounds( mWorld.GetCameraBounds() );
-
-	// Center the Camera.
-	mWorld.CenterCamera();
+	// Initialize the MapView.
+	mMapView.Init( &mMap );
 
 	// Create the tool palette Widget and show it.
 	mToolPalette = gWidgetManager->CreateWidgetFromTemplate( "ToolPalette" );
@@ -173,15 +159,15 @@ void EditorState::OnUpdate( float elapsedTime )
 {
 	GameState::OnUpdate( elapsedTime );
 
-	// Update the World.
-	mWorld.Update( elapsedTime );
+	// Update the MapView.
+	mMapView.Update( elapsedTime );
 }
 
 
 void EditorState::OnDraw()
 {
-	// Draw the World.
-	mWorld.Draw();
+	// Draw the MapView.
+	mMapView.Draw();
 
 	// Draw Widgets.
 	GameState::OnDraw();
@@ -250,7 +236,7 @@ bool EditorState::OnPointerMotion( const Pointer& activePointer, const PointersB
 		if( activePointer.isMoving )
 		{
 			// If multiple pointers are down, pan the Camera.
-			mWorld.GetCamera()->TranslateLookAt( -activePointer.GetDisplacement() );
+			mMapView.GetCamera()->TranslateLookAt( -activePointer.GetDisplacement() );
 			wasHandled = true;
 		}
 	}

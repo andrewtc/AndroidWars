@@ -11,44 +11,22 @@ namespace mage
 		MovementType( const HashString& name );
 		virtual ~MovementType();
 
+		int GetSuppliesConsumedPerTurn() const;
+		bool RequiresSuppliesToSurvive() const;
+
 		bool CanMoveAcrossTerrain( TerrainType* terrainType ) const;
 		int GetMovementCostAcrossTerrain( TerrainType* terrainType ) const;
+
+		std::string GetDisplayName() const;
 
 	protected:
 		void AddMovementCost( const HashString& movementTypeName, int movementCost );
 
+		bool mRequiresSuppliesToSurvive;
+		int mSuppliesConsumedPerTurn;
 		std::string mDisplayName;
 		HashMap< int > mMovementCostsByTerrainTypeID;
 
 		friend class MovementTypesTable;
 	};
-
-
-	inline void MovementType::AddMovementCost( const HashString& movementTypeName, int movementCost )
-	{
-		mMovementCostsByTerrainTypeID[ movementTypeName ] = movementCost;
-	}
-
-
-	inline bool MovementType::CanMoveAcrossTerrain( TerrainType* terrainType ) const
-	{
-		return ( GetMovementCostAcrossTerrain( terrainType ) > -1 );
-	}
-
-
-	inline int MovementType::GetMovementCostAcrossTerrain( TerrainType* terrainType ) const
-	{
-		// By default, don't allow movement across this type of terrain.
-		int result = -1;
-
-		// Get the hash value for this TerrainType (if it exists).
-		auto it = mMovementCostsByTerrainTypeID.find( terrainType->GetName() );
-
-		if( it != mMovementCostsByTerrainTypeID.end() )
-		{
-			result = it->second;
-		}
-
-		return result;
-	}
 }

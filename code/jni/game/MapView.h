@@ -2,7 +2,7 @@
 
 namespace mage
 {
-	class World
+	class MapView
 	{
 	public:
 		static const float TILE_WORLD_SCALE;
@@ -10,8 +10,8 @@ namespace mage
 
 		static const float MAP_BORDER_SCALE;
 
-		World();
-		~World();
+		MapView();
+		~MapView();
 
 		void Init( Map* map );
 		void Destroy();
@@ -26,6 +26,16 @@ namespace mage
 		Camera* GetCamera();
 		const Camera* GetCamera() const;
 		void CenterCamera();
+
+		void SetDefaultFont( BitmapFont* font );
+		BitmapFont* GetDefaultFont() const;
+
+		UnitSprite* GetUnitSpriteAtScreenCoords( float screenX, float screenY ) const;
+		UnitSprite* GetUnitSpriteAtScreenCoords( const Vec2f& screenCoords ) const;
+		UnitSprite* GetUnitSpriteAtWorldCoords( float worldX, float worldY ) const;
+		UnitSprite* GetUnitSpriteAtWorldCoords( const Vec2f& worldCoords ) const;
+		UnitSprite* GetUnitSpriteAtTileCoords( short tileX, short tileY ) const;
+		UnitSprite* GetUnitSpriteAtTileCoords( const Vec2s& tilePos ) const;
 
 		Vec2f WorldToScreenCoords( const Vec2f& worldCoords ) const;
 		Vec2f WorldToScreenCoords( float worldX, float worldY ) const;
@@ -44,8 +54,11 @@ namespace mage
 
 		void MapResized( const Vec2s& oldSize, const Vec2s& newSize );
 		void TileChanged( const Map::Iterator& tile );
+		void UnitSpriteSelected( UnitSprite* unitSprite );
 
 		Map* mMap;
+		UnitSprite* mSelectedUnitSprite;
+		BitmapFont* mDefaultFont;
 		Camera mCamera;
 		TileSpritesGrid mTileSprites;
 	};

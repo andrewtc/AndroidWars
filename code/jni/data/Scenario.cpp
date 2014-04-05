@@ -36,14 +36,16 @@ Scenario::Scenario()
 Scenario::~Scenario() { }
 
 
-void Scenario::LoadDataFromFile( const std::string& filePath )
+bool Scenario::LoadDataFromFile( const std::string& filePath )
 {
-	LoadDataFromFile( filePath.c_str() );
+	return LoadDataFromFile( filePath.c_str() );
 }
 
 
-void Scenario::LoadDataFromFile( const char* filePath )
+bool Scenario::LoadDataFromFile( const char* filePath )
 {
+	bool success = false;
+
 	/*
 	// Open the data file.
 	XmlReader xmlReader( file );
@@ -64,13 +66,18 @@ void Scenario::LoadDataFromFile( const char* filePath )
 	if( data )
 	{
 		// Load the data from the file.
-		DebugPrintf( "Loading Database data from file \"%s\"...", filePath );
+		DebugPrintf( "Loading Scenario data from file \"%s\"...", filePath );
 		LoadDataFromString( data );
+
+		// Return that the file was opened successfully.
+		success = true;
 	}
 	else
 	{
 		WarnFail( "Could not open data file \"%s\"!", filePath );
 	}
+
+	return success;
 }
 
 
@@ -88,7 +95,7 @@ void Scenario::LoadDataFromString( const char* data )
 
 	if( !document.HasParseError() )
 	{
-		// If the file was loaded successfully, load the database from the JSON result.
+		// If the file was loaded successfully, load the Scenario from the JSON result.
 		LoadDataFromJSON( document );
 	}
 	else
@@ -116,7 +123,7 @@ void Scenario::LoadDataFromString( const char* data )
 		// Get the column offset of the error.
 		size_t column = ( it - lastLineEnding );
 
-		WarnFail( "Error parsing Database JSON data at line %d, column %d: %s", line, column, document.GetParseError() );
+		WarnFail( "Error parsing Scenario JSON data at line %d, column %d: %s", line, column, document.GetParseError() );
 	}
 }
 
@@ -160,7 +167,7 @@ void Scenario::DebugPrintData() const
 {
 	DebugPrintf( "Scenario \"%s\":", mName.GetCString() );
 
-	// Print all records in the database.
+	// Print all records in the Scenario.
 	TerrainTypes.DebugPrintData();
 	UnitTypes.DebugPrintData();
 	MovementTypes.DebugPrintData();
