@@ -30,6 +30,7 @@ namespace mage
 		void SetDefaultFont( BitmapFont* font );
 		BitmapFont* GetDefaultFont() const;
 
+		UnitSprite* CreateUnitSprite( Unit* unit );
 		UnitSprite* GetUnitSpriteAtScreenCoords( float screenX, float screenY ) const;
 		UnitSprite* GetUnitSpriteAtScreenCoords( const Vec2f& screenCoords ) const;
 		UnitSprite* GetUnitSpriteAtWorldCoords( float worldX, float worldY ) const;
@@ -51,6 +52,7 @@ namespace mage
 
 	private:
 		typedef Grid< TileSprite, MAP_SIZE_POWER_OF_TWO > TileSpritesGrid;
+		typedef std::vector< UnitSprite* > UnitSprites;
 
 		void MapResized( const Vec2s& oldSize, const Vec2s& newSize );
 		void TileChanged( const Map::Iterator& tile );
@@ -60,6 +62,7 @@ namespace mage
 		UnitSprite* mSelectedUnitSprite;
 		BitmapFont* mDefaultFont;
 		Camera mCamera;
+		UnitSprites mUnitSprites;
 		TileSpritesGrid mTileSprites;
 	};
 }

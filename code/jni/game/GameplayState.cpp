@@ -5,7 +5,8 @@ using namespace mage;
 
 GameplayState::GameplayState() :
 	GameState(),
-	mIsNetworkGame( false )
+	mIsNetworkGame( false ),
+	mSelectUnitInputState( nullptr )
 {
 	DebugPrintf( "GameplayState created!" );
 }
@@ -33,18 +34,32 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 
 	// Load the default Scenario.
 	// TODO: Allow this to change.
-	mScenario.LoadDataFromFile( "data/Data.json" );
+	bool success = mScenario.LoadDataFromFile( "data/Data.json" );
+	assertion( success, "The Scenario file \"%s\" could not be opened!" );
 
 	// Create a new Map and paint it with default tiles.
+	mMap.Init( &mScenario );
 	mMap.Resize( 16, 12 );
 	mMap.FillWithDefaultTerrainType();
-	mMap.Init( &mScenario );
+
+	// Create a Faction.
+	Faction* testFaction = mMap.CreateFaction();
+
+	// Create a test Unit.
+	UnitType* testUnitType = mScenario.UnitTypes.FindByName( "Infantry" );
+	mMap.CreateUnit( testUnitType, testFaction, 5, 5, 10, 99 );
 
 	// Set the default font for the MapView.
 	mMapView.SetDefaultFont( gWidgetManager->GetFontByName( "default_s.fnt" ) );
 
 	// Initialize the MapView.
 	mMapView.Init( &mMap );
+
+	// Create input states.
+	mSelectUnitInputState = CreateState< SelectUnitInputState >();
+
+	// Start by letting the player select a Unit.
+	ChangeState( mSelectUnitInputState );
 
 	/*
 	gOnlineGameClient->RequestGameData( gameID, [ this ]( bool success, OnlineGameData gameData )

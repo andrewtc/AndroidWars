@@ -50,10 +50,15 @@ namespace mage
 	// Contains a map of components that use this animation
 	struct SpriteAnimationFrame
 	{
+		typedef std::vector< SpriteAnimationComponent* > SprAnimComponents;
+		typedef std::map< int, SprAnimComponents > SprAnimComponentsByZIndex;
+
+		void AddComponent( SpriteAnimationComponent* component );
+
 		int Index;
 		int Delay;
-		// @TODO We only support one component per frame right now...
-		SpriteAnimationComponent* SprAnimComponent;
+		RectI ClippingRect;
+		SprAnimComponentsByZIndex ComponentsByZIndex;
 	};
 	//---------------------------------------
 	// A named animation

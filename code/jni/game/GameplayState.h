@@ -2,6 +2,8 @@
 
 namespace mage
 {
+	class SelectUnitInputState;
+
 	/**
 	 * Encapsulates all gameplay functionality.
 	 */
@@ -30,6 +32,7 @@ namespace mage
 		virtual bool OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID );
 
 		bool mIsNetworkGame;
+		SelectUnitInputState* mSelectUnitInputState;
 		Scenario mScenario;
 		Game mGame;
 		Map mMap;

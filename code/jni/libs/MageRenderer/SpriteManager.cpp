@@ -176,6 +176,7 @@ bool LoadSpriteAnimations( const char* filename, bool linearFilter )
 
 		sprAnim.Name = animItr.GetAttributeAsString( "name" );
 		sprAnim.LoopType = animItr.GetAttributeAsInt( "loops" );
+		DebugPrintf( "LOADING ANIMATION \"%s\"...", sprAnim.Name.GetCString() );
 
 		// Loop through all the frames
 		for ( XmlReader::XmlReaderIterator cellItr = animItr.NextChild( "cell" );
@@ -212,10 +213,8 @@ bool LoadSpriteAnimations( const char* filename, bool linearFilter )
 					GetComponentFromPath( clipPath );
 				animComp->SprComponentClipName = clipName;
 
-				animFrame.SprAnimComponent = animComp;
-
-				// @TODO Load all components
-				break;
+				// Add the component to the animation frame.
+				animFrame.AddComponent( animComp );
 			}
 
 			sprAnim.Frames.push_back( animFrame );

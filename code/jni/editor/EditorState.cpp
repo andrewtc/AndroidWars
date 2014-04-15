@@ -6,9 +6,11 @@ using namespace mage;
 EditorState::EditorState() :
 	//mCamera( gWindowWidth, gWindowHeight ),
 	mBrushToolInputState( nullptr ),
+	mPlaceToolInputState( nullptr ),
 	mEraserToolInputState( nullptr ),
 	mToolPalette( nullptr ),
 	mTilePalette( nullptr ),
+	mUnitPalette( nullptr ),
 	mIsPanningCamera( false )
 { }
 
@@ -106,9 +108,44 @@ void EditorState::OnEnter( const Dictionary& parameters )
 	{
 		gWidgetManager->GetRootWidget()->AddChild( mToolPalette );
 		mToolPalette->Show();
+
+		// Bind callbacks for tool palette buttons.
+		Button* brushToolButton = mToolPalette->GetChildByName< Button >( "brushToolButton" );
+		Button* placeToolButton = mToolPalette->GetChildByName< Button >( "placeToolButton" );
+		Button* eraserToolButton = mToolPalette->GetChildByName< Button >( "eraserToolButton" );
+
+		if( brushToolButton )
+		{
+			brushToolButton->SetOnClickDelegate( [ this ]()
+			{
+				// Switch to the brush tool.
+				DebugPrintf( "Switching to brush tool." );
+				ChangeState( mBrushToolInputState );
+			});
+		}
+
+		if( placeToolButton )
+		{
+			placeToolButton->SetOnClickDelegate( [ this ]()
+			{
+				// Switch to the eraser tool.
+				DebugPrintf( "Switching to place tool." );
+				ChangeState( mPlaceToolInputState );
+			});
+		}
+
+		if( eraserToolButton )
+		{
+			eraserToolButton->SetOnClickDelegate( [ this ]()
+			{
+				// Switch to the eraser tool.
+				DebugPrintf( "Switching to eraser tool." );
+				ChangeState( mEraserToolInputState );
+			});
+		}
 	}
 
-	// Create the tile palette Widget and hide it.
+	// Create the Tile palette Widget and hide it.
 	mTilePalette = gWidgetManager->CreateWidgetFromTemplate< ListLayout >( "TilePalette" );
 
 	if( mTilePalette )
@@ -120,28 +157,16 @@ void EditorState::OnEnter( const Dictionary& parameters )
 		BuildTilePalette();
 	}
 
-	// Bind callbacks for tool palette buttons.
-	Button* brushToolButton = mToolPalette->GetChildByName< Button >( "brushToolButton" );
-	Button* eraserToolButton = mToolPalette->GetChildByName< Button >( "eraserToolButton" );
+	// Create the Unit palette Widget and hide it.
+	mUnitPalette = gWidgetManager->CreateWidgetFromTemplate< ListLayout >( "UnitPalette" );
 
-	if( brushToolButton )
+	if( mUnitPalette )
 	{
-		brushToolButton->SetOnClickDelegate( [ this ]()
-		{
-			// Switch to the brush tool.
-			DebugPrintf( "Switching to brush tool." );
-			ChangeState( mBrushToolInputState );
-		});
-	}
+		gWidgetManager->GetRootWidget()->AddChild( mUnitPalette );
+		mUnitPalette->Hide();
 
-	if( eraserToolButton )
-	{
-		eraserToolButton->SetOnClickDelegate( [ this ]()
-		{
-			// Switch to the eraser tool.
-			DebugPrintf( "Switching to eraser tool." );
-			ChangeState( mEraserToolInputState );
-		});
+		// Add all Unit type selectors to the palette.
+		BuildUnitPalette();
 	}
 
 	// Create input states.
@@ -291,6 +316,56 @@ void EditorState::BuildTilePalette()
 
 						// Change the selected tile type.
 						mBrushToolInputState->SetTileTemplate( tile );
+					});
+				}
+			}
+		}
+		else
+		{
+			WarnFail( "Could not build tile palette because no tile selector template was found!" );
+		}
+	}
+}
+
+
+void EditorState::BuildUnitPalette()
+{
+	if( mUnitPalette )
+	{
+		// Clear all items in the Unit palette.
+		mUnitPalette->DestroyAllItems();
+
+		// Get the WidgetTemplate for the tile selector.
+		WidgetTemplate* unitSelectorTemplate = gWidgetManager->GetTemplate( "UnitSelector" );
+
+		if( unitSelectorTemplate )
+		{
+			const UnitTypesTable::RecordsByHashedName& unitTypes = mScenario.UnitTypes.GetRecords();
+			for( auto it = unitTypes.begin(); it != unitTypes.end(); ++it )
+			{
+				// Add a button for each TerrainType in the Scenario.
+				UnitType* unitType = it->second;
+				Button* selector = mUnitPalette->CreateItem< Button >( *unitSelectorTemplate );
+
+				if( selector )
+				{
+					// Get the icon for this selector.
+					Graphic* icon = selector->GetChildByName< Graphic >( "icon" );
+
+					if( icon )
+					{
+						// Use the TerrainType sprite as the image for the selector.
+						icon->SetSprite( unitType->GetAnimationSetName(), "Idle" );
+					}
+					else
+					{
+						WarnFail( "Could not set icon for Unit selector button \"%s\" because no \"icon\" Graphic was found!", selector->GetFullName().c_str() );
+					}
+
+					selector->SetOnClickDelegate( [ this, unitType ]()
+					{
+						// Change the selected Unit type.
+						mPlaceToolInputState->SetSelectedUnitType( unitType );
 					});
 				}
 			}

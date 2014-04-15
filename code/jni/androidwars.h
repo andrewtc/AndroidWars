@@ -80,6 +80,7 @@ const size_t MAP_SIZE_POWER_OF_TWO = 10;
 #include "game/Unit.h"
 #include "game/Game.h"
 #include "game/GameplayState.h"
+#include "game/GameplayInputStates.h"
 
 #include "editor/EditorState.h"
 #include "editor/EditorInputStates.h"

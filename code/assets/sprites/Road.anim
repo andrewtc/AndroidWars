@@ -8,7 +8,8 @@
   </anim>
   <anim name="EastNorth" loops="0">
     <cell index="0" delay="1">
-      <spr name="/Road_EastNort" x="0" y="-16" z="0"/>
+      <spr name="/Road_EastNorth" x="0" y="-16" z="0"/>
+      <spr name="/Plain" x="0" y="-16" z="1"/>
     </cell>
   </anim>
   <anim name="EastWest" loops="0">
@@ -19,11 +20,13 @@
   <anim name="EastSouth" loops="0">
     <cell index="0" delay="1">
       <spr name="/Road_EastSouth" x="0" y="-16" z="0"/>
+      <spr name="/Plain" x="0" y="-16" z="1"/>
     </cell>
   </anim>
   <anim name="NorthWest" loops="0">
     <cell index="0" delay="1">
       <spr name="/Road_NorthWest" x="0" y="-16" z="0"/>
+      <spr name="/Plain" x="0" y="-16" z="1"/>
     </cell>
   </anim>
   <anim name="NorthSouth" loops="0">
@@ -34,6 +37,7 @@
   <anim name="WestSouth" loops="0">
     <cell index="0" delay="1">
       <spr name="/Road_WestSouth" x="0" y="-16" z="0"/>
+      <spr name="/Plain" x="0" y="-16" z="1"/>
     </cell>
   </anim>
   <anim name="EastNorthSouth" loops="0">

@@ -84,27 +84,83 @@ void BrushToolInputState::SetTileTemplate( const Tile& tile )
 }
 
 
+PlaceToolInputState::PlaceToolInputState( GameState* owner ) :
+	DerivedInputState( owner )
+{ }
+
+
+PlaceToolInputState::~PlaceToolInputState() { }
+
+
+void PlaceToolInputState::OnEnter( const Dictionary& parameters )
+{
+	EditorState* owner = GetOwnerDerived();
+}
+
+
+void PlaceToolInputState::OnExit()
+{
+}
+
+
+bool PlaceToolInputState::OnPointerDown( const Pointer& pointer )
+{
+	return false; //InputState::OnPointerDown( pointer );
+}
+
+
+bool PlaceToolInputState::OnPointerUp( const Pointer& pointer )
+{
+	bool wasHandled = false; //InputState::OnPointerUp( pointer );
+
+	if( !wasHandled )
+	{
+		// TODO: Place a Unit.
+		wasHandled = true;
+	}
+
+	return wasHandled;
+}
+
+
+bool PlaceToolInputState::OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID )
+{
+	bool wasHandled = false; //InputState::OnPointerMotion( activePointer, pointersByID );
+
+	if( !wasHandled )
+	{
+		// TODO: Move a unit.
+		wasHandled = true;
+	}
+
+	return wasHandled;
+}
+
+
+void PlaceToolInputState::SetSelectedUnitType( UnitType* unitType )
+{
+	mSelectedUnitType = unitType;
+}
+
+
+void PlaceToolInputState::SetSelectedFaction( Faction* faction )
+{
+	mSelectedFaction = faction;
+}
+
+
 EraserToolInputState::EraserToolInputState( GameState* owner ) :
-	DerivedInputState( owner ),
-	mTileTemplate()
+	DerivedInputState( owner )
 { }
 
 
 EraserToolInputState::~EraserToolInputState() { }
 
 
-void EraserToolInputState::OnEnter( const Dictionary& parameters )
-{
-	EditorState* owner = GetOwnerDerived();
-
-	// Set the Tile template to the default tile for this Scenario.
-	mTileTemplate = owner->CreateDefaultTileTemplate();
-}
+void EraserToolInputState::OnEnter( const Dictionary& parameters ) { }
 
 
-void EraserToolInputState::OnExit()
-{
-}
+void EraserToolInputState::OnExit() { }
 
 
 bool EraserToolInputState::OnPointerDown( const Pointer& pointer )
@@ -119,8 +175,7 @@ bool EraserToolInputState::OnPointerUp( const Pointer& pointer )
 
 	if( !wasHandled )
 	{
-		// Paint a tile.
-		GetOwnerDerived()->PaintTileAt( pointer.position.x, pointer.position.y, mTileTemplate );
+		// TODO: Erase a Unit.
 		wasHandled = true;
 	}
 
@@ -134,8 +189,7 @@ bool EraserToolInputState::OnPointerMotion( const Pointer& activePointer, const 
 
 	if( !wasHandled )
 	{
-		// Paint a tile.
-		GetOwnerDerived()->PaintTileAt( activePointer.position.x, activePointer.position.y, mTileTemplate );
+		// TODO: Erase a unit.
 		wasHandled = true;
 	}
 

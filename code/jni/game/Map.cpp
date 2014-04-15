@@ -379,7 +379,7 @@ Unit* Map::CreateUnit( UnitType* unitType, Faction* owner, const Vec2s& tilePos,
 	// Get the Tile where the Unit will be placed.
 	Iterator tile = GetTile( tilePos );
 	assertion( tile.IsValid(), "Cannot create Unit at invalid Tile (%d,%d)!", tilePos.x, tilePos.y );
-	assertion( tile->IsOccupied(), "Cannot create Unit at Tile (%d,%d) because the Tile is occupied by another Unit!", tilePos.x, tilePos.y );
+	assertion( tile->IsEmpty(), "Cannot create Unit at Tile (%d,%d) because the Tile is occupied by another Unit!", tilePos.x, tilePos.y );
 
 	// Set the health and ammo for the Unit.
 	if( health >= 0 )
@@ -397,6 +397,9 @@ Unit* Map::CreateUnit( UnitType* unitType, Faction* owner, const Vec2s& tilePos,
 
 	// Place the Unit into the Tile.
 	tile->SetUnit( unit );
+
+	// Add the Unit to the list of Units.
+	mUnits.push_back( unit );
 
 	return unit;
 }

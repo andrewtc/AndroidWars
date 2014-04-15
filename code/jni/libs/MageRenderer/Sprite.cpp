@@ -70,6 +70,48 @@ SpriteComponent* SpriteDefinition::GetComponentFromPath( const std::string& path
 
 
 //---------------------------------------
+// SpriteAnimationFrame
+//---------------------------------------
+void SpriteAnimationFrame::AddComponent( SpriteAnimationComponent* component )
+{
+	assertion( component, "Cannot add null SpriteAnimationComponent to SpriteAnimationFrame!" );
+
+	// Store each component in Z order.
+	int z = component->FrameZOrder;
+	ComponentsByZIndex[ z ].push_back( component );
+
+	// Get the clipping rect for the component.
+	auto it = component->SprComponent->SpriteClips.find( component->SprComponentClipName );
+	assertion( it != component->SprComponent->SpriteClips.end(), "No clipping rect found for SpriteComponent!" );
+	const RectI& componentRect = it->second;
+
+	// Expand the clipping rect for this frame to contain the component rect, if necessary.
+	if( componentRect.Left < ClippingRect.Left )
+	{
+		ClippingRect.Left = componentRect.Left;
+	}
+
+	if( componentRect.Top < ClippingRect.Top )
+	{
+		ClippingRect.Top = componentRect.Top;
+	}
+
+	if( componentRect.Right > ClippingRect.Right )
+	{
+		ClippingRect.Right = componentRect.Right;
+	}
+
+	if( componentRect.Bottom > ClippingRect.Bottom )
+	{
+		ClippingRect.Bottom = componentRect.Bottom;
+	}
+
+	DebugPrintf( "ADDED COMPONENT (z = %d, clipping rect = {%d,%d,%d,%d})", z, ClippingRect.Left, ClippingRect.Top, ClippingRect.Right, ClippingRect.Bottom );
+}
+//---------------------------------------
+
+
+//---------------------------------------
 // Sprite
 //---------------------------------------
 Sprite::Sprite( SpriteAnimationSet& animation, const HashString& initialAnimName )
@@ -150,50 +192,63 @@ void Sprite::OnDraw( const Camera& camera ) const
 	const SpriteAnimation* anim = mAnimationSet.FindAnimation( mSprAnimInfo.CurrentAnimationName );
 	if ( anim )
 	{
-		const SpriteAnimationComponent* sprComp = 
-			anim->
-			Frames[ mSprAnimInfo.CurrentAnimationFrame ].SprAnimComponent;
-		const RectI& clip = sprComp->SprComponent->SpriteClips[ sprComp->SprComponentClipName ];
-		Texture2D* texture = mAnimationSet.MyDefinition->SpriteSheet;
+		// Get the list of components sorted by z-index.
+		const SpriteAnimationFrame::SprAnimComponentsByZIndex& animComponentsByZIndex =
+			anim->Frames[ mSprAnimInfo.CurrentAnimationFrame ].ComponentsByZIndex;
 
-		float px = Position.x + sprComp->FrameOffsetX * 2;
-		float py = Position.y + sprComp->FrameOffsetY * 2;
-		float w = clip.Width();
-		float h = clip.Height();
-
-		if ( FixedSize )
+		for( auto z = animComponentsByZIndex.rbegin(); z != animComponentsByZIndex.rend(); ++z )
 		{
-			w = Size.x;
-			h = Size.y;
-		}
+			// For each z-index, get the components to draw.
+			const SpriteAnimationFrame::SprAnimComponents& animComponentsToDraw = z->second;
 
-		w *= Scale.x;
-		h *= Scale.y;
-
-		RectF worldClip( px, py, px + clip.Width(), py + clip.Height() );
-
-		if ( RelativeToCamera )
-		{
-			if ( camera.RectInViewport( worldClip ) )
+			for( auto it = animComponentsToDraw.begin(); it != animComponentsToDraw.end(); ++it )
 			{
-				DrawRect( texture,
-					px - camera.GetPosition().x,
-					py - camera.GetPosition().y,
-					w,
-					h,
-					DrawColor,
-					(int) clip.Left, (int) clip.Top, (int) clip.Width(), (int) clip.Height() );
+				// Get the current component to draw.
+				const SpriteAnimationComponent* animComponent = *it;
+
+				const RectI& clip = animComponent->SprComponent->SpriteClips[ animComponent->SprComponentClipName ];
+				Texture2D* texture = mAnimationSet.MyDefinition->SpriteSheet;
+
+				float px = Position.x + animComponent->FrameOffsetX * 2;
+				float py = Position.y + animComponent->FrameOffsetY * 2;
+				float w = clip.Width();
+				float h = clip.Height();
+
+				if ( FixedSize )
+				{
+					w = Size.x;
+					h = Size.y;
+				}
+
+				w *= Scale.x;
+				h *= Scale.y;
+
+				RectF worldClip( px, py, px + clip.Width(), py + clip.Height() );
+
+				if ( RelativeToCamera )
+				{
+					if ( camera.RectInViewport( worldClip ) )
+					{
+						DrawRect( texture,
+							px - camera.GetPosition().x,
+							py - camera.GetPosition().y,
+							w,
+							h,
+							DrawColor,
+							(int) clip.Left, (int) clip.Top, (int) clip.Width(), (int) clip.Height() );
+					}
+				}
+				else
+				{
+					DrawRect( texture,
+						px,
+						py,
+						w,
+						h,
+						DrawColor,
+						(int) clip.Left, (int) clip.Top, (int) clip.Width(), (int) clip.Height() );
+				}
 			}
-		}
-		else
-		{
-			DrawRect( texture,
-				px,
-				py,
-				w,
-				h,
-				DrawColor,
-				(int) clip.Left, (int) clip.Top, (int) clip.Width(), (int) clip.Height() );
 		}
 	}
 }
@@ -229,15 +284,9 @@ RectI Sprite::GetClippingRectForCurrentAnimation() const
 	const SpriteAnimation* anim = mAnimationSet.FindAnimation( mSprAnimInfo.CurrentAnimationName );
 	if ( anim )
 	{
-		const SpriteAnimationComponent* sprComp = 
-			anim->
-			Frames[ mSprAnimInfo.CurrentAnimationFrame ].SprAnimComponent;
-		const HashString& clipName = sprComp->SprComponentClipName;
-		SpriteComponent* sprComp0 = sprComp->SprComponent;
-		if ( sprComp0 )
-		{
-			clip = sprComp0->SpriteClips[ clipName ];
-		}
+		// Return the clipping rect for the current animation frame.
+		const SpriteAnimationFrame& frame = anim->Frames[ mSprAnimInfo.CurrentAnimationFrame ];
+		clip = frame.ClippingRect;
 	}
 	return clip;
 }

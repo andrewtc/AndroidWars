@@ -24,6 +24,30 @@ namespace mage
 	};
 
 
+	class PlaceToolInputState : public DerivedInputState< EditorState >
+	{
+	public:
+		void SetSelectedUnitType( UnitType* unitType );
+		void SetSelectedFaction( Faction* faction );
+
+	private:
+		PlaceToolInputState( GameState* owner );
+		~PlaceToolInputState();
+
+		virtual void OnEnter( const Dictionary& parameters );
+		virtual void OnExit();
+
+		virtual bool OnPointerDown( const Pointer& pointer );
+		virtual bool OnPointerUp( const Pointer& pointer );
+		virtual bool OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID );
+
+		UnitType* mSelectedUnitType;
+		Faction* mSelectedFaction;
+
+		friend class GameState;
+	};
+
+
 	class EraserToolInputState : public DerivedInputState< EditorState >
 	{
 	private:
@@ -36,8 +60,6 @@ namespace mage
 		virtual bool OnPointerDown( const Pointer& pointer );
 		virtual bool OnPointerUp( const Pointer& pointer );
 		virtual bool OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID );
-
-		Tile mTileTemplate;
 
 		friend class GameState;
 	};

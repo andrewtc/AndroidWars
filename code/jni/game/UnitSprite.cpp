@@ -31,6 +31,9 @@ void UnitSprite::Init()
 	// Create the Sprite.
 	UnitType* unitType = mUnit->GetUnitType();
 	mSprite = SpriteManager::CreateSprite( unitType->GetAnimationSetName(), mUnit->GetTilePos() );
+
+	// Move the Sprite to the proper location on the Map.
+	SetPosition( mMapView->TileToWorldCoords( mUnit->GetTilePos() ) );
 }
 
 
@@ -67,6 +70,12 @@ void UnitSprite::Draw( const Camera& camera )
 	Vec2f textPos = ( GetPosition() - camera.GetPosition() );
 	float height = ( mSprite->GetClippingRectForCurrentAnimation().Height() * 0.5f );
 	DrawTextFormat( textPos.x, textPos.y + height - font->GetLineHeight(), font, "%d", mUnit->GetHealth() );
+}
+
+
+void UnitSprite::SetPosition( const Vec2f& position )
+{
+	mSprite->Position = position;
 }
 
 

@@ -3,7 +3,82 @@
 <animations spriteSheet="Tileset.sprites" ver="1.2">
   <anim name="Idle" loops="0">
     <cell index="0" delay="1">
-      <spr name="/Sea" x="0" y="-16" z="0"/>
+      <spr name="/Sea_Idle" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
+  <anim name="East" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Sea_East" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
+  <anim name="North" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Sea_North" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
+  <anim name="West" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Sea_West" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
+  <anim name="South" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Sea_South" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
+  <anim name="EastNorth" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Sea_EastNorth" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
+  <anim name="EastWest" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Sea_EastWest" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
+  <anim name="EastSouth" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Sea_EastSouth" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
+  <anim name="NorthWest" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Sea_NorthWest" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
+  <anim name="NorthSouth" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Sea_NorthSouth" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
+  <anim name="WestSouth" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Sea_WestSouth" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
+  <anim name="EastNorthSouth" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Sea_EastNorthSouth" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
+  <anim name="EastNorthWest" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Sea_EastNorthWest" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
+  <anim name="NorthWestSouth" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Sea_NorthWestSouth" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
+  <anim name="EastWestSouth" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Sea_EastWestSouth" x="0" y="-16" z="0"/>
+    </cell>
+  </anim>
+  <anim name="EastNorthWestSouth" loops="0">
+    <cell index="0" delay="1">
+      <spr name="/Sea_EastNorthWestSouth" x="0" y="-16" z="0"/>
     </cell>
   </anim>
 </animations>

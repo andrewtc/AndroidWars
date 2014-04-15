@@ -41,5 +41,7 @@
     <Template name="ToolPalette"    file="ui/tool_palette.xml"     />
     <Template name="TileSelector"   file="ui/tile_selector.xml"    />
     <Template name="TilePalette"    file="ui/tile_palette.xml"     />
+    <Template name="UnitSelector"   file="ui/unit_selector.xml"    />
+    <Template name="UnitPalette"    file="ui/unit_palette.xml"     />
         
 </Theme>

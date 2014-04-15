@@ -156,6 +156,7 @@ $(aw_data_path)/MovementType.cpp \
 $(aw_data_path)/MovementTypesTable.cpp \
 $(aw_data_path)/Scenario.cpp \
 $(aw_game_path)/GameplayState.cpp \
+$(aw_game_path)/GameplayInputStates.cpp \
 $(aw_game_path)/Game.cpp \
 $(aw_game_path)/Player.cpp \
 $(aw_game_path)/Faction.cpp \
@@ -163,6 +164,7 @@ $(aw_game_path)/Unit.cpp \
 $(aw_game_path)/Map.cpp \
 $(aw_game_path)/MapView.cpp \
 $(aw_game_path)/TileSprite.cpp \
+$(aw_game_path)/UnitSprite.cpp \
 $(aw_editor_path)/EditorState.cpp \
 $(aw_editor_path)/EditorInputStates.cpp \
  ui/WidgetManager.cpp \

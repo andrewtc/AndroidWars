@@ -43,8 +43,15 @@ void MapView::Init( Map* map )
 		tileSprite->Init( this, tileSprite.GetPosition() );
 	});
 
-	// Create initial tile sprites.
+	// Create initial TileSprites.
 	MapResized( Vec2s::ZERO, mMap->GetSize() );
+
+	// Create initial UnitSprites.
+	mMap->ForEachUnit( [this]( Unit* unit )
+	{
+		DebugPrintf( "Creating UnitSprite at (%d,%d)!", unit->GetTileX(), unit->GetTileY() );
+		CreateUnitSprite( unit );
+	});
 
 	// Center the Camera initially.
 	CenterCamera();
@@ -86,6 +93,13 @@ void MapView::Draw()
 		// Draw the TileSprite that represents this Tile.
 		tileSprite->Draw();
 	});
+
+	for( auto it = mUnitSprites.begin(); it != mUnitSprites.end(); ++it )
+	{
+		// Draw all UnitSprites.
+		UnitSprite* unitSprite = *it;
+		unitSprite->Draw( mCamera );
+	}
 }
 
 
@@ -143,6 +157,19 @@ void MapView::SetDefaultFont( BitmapFont* font )
 BitmapFont* MapView::GetDefaultFont() const
 {
 	return mDefaultFont;
+}
+
+
+UnitSprite* MapView::CreateUnitSprite( Unit* unit )
+{
+	// Create and initialize a new UnitSprite.
+	UnitSprite* unitSprite = new UnitSprite( this, unit );
+	unitSprite->Init();
+
+	// Add the UnitSprite to the list of UnitSprites.
+	mUnitSprites.push_back( unitSprite );
+
+	return unitSprite;
 }
 
 

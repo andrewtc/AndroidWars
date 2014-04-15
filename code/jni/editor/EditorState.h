@@ -3,6 +3,7 @@
 namespace mage
 {
 	class BrushToolInputState;
+	class PlaceToolInputState;
 	class EraserToolInputState;
 
 	class EditorState : public GameState
@@ -35,13 +36,16 @@ namespace mage
 		virtual bool OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID );
 
 		void BuildTilePalette();
+		void BuildUnitPalette();
 
 		bool mIsPanningCamera;
 
 		BrushToolInputState* mBrushToolInputState;
+		PlaceToolInputState* mPlaceToolInputState;
 		EraserToolInputState* mEraserToolInputState;
 		Widget* mToolPalette;
 		ListLayout* mTilePalette;
+		ListLayout* mUnitPalette;
 
 		//Camera mCamera;
 		Scenario mScenario;

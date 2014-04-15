@@ -15,7 +15,13 @@ namespace mage
 		void Update( float elapsedTime );
 		void Draw( const Camera& camera );
 
+		void SetPosition( const Vec2f& position );
 		Vec2f GetPosition() const;
+
+		void SetUnit( Unit* unit );
+		Unit* GetUnit() const;
+
+		Sprite* GetSprite() const;
 
 	private:
 		bool mIsInitialized;

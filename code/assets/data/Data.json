@@ -12,7 +12,115 @@
         {
             "name":         "Sea",
             "animationSet": "Sea",
-            "coverBonus":   1
+            "coverBonus":   1,
+            "variations":
+            [
+                {
+                    "animation": "East",
+                    "conditions":
+                    [
+                        { "east": [ "none", "Sea" ] }
+                    ]
+                },
+                {
+                    "animation": "North",
+                    "conditions":
+                    [
+                        { "north": [ "none", "Sea" ] }
+                    ]
+                },
+                {
+                    "animation": "West",
+                    "conditions":
+                    [
+                        { "west": [ "none", "Sea" ] }
+                    ]
+                },
+                {
+                    "animation": "South",
+                    "conditions":
+                    [
+                        { "south": [ "none", "Sea" ] }
+                    ]
+                },
+                {
+                    "animation": "EastWest",
+                    "conditions":
+                    [
+                        { "east": [ "none", "Sea" ], "west": [ "none", "Sea" ] }
+                    ]
+                },
+                {
+                    "animation": "NorthSouth",
+                    "conditions":
+                    [
+                        { "north": [ "none", "Sea" ], "south": [ "none", "Sea" ] }
+                    ]
+                },
+                {
+                    "animation": "EastNorth",
+                    "conditions":
+                    [
+                        { "east": [ "none", "Sea" ], "north": [ "none", "Sea" ] }
+                    ]
+                },
+                {
+                    "animation": "NorthWest",
+                    "conditions":
+                    [
+                        { "north": [ "none", "Sea" ], "west": [ "none", "Sea" ] }
+                    ]
+                },
+                {
+                    "animation": "WestSouth",
+                    "conditions":
+                    [
+                        { "west": [ "none", "Sea" ], "south": [ "none", "Sea" ] }
+                    ]
+                },
+                {
+                    "animation": "EastSouth",
+                    "conditions":
+                    [
+                        { "east": [ "none", "Sea" ], "south": [ "none", "Sea" ] }
+                    ]
+                },
+                {
+                    "animation": "EastNorthSouth",
+                    "conditions":
+                    [
+                        { "east": [ "none", "Sea" ], "north": [ "none", "Sea" ], "south": [ "none", "Sea" ] }
+                    ]
+                },
+                {
+                    "animation": "EastNorthWest",
+                    "conditions":
+                    [
+                        { "east": [ "none", "Sea" ], "north": [ "none", "Sea" ], "west": [ "none", "Sea" ] }
+                    ]
+                },
+                {
+                    "animation": "NorthWestSouth",
+                    "conditions":
+                    [
+                        { "north": [ "none", "Sea" ], "west": [ "none", "Sea" ], "south": [ "none", "Sea" ] }
+                    ]
+                },
+                {
+                    "animation": "EastWestSouth",
+                    "conditions":
+                    [
+                        { "east": [ "none", "Sea" ], "west": [ "none", "Sea" ], "south": [ "none", "Sea" ] }
+                    ]
+                },
+                {
+                    "animation": "EastNorthWestSouth",
+                    "conditions":
+                    [
+                        { "east": [ "none", "Sea" ], "north": [ "none", "Sea" ], "west": [ "none", "Sea" ], "south": [ "none", "Sea" ] }
+                    ]
+                }
+            ]
         },
         {
             "name":         "City",
