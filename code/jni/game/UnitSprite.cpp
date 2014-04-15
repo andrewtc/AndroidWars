@@ -83,3 +83,32 @@ Vec2f UnitSprite::GetPosition() const
 {
 	return mSprite->Position;
 }
+
+
+Unit* UnitSprite::GetUnit() const
+{
+	return mUnit;
+}
+
+
+Sprite* UnitSprite::GetSprite() const
+{
+	return mSprite;
+}
+
+
+RectF UnitSprite::GetWorldBounds() const
+{
+	// Get the Sprite bounds.
+	RectF bounds = mSprite->GetClippingRectForCurrentAnimation();
+
+	// Offset the bounds by the current Sprite position.
+	Vec2f position = mSprite->Position;
+
+	bounds.Left   += position.x;
+	bounds.Top    += position.y;
+	bounds.Right  += position.x;
+	bounds.Bottom += position.y;
+
+	return bounds;
+}

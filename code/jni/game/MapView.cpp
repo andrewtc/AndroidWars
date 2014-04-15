@@ -173,6 +173,47 @@ UnitSprite* MapView::CreateUnitSprite( Unit* unit )
 }
 
 
+UnitSprite* MapView::GetUnitSpriteAtScreenCoords( float screenX, float screenY ) const
+{
+	return GetUnitSpriteAtScreenCoords( Vec2f( screenX, screenY ) );
+}
+
+
+UnitSprite* MapView::GetUnitSpriteAtScreenCoords( const Vec2f& screenCoords ) const
+{
+	Vec2f worldCoords = ScreenToWorldCoords( screenCoords );
+	return GetUnitSpriteAtWorldCoords( worldCoords );
+}
+
+
+UnitSprite* MapView::GetUnitSpriteAtWorldCoords( float worldX, float worldY ) const
+{
+	return GetUnitSpriteAtWorldCoords( Vec2f( worldX, worldY ) );
+}
+
+
+UnitSprite* MapView::GetUnitSpriteAtWorldCoords( const Vec2f& worldCoords ) const
+{
+	UnitSprite* result = nullptr;
+
+	for( auto it = mUnitSprites.begin(); it != mUnitSprites.end(); ++it )
+	{
+		// Get the bounds of the UnitSprite.
+		UnitSprite* unitSprite = *it;
+		RectF bounds = unitSprite->GetWorldBounds();
+
+		if( bounds.Contains( worldCoords.x, worldCoords.y ) )
+		{
+			// If a Sprite is found at this location, return it.
+			result = unitSprite;
+			break;
+		}
+	}
+
+	return result;
+}
+
+
 Vec2f MapView::WorldToScreenCoords( const Vec2f& worldCoords ) const
 {
 	return WorldToScreenCoords( worldCoords.x, worldCoords.y );

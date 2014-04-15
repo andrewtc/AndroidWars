@@ -22,6 +22,7 @@ namespace mage
 		Unit* GetUnit() const;
 
 		Sprite* GetSprite() const;
+		RectF GetWorldBounds() const;
 
 	private:
 		bool mIsInitialized;

@@ -117,7 +117,6 @@ void GameplayState::OnScreenSizeChanged( int32 w, int32 h )
 
 bool GameplayState::OnPointerDown( const Pointer& pointer )
 {
-	// TODO
 	return GameState::OnPointerDown( pointer );
 }
 

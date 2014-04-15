@@ -31,6 +31,18 @@ void SelectUnitInputState::OnExit()
 
 bool SelectUnitInputState::OnPointerDown( const Pointer& pointer )
 {
+	GameplayState* owner = GetOwnerDerived();
+	MapView* mapView = owner->GetMapView();
+
+	// See if a UnitSprite was tapped.
+	UnitSprite* unitSpriteToSelect = mapView->GetUnitSpriteAtScreenCoords( pointer.position );
+
+	if( unitSpriteToSelect )
+	{
+		Vec2s tilePos = unitSpriteToSelect->GetUnit()->GetTilePos();
+		DebugPrintf( "PointerDown on Unit at (%d,%d)!", tilePos.x, tilePos.y );
+	}
+
 	return false; //InputState::OnPointerDown( pointer );
 }
 
