@@ -83,6 +83,12 @@ void MapView::Update( float elapsedTime )
 		// Update the TileSprite that represents this Tile.
 		tileSprite->Update( elapsedTime );
 	});
+
+	if( mArrowSprite.IsInitialized() )
+	{
+		// Draw the arrow sprite (if necessary).
+		mArrowSprite.Update( elapsedTime );
+	}
 }
 
 
@@ -96,9 +102,25 @@ void MapView::Draw()
 
 	for( auto it = mUnitSprites.begin(); it != mUnitSprites.end(); ++it )
 	{
-		// Draw all UnitSprites.
+		// Draw all non-selected UnitSprites.
 		UnitSprite* unitSprite = *it;
-		unitSprite->Draw( mCamera );
+
+		if( unitSprite != mSelectedUnitSprite )
+		{
+			unitSprite->Draw( mCamera );
+		}
+	}
+
+	if( mArrowSprite.IsInitialized() )
+	{
+		// If there is a selected Unit, draw the arrow path.
+		mArrowSprite.Draw( mCamera );
+	}
+
+	if( mSelectedUnitSprite )
+	{
+		// Draw the selected Unit.
+		mSelectedUnitSprite->Draw( mCamera );
 	}
 }
 
@@ -160,6 +182,20 @@ BitmapFont* MapView::GetDefaultFont() const
 }
 
 
+
+MapView::TileSpritesGrid& MapView::GetTileSprites()
+{
+	return mTileSprites;
+}
+
+
+
+const MapView::TileSpritesGrid& MapView::GetTileSprites() const
+{
+	return mTileSprites;
+}
+
+
 UnitSprite* MapView::CreateUnitSprite( Unit* unit )
 {
 	// Create and initialize a new UnitSprite.
@@ -211,6 +247,32 @@ UnitSprite* MapView::GetUnitSpriteAtWorldCoords( const Vec2f& worldCoords ) cons
 	}
 
 	return result;
+}
+
+
+void MapView::SelectUnitSprite( UnitSprite* unitSprite )
+{
+	if( mSelectedUnitSprite )
+	{
+		// Deselect previously selected UnitSprite.
+		DeselectAllTiles();
+	}
+
+	// Set the new UnitSprite.
+	mSelectedUnitSprite = unitSprite;
+	UnitSpriteSelected( mSelectedUnitSprite );
+
+	if( mSelectedUnitSprite )
+	{
+		// Select the new UnitSprite.
+		SelectAllReachableTilesForUnit( mSelectedUnitSprite->GetUnit() );
+	}
+}
+
+
+void MapView::DeselectUnitSprite()
+{
+	SelectUnitSprite( nullptr );
 }
 
 
@@ -307,13 +369,70 @@ void MapView::TileChanged( const Map::Iterator& tile )
 
 void MapView::UnitSpriteSelected( UnitSprite* unitSprite )
 {
-	// TODO
 	if( unitSprite )
 	{
+		// If a Unit was selected, initialize the arrow sprite (if necessary).
+		if( !mArrowSprite.IsInitialized() )
+		{
+			DebugPrintf( "Initializing ArrowSprite..." );
+			mArrowSprite.Init( this );
+		}
 
+		// Determine the location of the Unit for the selected UnitSprite.
+		Unit* unit = unitSprite->GetUnit();
+		Vec2s tilePos = unit->GetTilePos();
+
+		// Reset the path of the arrow sprite.
+		DebugPrintf( "Setting ArrowSprite..." );
+		Path path;
+		path.SetOrigin( tilePos );
+
+		// TODO: Remove this.
+		path.AddDirection( PrimaryDirection::EAST );
+		path.AddDirection( PrimaryDirection::NORTH );
+		path.AddDirection( PrimaryDirection::EAST );
+		path.AddDirection( PrimaryDirection::EAST );
+		path.AddDirection( PrimaryDirection::SOUTH );
+		path.AddDirection( PrimaryDirection::SOUTH );
+		path.AddDirection( PrimaryDirection::WEST );
+		path.AddDirection( PrimaryDirection::WEST );
+
+		mArrowSprite.SetPath( path );
 	}
 	else
 	{
-
+		// Otherwise, destroy the arrow sprite.
+		if( mArrowSprite.IsInitialized() )
+		{
+			DebugPrintf( "Destroying ArrowSprite..." );
+			mArrowSprite.Destroy();
+		}
 	}
+}
+
+
+void MapView::SelectAllReachableTilesForUnit( Unit* unit )
+{
+	// Select all reachable tiles for the Unit.
+	mMap->ForEachReachableTile( unit, [this]( const Map::Iterator& tile, const Unit* unit )
+	{
+		// Get the TileSprite for this position.
+		MapView::TileSpritesGrid::Iterator tileSpriteIt = mTileSprites.GetTile( tile.GetPosition() );
+
+		if( tileSpriteIt.IsValid() )
+		{
+			// Select the TileSprite.
+			tileSpriteIt->Select();
+		}
+	});
+}
+
+
+void MapView::DeselectAllTiles()
+{
+	mTileSprites.ForEachTile( [this]( const TileSpritesGrid::Iterator& tile )
+	{
+		// Deselect all tiles.
+		tile->Deselect();
+	});
 }

@@ -33,6 +33,7 @@ const size_t MAP_SIZE_POWER_OF_TWO = 10;
 #include "util/Delegate.h"
 #include "util/PrimaryDirection.h"
 #include "util/Grid.h"
+#include "util/MinHeap.h"
 
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/document.h"
@@ -75,6 +76,7 @@ const size_t MAP_SIZE_POWER_OF_TWO = 10;
 #include "game/Faction.h"
 #include "game/TileSprite.h"
 #include "game/UnitSprite.h"
+#include "game/ArrowSprite.h"
 #include "game/MapView.h"
 #include "game/Player.h"
 #include "game/Unit.h"

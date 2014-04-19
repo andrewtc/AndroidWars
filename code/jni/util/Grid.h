@@ -225,28 +225,28 @@ namespace mage
 	MAGE_GRID_BASIC_ITERATOR_TEMPLATE
 	bool MAGE_GRID_BASIC_ITERATOR::operator>( const IteratorType& other ) const
 	{
-		return ( mGrid == other.mGrid ) && ( mTilePos > other.mTilePos );
+		return ( mGrid > other.mGrid ) || ( ( mGrid == other.mGrid ) && ( mTilePos > other.mTilePos ) );
 	}
 
 
 	MAGE_GRID_BASIC_ITERATOR_TEMPLATE
 	bool MAGE_GRID_BASIC_ITERATOR::operator>=( const IteratorType& other ) const
 	{
-		return ( mGrid == other.mGrid ) && ( mTilePos >= other.mTilePos );
+		return ( mGrid > other.mGrid ) || ( ( mGrid == other.mGrid ) && ( mTilePos >= other.mTilePos ) );
 	}
 
 
 	MAGE_GRID_BASIC_ITERATOR_TEMPLATE
 	bool MAGE_GRID_BASIC_ITERATOR::operator<( const IteratorType& other ) const
 	{
-		return ( mGrid == other.mGrid ) && ( mTilePos < other.mTilePos );
+		return ( mGrid < other.mGrid ) || ( ( mGrid == other.mGrid ) && ( mTilePos < other.mTilePos ) );
 	}
 
 
 	MAGE_GRID_BASIC_ITERATOR_TEMPLATE
 	bool MAGE_GRID_BASIC_ITERATOR::operator<=( const IteratorType& other ) const
 	{
-		return ( mGrid == other.mGrid ) && ( mTilePos <= other.mTilePos );
+		return ( mGrid < other.mGrid ) || ( ( mGrid == other.mGrid ) && ( mTilePos <= other.mTilePos ) );
 	}
 
 

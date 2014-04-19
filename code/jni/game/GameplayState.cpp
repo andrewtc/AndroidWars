@@ -6,7 +6,8 @@ using namespace mage;
 GameplayState::GameplayState() :
 	GameState(),
 	mIsNetworkGame( false ),
-	mSelectUnitInputState( nullptr )
+	mSelectUnitInputState( nullptr ),
+	mActionsDialog( nullptr )
 {
 	DebugPrintf( "GameplayState created!" );
 }
@@ -123,15 +124,13 @@ bool GameplayState::OnPointerDown( const Pointer& pointer )
 
 bool GameplayState::OnPointerUp( const Pointer& pointer )
 {
-	// TODO
-	return true;
+	return GameState::OnPointerUp( pointer );
 }
 
 
 bool GameplayState::OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID )
 {
-	// TODO
-	return true;
+	return GameState::OnPointerMotion( activePointer, pointersByID );
 }
 
 

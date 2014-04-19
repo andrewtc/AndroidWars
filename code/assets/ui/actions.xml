@@ -1,0 +1,7 @@
+<ListLayout
+    name="unitPalette"
+    position="20,20"
+    direction="vertical"
+    >
+    <Include name="moveButton" template="TestMenuButton" label="Move" />
+</ListLayout>

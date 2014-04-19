@@ -8,100 +8,119 @@ namespace mage
 	class Path
 	{
 	public:
+		typedef Delegate< void > OnChangedDelegate;
+
 		Path();
+		Path( const Path& other );
+		void operator=( const Path& other );
 		~Path();
 
-		void AddWaypoint( const Vec2i& waypoint );
-		Vec2i& GetWaypoint( size_t index );
-		const Vec2i& GetWaypoint( size_t index ) const;
-		Vec2i& GetNextWaypoint();
-		const Vec2i& GetNextWaypoint() const;
-		Vec2i& GetDestination();
-		const Vec2i& GetDestination() const;
-		Vec2i PopNextWaypoint();
+		void SetOrigin( const Vec2s& origin );
+		Vec2s GetOrigin() const;
+
+		void AddDirection( PrimaryDirection direction );
+		PrimaryDirection GetDirection( size_t index ) const;
+		Vec2s GetWaypoint( size_t index ) const;
+		Vec2s GetDestination() const;
 		void Clear();
 
-		size_t GetNumWaypoints() const;
+		size_t GetLength() const;
 		bool IsValid() const;
 
 	protected:
-		std::vector< Vec2i > mWaypoints;
+		Vec2s mOrigin;
+		std::vector< PrimaryDirection > mDirections;
+
+	public:
+		Event<> OnChanged;
 	};
 
 
 	inline Path::Path() { }
 
 
+	inline Path::Path( const Path& other ) :
+		mOrigin( other.mOrigin ),
+		mDirections( other.mDirections )
+	{
+		// Don't copy event callbacks.
+	}
+
+
+	inline void Path::operator=( const Path& other )
+	{
+		// Don't copy event callbacks.
+		mOrigin = other.mOrigin;
+		mDirections = other.mDirections;
+	}
+
+
 	inline Path::~Path() { }
 
 
-	inline void Path::AddWaypoint( const Vec2i& waypoint )
+	inline void Path::SetOrigin( const Vec2s& origin )
 	{
-		mWaypoints.push_back( waypoint );
+		mOrigin = origin;
+		OnChanged.Invoke();
 	}
 
 
-	inline Vec2i& Path::GetWaypoint( size_t index )
+	inline Vec2s Path::GetOrigin() const
 	{
-		size_t numWaypoints = GetNumWaypoints();
-		assertion( index < numWaypoints, "Waypoint index %d is out of bounds! (%d elements)", index, numWaypoints );
-		return mWaypoints[ numWaypoints - index - 1 ];
+		return mOrigin;
 	}
 
 
-	inline const Vec2i& Path::GetWaypoint( size_t index ) const
+	inline void Path::AddDirection( PrimaryDirection direction )
 	{
-		assertion( index < GetNumWaypoints(), "Waypoint index %d is out of bounds! (%d elements)", index, GetNumWaypoints() );
-		return mWaypoints[ index ];
+		mDirections.push_back( direction );
+		OnChanged.Invoke();
 	}
 
 
-	inline Vec2i& Path::GetNextWaypoint()
+	inline PrimaryDirection Path::GetDirection( size_t index ) const
 	{
-		return mWaypoints.back();
+		size_t length = GetLength();
+		assertion( index < length, "Direction index %d is out of bounds! (%d elements)", index, length );
+		return mDirections[ length - index - 1 ];
 	}
 
 
-	inline const Vec2i& Path::GetNextWaypoint() const
+	inline Vec2s Path::GetWaypoint( size_t index ) const
 	{
-		return mWaypoints.back();
-	}
+		Vec2s waypoint = mOrigin;
 
+		for( size_t index = 0, length = mDirections.size(); index < length; ++index )
+		{
+			// Calculate the position of the waypoint at the specified index.
+			waypoint += mDirections[ index ].GetOffset();
+		}
 
-	inline Vec2i& Path::GetDestination()
-	{
-		return mWaypoints.front();
-	}
-
-
-	inline const Vec2i& Path::GetDestination() const
-	{
-		return mWaypoints.front();
-	}
-
-
-	inline Vec2i Path::PopNextWaypoint()
-	{
-		Vec2i waypoint = mWaypoints.back();
-		mWaypoints.pop_back();
 		return waypoint;
+	}
+
+
+	inline Vec2s Path::GetDestination() const
+	{
+		return GetWaypoint( mDirections.size() - 1 );
 	}
 
 
 	inline void Path::Clear()
 	{
-		mWaypoints.clear();
+		mDirections.clear();
+		OnChanged.Invoke();
 	}
 
 
-	inline size_t Path::GetNumWaypoints() const
+	inline size_t Path::GetLength() const
 	{
-		return mWaypoints.size();
+		return mDirections.size();
 	}
 
 
 	inline bool Path::IsValid() const
 	{
-		return ( GetNumWaypoints() > 0 );
+		return ( GetLength() > 0 );
 	}
 }

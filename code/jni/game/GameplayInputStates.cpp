@@ -39,8 +39,18 @@ bool SelectUnitInputState::OnPointerDown( const Pointer& pointer )
 
 	if( unitSpriteToSelect )
 	{
-		Vec2s tilePos = unitSpriteToSelect->GetUnit()->GetTilePos();
+		Unit* unit = unitSpriteToSelect->GetUnit();
+
+		Vec2s tilePos = unit->GetTilePos();
 		DebugPrintf( "PointerDown on Unit at (%d,%d)!", tilePos.x, tilePos.y );
+
+		// Select the UnitSprite.
+		mapView->SelectUnitSprite( unitSpriteToSelect );
+	}
+	else
+	{
+		// Deselect the Unit.
+		mapView->DeselectUnitSprite();
 	}
 
 	return false; //InputState::OnPointerDown( pointer );
@@ -49,6 +59,12 @@ bool SelectUnitInputState::OnPointerDown( const Pointer& pointer )
 
 bool SelectUnitInputState::OnPointerUp( const Pointer& pointer )
 {
+	GameplayState* owner = GetOwnerDerived();
+	MapView* mapView = owner->GetMapView();
+
+	// Deselect the currently selected UnitSprite (if any).
+	mapView->DeselectUnitSprite();
+
 	bool wasHandled = false; //InputState::OnPointerUp( pointer );
 	return wasHandled;
 }

@@ -10,6 +10,9 @@ namespace mage
 	class TileSprite
 	{
 	public:
+		static const Color DEFAULT_COLOR;
+		static const Color SELECTED_COLOR;
+
 		static HashString ChooseTileVariation( const Map::ConstIterator& tile );
 
 		TileSprite();
@@ -27,11 +30,17 @@ namespace mage
 		short GetTileX() const;
 		short GetTileY() const;
 
+		void SetSelected( bool selected );
+		void Select();
+		void Deselect();
+		bool IsSelected() const;
+
 	private:
 		void DestroySprite();
 
 		static bool TileMatchesVariation( const Map::ConstIterator& tile, const Variation* variation );
 
+		bool mIsSelected;
 		MapView* mMapView;
 		Sprite* mSprite;
 		Map::Iterator mTile;

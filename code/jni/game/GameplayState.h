@@ -32,6 +32,7 @@ namespace mage
 		virtual bool OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID );
 
 		bool mIsNetworkGame;
+		Widget* mActionsDialog;
 		SelectUnitInputState* mSelectUnitInputState;
 		Scenario mScenario;
 		Game mGame;

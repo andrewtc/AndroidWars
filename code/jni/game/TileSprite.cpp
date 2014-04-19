@@ -3,6 +3,10 @@
 using namespace mage;
 
 
+const Color TileSprite::DEFAULT_COLOR = Color( 1.0f, 1.0f, 1.0f, 1.0f );
+const Color TileSprite::SELECTED_COLOR = Color( 0.5f, 0.8f, 1.0f, 1.0f );
+
+
 HashString TileSprite::ChooseTileVariation( const Map::ConstIterator& tile )
 {
 	// By default, use the default animation.
@@ -85,7 +89,8 @@ bool TileSprite::TileMatchesVariation( const Map::ConstIterator& tile, const Var
 
 TileSprite::TileSprite() :
 	mMapView( nullptr ),
-	mSprite( nullptr )
+	mSprite( nullptr ),
+	mIsSelected( false )
 { }
 
 
@@ -149,6 +154,37 @@ short TileSprite::GetTileX() const
 short TileSprite::GetTileY() const
 {
 	return mTile.GetY();
+}
+
+
+void TileSprite::SetSelected( bool selected )
+{
+	if( mIsSelected != selected )
+	{
+		//DebugPrintf( "%s TileSprite at (%d,%d)!", ( selected ? "Selecting" : "Deselecting" ), mTile.GetX(), mTile.GetY() );
+		mIsSelected = selected;
+
+		// Set the color of the Sprite based on selection state.
+		mSprite->DrawColor = ( mIsSelected ? SELECTED_COLOR : DEFAULT_COLOR );
+	}
+}
+
+
+void TileSprite::Select()
+{
+	SetSelected( true );
+}
+
+
+void TileSprite::Deselect()
+{
+	SetSelected( false );
+}
+
+
+bool TileSprite::IsSelected() const
+{
+	return mIsSelected;
 }
 
 

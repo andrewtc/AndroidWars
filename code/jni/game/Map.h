@@ -54,6 +54,7 @@ namespace mage
 		typedef std::vector< Faction* > Factions;
 		typedef std::vector< Unit* > Units;
 		typedef std::vector< Iterator > Tiles;
+		typedef std::set< Iterator > TileSet;
 
 		typedef Delegate< void, const Map::Iterator& > OnTileChangedCallback;
 
@@ -98,7 +99,7 @@ namespace mage
 		void ForEachUnit( ForEachUnitCallback callback );
 		void ForEachUnit( ForEachConstUnitCallback callback ) const;
 
-		void FindReachableTiles( const Unit* unit, Tiles& result );
+		void FindReachableTiles( const Unit* unit, TileSet& result );
 		void ForEachReachableTile( const Unit* unit, ForEachReachableTileCallback callback );
 		void FindBestPathToTile( const Vec2i& tilePos, Path& result ) const;
 		Event< Unit*, const Path& > OnUnitMoved;
@@ -106,17 +107,35 @@ namespace mage
 		Scenario* GetScenario() const;
 
 	private:
+		struct ReachableTileInfo
+		{
+			ReachableTileInfo();
+			ReachableTileInfo( const Iterator& tile, PrimaryDirection direction, int movementRange );
+
+			bool operator==( const ReachableTileInfo& info );
+			bool operator!=( const ReachableTileInfo& info );
+			bool operator<( const ReachableTileInfo& info );
+			bool operator<=( const ReachableTileInfo& info );
+			bool operator>( const ReachableTileInfo& info );
+			bool operator>=( const ReachableTileInfo& info );
+
+			PrimaryDirection previousDirection;
+			int totalCostToEnter;
+			Iterator tile;
+		};
+
+		typedef FixedSizeMinHeap< MAX_TILES, int, ReachableTileInfo > OpenList;
+
 		void TileChanged( const Iterator& tile );
 		void UnitMoved( Unit* unit, const Path& path );
 		void UnitDied( Unit* unit );
-
-		void FindReachableTilesRecursive( const Unit* unit, const Vec2i& tilePos, int costToEnter, PrimaryDirection previousTileDirection, int movementRange, Tiles& result );
 
 		bool mIsInitialized;
 		int mNextPathIndex;
 		Scenario* mScenario;
 		Units mUnits;
 		Factions mFactions;
+		OpenList mOpenList;
 
 	public:
 		Event< const Iterator& > OnTileChanged;

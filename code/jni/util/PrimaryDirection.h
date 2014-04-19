@@ -40,6 +40,7 @@ namespace mage
 		const HashString& GetName() const;
 		Vec2s GetOffset() const;
 		PrimaryDirection GetOppositeDirection() const;
+		unsigned char GetIndex() const;
 
 		static PrimaryDirection GetDirectionByName( const HashString& directionName );
 
@@ -172,6 +173,12 @@ namespace mage
 	inline PrimaryDirection PrimaryDirection::GetOppositeDirection() const
 	{
 		return PrimaryDirection( GetDirectionInfo( mIndex ).oppositeDirection );
+	}
+
+
+	inline unsigned char PrimaryDirection::GetIndex() const
+	{
+		return mIndex;
 	}
 
 

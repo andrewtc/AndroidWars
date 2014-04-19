@@ -10,6 +10,9 @@ namespace mage
 
 		static const float MAP_BORDER_SCALE;
 
+		typedef Grid< TileSprite, MAP_SIZE_POWER_OF_TWO > TileSpritesGrid;
+		typedef std::vector< UnitSprite* > UnitSprites;
+
 		MapView();
 		~MapView();
 
@@ -30,6 +33,9 @@ namespace mage
 		void SetDefaultFont( BitmapFont* font );
 		BitmapFont* GetDefaultFont() const;
 
+		TileSpritesGrid& GetTileSprites();
+		const TileSpritesGrid& GetTileSprites() const;
+
 		UnitSprite* CreateUnitSprite( Unit* unit );
 		UnitSprite* GetUnitSpriteAtScreenCoords( float screenX, float screenY ) const;
 		UnitSprite* GetUnitSpriteAtScreenCoords( const Vec2f& screenCoords ) const;
@@ -37,6 +43,9 @@ namespace mage
 		UnitSprite* GetUnitSpriteAtWorldCoords( const Vec2f& worldCoords ) const;
 		UnitSprite* GetUnitSpriteAtTileCoords( short tileX, short tileY ) const;
 		UnitSprite* GetUnitSpriteAtTileCoords( const Vec2s& tilePos ) const;
+
+		void SelectUnitSprite( UnitSprite* unitSprite );
+		void DeselectUnitSprite();
 
 		Vec2f WorldToScreenCoords( const Vec2f& worldCoords ) const;
 		Vec2f WorldToScreenCoords( float worldX, float worldY ) const;
@@ -51,17 +60,18 @@ namespace mage
 		bool IsInitialized() const;
 
 	private:
-		typedef Grid< TileSprite, MAP_SIZE_POWER_OF_TWO > TileSpritesGrid;
-		typedef std::vector< UnitSprite* > UnitSprites;
-
 		void MapResized( const Vec2s& oldSize, const Vec2s& newSize );
 		void TileChanged( const Map::Iterator& tile );
 		void UnitSpriteSelected( UnitSprite* unitSprite );
+
+		void SelectAllReachableTilesForUnit( Unit* unit );
+		void DeselectAllTiles();
 
 		Map* mMap;
 		UnitSprite* mSelectedUnitSprite;
 		BitmapFont* mDefaultFont;
 		Camera mCamera;
+		ArrowSprite mArrowSprite;
 		UnitSprites mUnitSprites;
 		TileSpritesGrid mTileSprites;
 	};

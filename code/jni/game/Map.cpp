@@ -146,6 +146,52 @@ bool Tile::IsCapturable() const
 }
 
 
+Map::ReachableTileInfo::ReachableTileInfo() :
+	tile(), previousDirection( PrimaryDirection::NONE ), totalCostToEnter( 0 )
+{ }
+
+
+Map::ReachableTileInfo::ReachableTileInfo( const Iterator& tile, PrimaryDirection direction, int movementRange ) :
+	tile( tile ), previousDirection( previousDirection ), totalCostToEnter( movementRange )
+{ }
+
+
+bool Map::ReachableTileInfo::operator==( const ReachableTileInfo& other )
+{
+	return ( tile == other.tile );
+}
+
+
+bool Map::ReachableTileInfo::operator!=( const ReachableTileInfo& other )
+{
+	return ( tile != other.tile );
+}
+
+
+bool Map::ReachableTileInfo::operator<( const ReachableTileInfo& other )
+{
+	return ( tile < other.tile );
+}
+
+
+bool Map::ReachableTileInfo::operator<=( const ReachableTileInfo& other )
+{
+	return ( tile <= other.tile );
+}
+
+
+bool Map::ReachableTileInfo::operator>( const ReachableTileInfo& other )
+{
+	return ( tile > other.tile );
+}
+
+
+bool Map::ReachableTileInfo::operator>=( const ReachableTileInfo& other )
+{
+	return ( tile >= other.tile );
+}
+
+
 std::string Map::FormatMapPath( const std::string& mapName )
 {
 	std::stringstream formatter;
@@ -421,6 +467,100 @@ void Map::ForEachUnit( ForEachConstUnitCallback callback ) const
 	{
 		// Call the function for each Unit.
 		callback.Invoke( *it );
+	}
+}
+
+
+
+void Map::FindReachableTiles( const Unit* unit, TileSet& result )
+{
+	// Clear the list of results.
+	result.clear();
+
+	// Clear the open list.
+	mOpenList.clear();
+
+	// Get the Unit's current Tile and type.
+	Iterator originTile = unit->GetTile();
+	UnitType* unitType = unit->GetUnitType();
+	MovementType* movementType = unit->GetMovementType();
+
+	// Get the starting movement range of the Unit.
+	int movementRange = unit->GetMovementRange();
+
+	// Add the origin tile to the open list.
+	ReachableTileInfo originTileInfo( originTile, PrimaryDirection::NONE, 0 );
+	mOpenList.insert( 0, originTileInfo );
+
+	while( !mOpenList.isEmpty() )
+	{
+		// Pop the first element off the open list.
+		ReachableTileInfo tileInfo = mOpenList.popMinElement();
+
+		// Add the tile to the result.
+		result.insert( tileInfo.tile );
+
+		for( int i = 0; i < CARDINAL_DIRECTION_COUNT; ++i )
+		{
+			// Determine the direction to search.
+			PrimaryDirection direction = CARDINAL_DIRECTIONS[ i ];
+
+			if( direction != tileInfo.previousDirection )
+			{
+				// If the adjacent tile isn't in the previous direction, get the adjacent tile.
+				Iterator adjacent = tileInfo.tile.GetAdjacent( direction );
+
+				if( adjacent.IsValid() && result.find( adjacent ) == result.end() )
+				{
+					// If the adjacent tile is valid and isn't already on the list of results, get the TerrainType of the adjacent tile.
+					TerrainType* adjacentTerrainType = adjacent->GetTerrainType();
+
+					if( movementType->CanMoveAcrossTerrain( adjacentTerrainType ) )
+					{
+						// If the adjacent tile is passable, find the leftover movement range after entering the tile.
+						int adjacentTotalCost = ( tileInfo.totalCostToEnter + movementType->GetMovementCostAcrossTerrain( adjacentTerrainType ) );
+
+						if( adjacentTotalCost <= movementRange )
+						{
+							// If the Unit has a long enough range to enter the adjacent tile, store info for the adjacent tile.
+							ReachableTileInfo adjacentTileInfo( adjacent, direction.GetOppositeDirection(), adjacentTotalCost );
+
+							// See if the value is already on the open list.
+							OpenList::Node node = mOpenList.findNodeByValue( adjacentTileInfo );
+
+							if( node == nullptr )
+							{
+								// If the tile info isn't already on the open list, add it.
+								mOpenList.insert( adjacentTotalCost, adjacentTileInfo );
+							}
+							else if( node->key > adjacentTotalCost )
+							{
+								// If the node is already on the open list but has a larger total cost,
+								// update the value.
+								mOpenList.update( adjacentTotalCost, adjacentTileInfo );
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+
+void Map::ForEachReachableTile( const Unit* unit, ForEachReachableTileCallback callback )
+{
+	assertion( unit, "Cannot find reachable tiles for null Unit!" );
+	assertion( callback.IsValid(), "Cannot call invalid callback on reachable tiles!" );
+
+	// Find all reachable tiles for the Unit.
+	TileSet reachableTiles;
+	FindReachableTiles( unit, reachableTiles );
+
+	for( auto it = reachableTiles.begin(); it != reachableTiles.end(); ++it )
+	{
+		// Invoke the callback on all reachable tiles.
+		callback.Invoke( *it, unit );
 	}
 }
 
