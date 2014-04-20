@@ -27,10 +27,25 @@ namespace mage
 
 		bool IsCapturable() const;
 
+		void Open( int searchIndex );
+		bool IsOpen( int searchIndex ) const;
+		void Close( int searchIndex );
+		bool IsClosed( int searchIndex ) const;
+
+		void SetPreviousTileDirection( PrimaryDirection direction );
+		PrimaryDirection GetPreviousTileDirection() const;
+
+		void SetBestTotalCostToEnter( int totalCostToEnter );
+		int GetBestTotalCostToEnter() const;
+
 	private:
 		void SetUnit( Unit* unit );
 		void ClearUnit();
 
+		PrimaryDirection mPreviousTileDirection;
+		int mBestTotalCostToEnter;
+		int mLastOpenedSearchIndex;
+		int mLastClosedSearchIndex;
 		TerrainType* mTerrainType;
 		Faction* mOwner;
 		Unit* mUnit;
@@ -101,37 +116,22 @@ namespace mage
 
 		void FindReachableTiles( const Unit* unit, TileSet& result );
 		void ForEachReachableTile( const Unit* unit, ForEachReachableTileCallback callback );
-		void FindBestPathToTile( const Vec2i& tilePos, Path& result ) const;
+		void FindBestPathToTile( const Unit* unit, const Vec2s& tilePos, Path& result );
 		Event< Unit*, const Path& > OnUnitMoved;
 
 		Scenario* GetScenario() const;
 
+		int ReserveSearchIndex();
+
 	private:
-		struct ReachableTileInfo
-		{
-			ReachableTileInfo();
-			ReachableTileInfo( const Iterator& tile, PrimaryDirection direction, int movementRange );
-
-			bool operator==( const ReachableTileInfo& info );
-			bool operator!=( const ReachableTileInfo& info );
-			bool operator<( const ReachableTileInfo& info );
-			bool operator<=( const ReachableTileInfo& info );
-			bool operator>( const ReachableTileInfo& info );
-			bool operator>=( const ReachableTileInfo& info );
-
-			PrimaryDirection previousDirection;
-			int totalCostToEnter;
-			Iterator tile;
-		};
-
-		typedef FixedSizeMinHeap< MAX_TILES, int, ReachableTileInfo > OpenList;
+		typedef FixedSizeMinHeap< MAX_TILES, int, Iterator > OpenList;
 
 		void TileChanged( const Iterator& tile );
 		void UnitMoved( Unit* unit, const Path& path );
 		void UnitDied( Unit* unit );
 
 		bool mIsInitialized;
-		int mNextPathIndex;
+		int mNextSearchIndex;
 		Scenario* mScenario;
 		Units mUnits;
 		Factions mFactions;

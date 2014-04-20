@@ -215,6 +215,31 @@ int Unit::GetMovementCostAcrossTerrain( TerrainType* terrainType ) const
 }
 
 
+int Unit::CalculatePathCost( const Path& path ) const
+{
+	int totalCost = 0;
+
+	// Get the current tile for this Unit.
+	Map::Iterator currentTile = GetTile();
+
+	for( size_t i = 0; i < path.GetLength(); ++i )
+	{
+		// Get the adjacent tile in the direction specified.
+		PrimaryDirection direction = path.GetDirection( i );
+		currentTile = currentTile.GetAdjacent( direction );
+
+		if( currentTile.IsValid() )
+		{
+			// Add the cost of entering the tile to the path.
+			int movementCost = GetMovementCostAcrossTerrain( currentTile->GetTerrainType() );
+			totalCost += movementCost;
+		}
+	}
+
+	return totalCost;
+}
+
+
 bool Unit::CanMoveAcrossTerrain( TerrainType* terrainType ) const
 {
 	return ( GetMovementCostAcrossTerrain( terrainType ) > -1 );

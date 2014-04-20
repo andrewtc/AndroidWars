@@ -7,6 +7,7 @@ GameplayState::GameplayState() :
 	GameState(),
 	mIsNetworkGame( false ),
 	mSelectUnitInputState( nullptr ),
+	mMoveUnitInputState( nullptr ),
 	mActionsDialog( nullptr )
 {
 	DebugPrintf( "GameplayState created!" );
@@ -58,6 +59,7 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 
 	// Create input states.
 	mSelectUnitInputState = CreateState< SelectUnitInputState >();
+	mMoveUnitInputState = CreateState< MoveUnitInputState >();
 
 	// Start by letting the player select a Unit.
 	ChangeState( mSelectUnitInputState );
@@ -167,4 +169,16 @@ MapView* GameplayState::GetMapView()
 const MapView* GameplayState::GetMapView() const
 {
 	return &mMapView;
+}
+
+
+SelectUnitInputState* GameplayState::GetSelectUnitInputState() const
+{
+	return mSelectUnitInputState;
+}
+
+
+MoveUnitInputState* GameplayState::GetMoveUnitInputState() const
+{
+	return mMoveUnitInputState;
 }

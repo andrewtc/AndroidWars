@@ -21,7 +21,10 @@ namespace mage
 		void AddDirection( PrimaryDirection direction );
 		PrimaryDirection GetDirection( size_t index ) const;
 		Vec2s GetWaypoint( size_t index ) const;
+		int GetIndexOfWaypoint( const Vec2s& waypoint ) const;
+		bool ContainsWaypoint( const Vec2s& waypoint ) const;
 		Vec2s GetDestination() const;
+		void RemoveWaypointsAfterIndex( size_t index );
 		void Clear();
 
 		size_t GetLength() const;
@@ -82,7 +85,7 @@ namespace mage
 	{
 		size_t length = GetLength();
 		assertion( index < length, "Direction index %d is out of bounds! (%d elements)", index, length );
-		return mDirections[ length - index - 1 ];
+		return mDirections[ index ];
 	}
 
 
@@ -90,19 +93,58 @@ namespace mage
 	{
 		Vec2s waypoint = mOrigin;
 
-		for( size_t index = 0, length = mDirections.size(); index < length; ++index )
+		for( size_t i = 0, length = mDirections.size(); i < index; ++i )
 		{
 			// Calculate the position of the waypoint at the specified index.
-			waypoint += mDirections[ index ].GetOffset();
+			PrimaryDirection direction = GetDirection( i );
+			waypoint += direction.GetOffset();
 		}
 
 		return waypoint;
 	}
 
 
+	inline int Path::GetIndexOfWaypoint( const Vec2s& waypoint ) const
+	{
+		int result = -1;
+		Vec2s currentWaypoint = mOrigin;
+
+		for( size_t index = 0, length = mDirections.size(); index < length; ++index )
+		{
+			if( currentWaypoint == waypoint )
+			{
+				// If the requested waypoint is found, return true.
+				result = (int) index;
+				break;
+			}
+
+			// Calculate the position of the next waypoint.
+			PrimaryDirection direction = GetDirection( index );
+			currentWaypoint += direction.GetOffset();
+		}
+
+		return result;
+	}
+
+
+	inline bool Path::ContainsWaypoint( const Vec2s& waypoint ) const
+	{
+		return ( GetIndexOfWaypoint( waypoint ) >= 0 );
+	}
+
+
 	inline Vec2s Path::GetDestination() const
 	{
 		return GetWaypoint( mDirections.size() - 1 );
+	}
+
+
+	inline void Path::RemoveWaypointsAfterIndex( size_t index )
+	{
+		// Remove all directions after the specified index.
+		assertion( index < mDirections.size(), "Cannot remove waypoints after index because the index (%d) is out of bounds!", index );
+		mDirections.erase( mDirections.begin() + index, mDirections.end() );
+		OnChanged.Invoke();
 	}
 
 

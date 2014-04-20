@@ -3,6 +3,7 @@
 namespace mage
 {
 	class SelectUnitInputState;
+	class MoveUnitInputState;
 
 	/**
 	 * Encapsulates all gameplay functionality.
@@ -20,6 +21,9 @@ namespace mage
 		MapView* GetMapView();
 		const MapView* GetMapView() const;
 
+		SelectUnitInputState* GetSelectUnitInputState() const;
+		MoveUnitInputState* GetMoveUnitInputState() const;
+
 	private:
 		virtual void OnEnter( const Dictionary& parameters );
 		virtual void OnUpdate( float elapsedTime );
@@ -34,6 +38,7 @@ namespace mage
 		bool mIsNetworkGame;
 		Widget* mActionsDialog;
 		SelectUnitInputState* mSelectUnitInputState;
+		MoveUnitInputState* mMoveUnitInputState;
 		Scenario mScenario;
 		Game mGame;
 		Map mMap;

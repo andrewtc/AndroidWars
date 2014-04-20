@@ -82,13 +82,11 @@ namespace mage
 
 
 	template< size_t capacity, typename key_t, typename value_t >
-	value_t FixedSizeMinHeap< capacity, key_t, value_t >::popMinElement()
+	typename FixedSizeMinHeap< capacity, key_t, value_t >::Pair FixedSizeMinHeap< capacity, key_t, value_t >::popMinNode()
 	{
-		// Grab the topmost node.
+		// Copy the Node to pop.
 		Node firstNode = getFirstNode();
-
-		// Copy the value to pop.
-		Value value = firstNode->value;
+		Pair result = *firstNode;
 
 		Node endNode = getLastNode();
 
@@ -111,7 +109,22 @@ namespace mage
 		assertion( isValidHeap( firstNode ), "MinHeap failed to heapify after popping element!" );
 
 		// Return the popped value.
-		return value;
+		return result;
+	}
+
+
+	template< size_t capacity, typename key_t, typename value_t >
+	value_t FixedSizeMinHeap< capacity, key_t, value_t >::popMinElement()
+	{
+		return popMinNode().value;
+	}
+
+
+	template< size_t capacity, typename key_t, typename value_t >
+	typename FixedSizeMinHeap< capacity, key_t, value_t >::ConstNode FixedSizeMinHeap< capacity, key_t, value_t >::peekMinNode() const
+	{
+		// Return the topmost value.
+		return getFirstNode();
 	}
 
 

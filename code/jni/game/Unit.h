@@ -34,6 +34,7 @@ namespace mage
 		MovementType* GetMovementType() const;
 		int GetMovementRange() const;
 		int GetMovementCostAcrossTerrain( TerrainType* terrainType ) const;
+		int CalculatePathCost( const Path& path ) const;
 		bool CanMoveAcrossTerrain( TerrainType* terrainType ) const;
 		bool IsOwnedBy( Faction* faction ) const;
 

@@ -276,6 +276,36 @@ void MapView::DeselectUnitSprite()
 }
 
 
+UnitSprite* MapView::GetSelectedUnitSprite() const
+{
+	return mSelectedUnitSprite;
+}
+
+
+bool MapView::HasSelectedUnitSprite() const
+{
+	return ( mSelectedUnitSprite != nullptr );
+}
+
+
+const ArrowSprite& MapView::GetArrowSprite() const
+{
+	return mArrowSprite;
+}
+
+
+Path& MapView::GetSelectedUnitPath()
+{
+	return mArrowSprite.GetPath();
+}
+
+
+const Path& MapView::GetSelectedUnitPath() const
+{
+	return mArrowSprite.GetPath();
+}
+
+
 Vec2f MapView::WorldToScreenCoords( const Vec2f& worldCoords ) const
 {
 	return WorldToScreenCoords( worldCoords.x, worldCoords.y );
@@ -386,16 +416,6 @@ void MapView::UnitSpriteSelected( UnitSprite* unitSprite )
 		DebugPrintf( "Setting ArrowSprite..." );
 		Path path;
 		path.SetOrigin( tilePos );
-
-		// TODO: Remove this.
-		path.AddDirection( PrimaryDirection::EAST );
-		path.AddDirection( PrimaryDirection::NORTH );
-		path.AddDirection( PrimaryDirection::EAST );
-		path.AddDirection( PrimaryDirection::EAST );
-		path.AddDirection( PrimaryDirection::SOUTH );
-		path.AddDirection( PrimaryDirection::SOUTH );
-		path.AddDirection( PrimaryDirection::WEST );
-		path.AddDirection( PrimaryDirection::WEST );
 
 		mArrowSprite.SetPath( path );
 	}

@@ -34,7 +34,9 @@ namespace mage
 
 		void insert( const Key& key, Value& value );
 		void update( const Key& key, Value& value );
+		Pair popMinNode();
 		Value popMinElement();
+		ConstNode peekMinNode() const;
 		Value peekMinElement() const;
 		Node findNodeByValue( const Value& value );
 		ConstNode findNodeByValue( const Value& value ) const;

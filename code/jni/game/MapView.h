@@ -46,6 +46,12 @@ namespace mage
 
 		void SelectUnitSprite( UnitSprite* unitSprite );
 		void DeselectUnitSprite();
+		UnitSprite* GetSelectedUnitSprite() const;
+		bool HasSelectedUnitSprite() const;
+
+		const ArrowSprite& GetArrowSprite() const;
+		Path& GetSelectedUnitPath();
+		const Path& GetSelectedUnitPath() const;
 
 		Vec2f WorldToScreenCoords( const Vec2f& worldCoords ) const;
 		Vec2f WorldToScreenCoords( float worldX, float worldY ) const;

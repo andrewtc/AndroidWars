@@ -9,6 +9,9 @@ const char* const Map::MAP_FILE_EXTENSION = "maps/";
 
 Tile::Tile() :
 	mTerrainType( nullptr ),
+	mBestTotalCostToEnter( 0 ),
+	mLastClosedSearchIndex( -1 ),
+	mLastOpenedSearchIndex( -1 ),
 	mOwner( nullptr ),
 	mUnit( nullptr )
 { }
@@ -146,49 +149,51 @@ bool Tile::IsCapturable() const
 }
 
 
-Map::ReachableTileInfo::ReachableTileInfo() :
-	tile(), previousDirection( PrimaryDirection::NONE ), totalCostToEnter( 0 )
-{ }
-
-
-Map::ReachableTileInfo::ReachableTileInfo( const Iterator& tile, PrimaryDirection direction, int movementRange ) :
-	tile( tile ), previousDirection( previousDirection ), totalCostToEnter( movementRange )
-{ }
-
-
-bool Map::ReachableTileInfo::operator==( const ReachableTileInfo& other )
+void Tile::Open( int searchIndex )
 {
-	return ( tile == other.tile );
+	mLastOpenedSearchIndex = searchIndex;
 }
 
 
-bool Map::ReachableTileInfo::operator!=( const ReachableTileInfo& other )
+bool Tile::IsOpen( int searchIndex ) const
 {
-	return ( tile != other.tile );
+	return ( mLastOpenedSearchIndex == searchIndex );
 }
 
 
-bool Map::ReachableTileInfo::operator<( const ReachableTileInfo& other )
+void Tile::Close( int searchIndex )
 {
-	return ( tile < other.tile );
+	mLastClosedSearchIndex = searchIndex;
 }
 
 
-bool Map::ReachableTileInfo::operator<=( const ReachableTileInfo& other )
+bool Tile::IsClosed( int searchIndex ) const
 {
-	return ( tile <= other.tile );
+	return ( mLastClosedSearchIndex == searchIndex );
 }
 
 
-bool Map::ReachableTileInfo::operator>( const ReachableTileInfo& other )
+void Tile::SetPreviousTileDirection( PrimaryDirection direction )
 {
-	return ( tile > other.tile );
+	mPreviousTileDirection = direction;
 }
 
 
-bool Map::ReachableTileInfo::operator>=( const ReachableTileInfo& other )
+PrimaryDirection Tile::GetPreviousTileDirection() const
 {
-	return ( tile >= other.tile );
+	return mPreviousTileDirection;
+}
+
+
+void Tile::SetBestTotalCostToEnter( int totalCostToEnter )
+{
+	mBestTotalCostToEnter = totalCostToEnter;
+}
+
+
+int Tile::GetBestTotalCostToEnter() const
+{
+	return mBestTotalCostToEnter;
 }
 
 
@@ -203,7 +208,7 @@ std::string Map::FormatMapPath( const std::string& mapName )
 Map::Map() :
 	mIsInitialized( false ),
 	mScenario( nullptr ),
-	mNextPathIndex( 0 )
+	mNextSearchIndex( 0 )
 { }
 
 
@@ -474,6 +479,8 @@ void Map::ForEachUnit( ForEachConstUnitCallback callback ) const
 
 void Map::FindReachableTiles( const Unit* unit, TileSet& result )
 {
+	int searchIndex = ReserveSearchIndex();
+
 	// Clear the list of results.
 	result.clear();
 
@@ -489,56 +496,55 @@ void Map::FindReachableTiles( const Unit* unit, TileSet& result )
 	int movementRange = unit->GetMovementRange();
 
 	// Add the origin tile to the open list.
-	ReachableTileInfo originTileInfo( originTile, PrimaryDirection::NONE, 0 );
-	mOpenList.insert( 0, originTileInfo );
+	originTile->Open( searchIndex );
+	originTile->SetPreviousTileDirection( PrimaryDirection::NONE );
+	originTile->SetBestTotalCostToEnter( 0 );
+	mOpenList.insert( 0, originTile );
 
 	while( !mOpenList.isEmpty() )
 	{
 		// Pop the first element off the open list.
-		ReachableTileInfo tileInfo = mOpenList.popMinElement();
+		Map::Iterator tile = mOpenList.popMinElement();
 
-		// Add the tile to the result.
-		result.insert( tileInfo.tile );
+		// Close the tile and add it to the result.
+		tile->Close( searchIndex );
+		result.insert( tile );
 
 		for( int i = 0; i < CARDINAL_DIRECTION_COUNT; ++i )
 		{
 			// Determine the direction to search.
 			PrimaryDirection direction = CARDINAL_DIRECTIONS[ i ];
 
-			if( direction != tileInfo.previousDirection )
+			// If the adjacent tile isn't in the previous direction, get the adjacent tile.
+			Iterator adjacent = tile.GetAdjacent( direction );
+
+			if( adjacent.IsValid() && !adjacent->IsClosed( searchIndex ) )
 			{
-				// If the adjacent tile isn't in the previous direction, get the adjacent tile.
-				Iterator adjacent = tileInfo.tile.GetAdjacent( direction );
+				// If the adjacent tile is valid and isn't already closed, get the TerrainType of the adjacent tile.
+				TerrainType* adjacentTerrainType = adjacent->GetTerrainType();
 
-				if( adjacent.IsValid() && result.find( adjacent ) == result.end() )
+				if( movementType->CanMoveAcrossTerrain( adjacentTerrainType ) )
 				{
-					// If the adjacent tile is valid and isn't already on the list of results, get the TerrainType of the adjacent tile.
-					TerrainType* adjacentTerrainType = adjacent->GetTerrainType();
+					// If the adjacent tile is passable, find the total cost of entering the tile.
+					int costToEnterAdjacent = movementType->GetMovementCostAcrossTerrain( adjacentTerrainType );
+					int adjacentTotalCost = ( tile->GetBestTotalCostToEnter() + costToEnterAdjacent );
 
-					if( movementType->CanMoveAcrossTerrain( adjacentTerrainType ) )
+					if( adjacentTotalCost <= movementRange )
 					{
-						// If the adjacent tile is passable, find the leftover movement range after entering the tile.
-						int adjacentTotalCost = ( tileInfo.totalCostToEnter + movementType->GetMovementCostAcrossTerrain( adjacentTerrainType ) );
-
-						if( adjacentTotalCost <= movementRange )
+						if( !adjacent->IsOpen( searchIndex ) )
 						{
-							// If the Unit has a long enough range to enter the adjacent tile, store info for the adjacent tile.
-							ReachableTileInfo adjacentTileInfo( adjacent, direction.GetOppositeDirection(), adjacentTotalCost );
-
-							// See if the value is already on the open list.
-							OpenList::Node node = mOpenList.findNodeByValue( adjacentTileInfo );
-
-							if( node == nullptr )
-							{
-								// If the tile info isn't already on the open list, add it.
-								mOpenList.insert( adjacentTotalCost, adjacentTileInfo );
-							}
-							else if( node->key > adjacentTotalCost )
-							{
-								// If the node is already on the open list but has a larger total cost,
-								// update the value.
-								mOpenList.update( adjacentTotalCost, adjacentTileInfo );
-							}
+							// If the tile info isn't already on the open list, add it.
+							adjacent->SetPreviousTileDirection( direction.GetOppositeDirection() );
+							adjacent->SetBestTotalCostToEnter( adjacentTotalCost );
+							mOpenList.insert( adjacentTotalCost, adjacent );
+						}
+						else if( adjacentTotalCost < adjacent->GetBestTotalCostToEnter() )
+						{
+							// If the node is already on the open list but has a larger total cost,
+							// update the value.
+							adjacent->SetPreviousTileDirection( direction.GetOppositeDirection() );
+							adjacent->SetBestTotalCostToEnter( adjacentTotalCost );
+							mOpenList.update( adjacentTotalCost, adjacent );
 						}
 					}
 				}
@@ -561,6 +567,112 @@ void Map::ForEachReachableTile( const Unit* unit, ForEachReachableTileCallback c
 	{
 		// Invoke the callback on all reachable tiles.
 		callback.Invoke( *it, unit );
+	}
+}
+
+
+void Map::FindBestPathToTile( const Unit* unit, const Vec2s& tilePos, Path& result )
+{
+	std::vector< PrimaryDirection > reverseDirections;
+	int searchIndex = ReserveSearchIndex();
+
+	// Clear the list of results.
+	result.Clear();
+	result.SetOrigin( unit->GetTilePos() );
+
+	// Clear the open list.
+	mOpenList.clear();
+
+	// Get the Unit's current Tile and type.
+	Iterator originTile = unit->GetTile();
+	UnitType* unitType = unit->GetUnitType();
+	MovementType* movementType = unit->GetMovementType();
+
+	// Get the starting movement range of the Unit.
+	int movementRange = unit->GetMovementRange();
+
+	// Add the origin tile to the open list.
+	originTile->Open( searchIndex );
+	originTile->SetPreviousTileDirection( PrimaryDirection::NONE );
+	originTile->SetBestTotalCostToEnter( 0 );
+	mOpenList.insert( 0, originTile );
+
+	while( !mOpenList.isEmpty() )
+	{
+		// Pop the first element off the open list.
+		Map::Iterator tile = mOpenList.popMinElement();
+
+		if( tile.GetPosition() != tilePos )
+		{
+			// If this isn't the goal tile, close it.
+			tile->Close( searchIndex );
+
+			for( int i = 0; i < CARDINAL_DIRECTION_COUNT; ++i )
+			{
+				// Determine the direction to search.
+				PrimaryDirection direction = CARDINAL_DIRECTIONS[ i ];
+
+				// If the adjacent tile isn't in the previous direction, get the adjacent tile.
+				Iterator adjacent = tile.GetAdjacent( direction );
+
+				if( adjacent.IsValid() && !adjacent->IsClosed( searchIndex ) )
+				{
+					// If the adjacent tile is valid and isn't already closed, get the TerrainType of the adjacent tile.
+					TerrainType* adjacentTerrainType = adjacent->GetTerrainType();
+
+					if( movementType->CanMoveAcrossTerrain( adjacentTerrainType ) )
+					{
+						// If the adjacent tile is passable, find the total cost of entering the tile.
+						int costToEnterAdjacent = movementType->GetMovementCostAcrossTerrain( adjacentTerrainType );
+						int adjacentTotalCost = ( tile->GetBestTotalCostToEnter() + costToEnterAdjacent );
+						int distanceToGoal = ( originTile.GetPosition().GetManhattanDistanceTo( tilePos ) );
+						int adjacentWeight = ( adjacentTotalCost + distanceToGoal );
+
+						if( adjacentTotalCost <= movementRange )
+						{
+							if( !adjacent->IsOpen( searchIndex ) )
+							{
+								// If the tile info isn't already on the open list, add it.
+								adjacent->SetPreviousTileDirection( direction.GetOppositeDirection() );
+								adjacent->SetBestTotalCostToEnter( adjacentTotalCost );
+								mOpenList.insert( adjacentWeight, adjacent );
+							}
+							else if( adjacentTotalCost < adjacent->GetBestTotalCostToEnter() )
+							{
+								// If the node is already on the open list but has a larger total cost,
+								// update the value.
+								adjacent->SetPreviousTileDirection( direction.GetOppositeDirection() );
+								adjacent->SetBestTotalCostToEnter( adjacentTotalCost );
+								mOpenList.update( adjacentWeight, adjacent );
+							}
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			// If this is the goal tile, construct the path to the location.
+			PrimaryDirection previousDirection = tile->GetPreviousTileDirection();
+
+			while( previousDirection != PrimaryDirection::NONE )
+			{
+				// Construct the list of directions from the goal back to the origin tile.
+				reverseDirections.push_back( previousDirection );
+				tile = tile.GetAdjacent( previousDirection );
+				previousDirection = tile->GetPreviousTileDirection();
+			}
+
+			// End the search.
+			break;
+		}
+	}
+
+	for( auto it = reverseDirections.rbegin(); it != reverseDirections.rend(); ++it )
+	{
+		// Construct the path by reversing the directions from the goal to the origin.
+		PrimaryDirection direction = *it;
+		result.AddDirection( direction.GetOppositeDirection() );
 	}
 }
 
@@ -592,6 +704,12 @@ void Map::DestroyAllUnits()
 Scenario* Map::GetScenario() const
 {
 	return mScenario;
+}
+
+
+int Map::ReserveSearchIndex()
+{
+	return mNextSearchIndex++;
 }
 
 
