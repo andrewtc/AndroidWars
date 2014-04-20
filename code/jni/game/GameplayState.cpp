@@ -8,6 +8,7 @@ GameplayState::GameplayState() :
 	mIsNetworkGame( false ),
 	mSelectUnitInputState( nullptr ),
 	mMoveUnitInputState( nullptr ),
+	mSelectActionInputState( nullptr ),
 	mActionsDialog( nullptr )
 {
 	DebugPrintf( "GameplayState created!" );
@@ -48,7 +49,7 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 	Faction* testFaction = mMap.CreateFaction();
 
 	// Create a test Unit.
-	UnitType* testUnitType = mScenario.UnitTypes.FindByName( "Infantry" );
+	UnitType* testUnitType = mScenario.UnitTypes.FindByName( "Tank" );
 	mMap.CreateUnit( testUnitType, testFaction, 5, 5, 10, 99 );
 
 	// Set the default font for the MapView.
@@ -60,6 +61,7 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 	// Create input states.
 	mSelectUnitInputState = CreateState< SelectUnitInputState >();
 	mMoveUnitInputState = CreateState< MoveUnitInputState >();
+	mSelectActionInputState = CreateState< SelectActionInputState >();
 
 	// Start by letting the player select a Unit.
 	ChangeState( mSelectUnitInputState );
@@ -93,6 +95,9 @@ void GameplayState::OnUpdate( float elapsedTime )
 		// Update the MapView.
 		mMapView.Update( elapsedTime );
 	}
+
+	// Update all Widgets.
+	GameState::OnUpdate( elapsedTime );
 }
 
 
@@ -103,6 +108,9 @@ void GameplayState::OnDraw()
 		// Draw the MapView.
 		mMapView.Draw();
 	}
+
+	// Draw all Widgets.
+	GameState::OnDraw();
 }
 
 
@@ -181,4 +189,10 @@ SelectUnitInputState* GameplayState::GetSelectUnitInputState() const
 MoveUnitInputState* GameplayState::GetMoveUnitInputState() const
 {
 	return mMoveUnitInputState;
+}
+
+
+SelectActionInputState* GameplayState::GetSelectActionInputState() const
+{
+	return mSelectActionInputState;
 }

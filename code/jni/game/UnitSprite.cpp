@@ -25,6 +25,10 @@ void UnitSprite::Init()
 	assertion( !IsInitialized(), "Cannot initialize UnitSprite that has already been initialized!" );
 	mIsInitialized = true;
 
+	// Listen for changes to the Unit's position.
+	mUnit->OnTeleport.AddCallback( this, &UnitSprite::OnUnitTeleport );
+	mUnit->OnMove.AddCallback( this, &UnitSprite::OnUnitMove );
+
 	// Determine the position of the Unit in the MapView.
 	Vec2f worldPos = mMapView->TileToWorldCoords( mUnit->GetTilePos() );
 
@@ -111,4 +115,18 @@ RectF UnitSprite::GetWorldBounds() const
 	bounds.Bottom += position.y;
 
 	return bounds;
+}
+
+
+void UnitSprite::OnUnitTeleport( const Map::Iterator& tile )
+{
+	// Update the sprite position.
+	SetPosition( mMapView->TileToWorldCoords( mUnit->GetTilePos() ) );
+}
+
+
+void UnitSprite::OnUnitMove( const Path& path )
+{
+	// TODO: Start the move animation.
+	SetPosition( mMapView->TileToWorldCoords( mUnit->GetTilePos() ) );
 }

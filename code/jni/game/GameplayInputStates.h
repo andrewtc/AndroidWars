@@ -34,4 +34,23 @@ namespace mage
 
 		friend class GameState;
 	};
+
+
+	class SelectActionInputState : public DerivedInputState< GameplayState >
+	{
+		SelectActionInputState( GameState* owner );
+		~SelectActionInputState();
+
+		virtual void OnEnter( const Dictionary& parameters );
+		virtual void OnExit();
+
+		Button* CreateActionButton( WidgetTemplate& widgetTemplate, const std::string& label );
+
+		void OnWaitButtonPressed();
+		void OnCancelButtonPressed();
+
+		ListLayout* mActionMenu;
+
+		friend class GameState;
+	};
 }

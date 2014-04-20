@@ -44,5 +44,6 @@
     <Template name="UnitSelector"   file="ui/unit_selector.xml"    />
     <Template name="UnitPalette"    file="ui/unit_palette.xml"     />
     <Template name="Actions"        file="ui/actions.xml"          />
+    <Template name="ActionMenuButton" file="ui/action_menu_button.xml" />
         
 </Theme>

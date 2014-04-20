@@ -10,6 +10,8 @@ namespace mage
 		DECLARE_RTTI;
 
 	public:
+		typedef Delegate< const Map::Iterator& > OnTileChangedDelegate;
+
 		static const int MAX_HEALTH = 10;
 
 		Unit();
@@ -36,6 +38,9 @@ namespace mage
 		int GetMovementCostAcrossTerrain( TerrainType* terrainType ) const;
 		int CalculatePathCost( const Path& path ) const;
 		bool CanMoveAcrossTerrain( TerrainType* terrainType ) const;
+		void Teleport( const Vec2s& tilePos );
+		void Teleport( Map::Iterator tile );
+		void Move( const Path& path );
 		bool IsOwnedBy( Faction* faction ) const;
 
 		bool CanAttack( const Unit& target ) const;
@@ -87,6 +92,8 @@ namespace mage
 		void OnTurnStart( int turnIndex );
 		void OnTurnEnd( int turnIndex );
 
+		void SetTile( Map::Iterator tile );
+
 		bool mIsAlive;
 		bool mIsActive;
 		int mHealth;
@@ -98,6 +105,9 @@ namespace mage
 		Map::Iterator mTile;
 
 	public:
+		Event< const Map::Iterator& > OnTileChanged;
+		Event< const Map::Iterator& > OnTeleport;
+		Event< const Path& > OnMove;
 		Event< int, Unit* > OnTakeDamage;
 		Event<> OnDeath;
 		Event<> OnDestroyed;

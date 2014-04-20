@@ -412,13 +412,13 @@ void Map::DestroyFaction( Faction* faction )
 }
 
 
-Unit* Map::CreateUnit( UnitType* unitType, Faction* owner, short tileX, short tileY, int health, int ammo )
+Unit* Map::CreateUnit( UnitType* unitType, Faction* owner, short tileX, short tileY, int health, int ammo, int supplies )
 {
 	return CreateUnit( unitType, owner, Vec2s( tileX, tileY ) );
 }
 
 
-Unit* Map::CreateUnit( UnitType* unitType, Faction* owner, const Vec2s& tilePos, int health, int ammo )
+Unit* Map::CreateUnit( UnitType* unitType, Faction* owner, const Vec2s& tilePos, int health, int ammo, int supplies )
 {
 	// Create a new Unit.
 	Unit* unit = new Unit();
@@ -437,10 +437,27 @@ Unit* Map::CreateUnit( UnitType* unitType, Faction* owner, const Vec2s& tilePos,
 	{
 		unit->SetHealth( health );
 	}
+	else
+	{
+		unit->ResetHealth();
+	}
 
 	if( ammo >= 0 )
 	{
 		unit->SetAmmo( ammo );
+	}
+	else
+	{
+		unit->ResetAmmo();
+	}
+
+	if( supplies >= 0 )
+	{
+		unit->SetSupplies( supplies );
+	}
+	else
+	{
+		unit->ResetSupplies();
 	}
 
 	// Initialize the Unit.

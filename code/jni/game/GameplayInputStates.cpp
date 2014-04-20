@@ -105,9 +105,6 @@ void MoveUnitInputState::OnExit()
 	GameplayState* owner = GetOwnerDerived();
 	MapView* mapView = owner->GetMapView();
 
-	// Deselect the currently selected UnitSprite (if any).
-	mapView->DeselectUnitSprite();
-
 	// TODO: Hide unit info.
 }
 
@@ -128,8 +125,8 @@ bool MoveUnitInputState::OnPointerUp( const Pointer& pointer )
 
 	if( GetPointerCount() == 1 )
 	{
-		// If the last pointer left the screen, leave the current InputState.
-		owner->PopState();
+		// If the last pointer left the screen, go to the action menu state.
+		owner->ChangeState( owner->GetSelectActionInputState() );
 	}
 
 	bool wasHandled = false; //InputState::OnPointerUp( pointer );
@@ -154,7 +151,7 @@ bool MoveUnitInputState::OnPointerMotion( const Pointer& activePointer, const Po
 
 		if( pointerTilePos != mLastPointerTilePos )
 		{
-			DebugPrintf( "Pointer is over tile (%d,%d).", pointerTilePos.x, pointerTilePos.y );
+			//DebugPrintf( "Pointer is over tile (%d,%d).", pointerTilePos.x, pointerTilePos.y );
 
 			// Determine whether the TileSprite is selected at this location.
 			MapView::TileSpritesGrid::Iterator tileSpriteIt = mapView->GetTileSprites().GetTile( pointerTilePos );
@@ -230,3 +227,132 @@ bool MoveUnitInputState::OnPointerMotion( const Pointer& activePointer, const Po
 	return wasHandled;
 }
 
+
+SelectActionInputState::SelectActionInputState( GameState* owner ) :
+	DerivedInputState( owner )
+{
+	// Create the action menu Widget.
+	mActionMenu = gWidgetManager->CreateWidgetFromTemplate< ListLayout >( "Actions" );
+
+	if( mActionMenu )
+	{
+		// Add the action menu.
+		gWidgetManager->GetRootWidget()->AddChild( mActionMenu );
+	}
+	else
+	{
+		WarnFail( "Could not create action menu Widget!" );
+	}
+}
+
+
+SelectActionInputState::~SelectActionInputState()
+{
+	if( mActionMenu )
+	{
+		// Destroy the action menu Widget.
+		gWidgetManager->DestroyWidget( mActionMenu );
+	}
+}
+
+
+void SelectActionInputState::OnEnter( const Dictionary& parameters )
+{
+	GameplayState* owner = GetOwnerDerived();
+	MapView* mapView = owner->GetMapView();
+
+	if( mActionMenu )
+	{
+		// Get the selected Unit.
+		UnitSprite* selectedUnitSprite = mapView->GetSelectedUnitSprite();
+		assertion( selectedUnitSprite, "Cannot display actions because no UnitSprite is selected!" );
+		Unit* unit = selectedUnitSprite->GetUnit();
+
+		// Clear any previous menu items.
+		mActionMenu->DestroyAllItems();
+
+		// Get the action menu button template.
+		WidgetTemplate* itemTemplate = gWidgetManager->GetTemplate( "ActionMenuButton" );
+
+		if( itemTemplate )
+		{
+			// Build a list of actions for the selected Unit.
+			Button* waitButton = CreateActionButton( *itemTemplate, "Wait" );
+			waitButton->SetOnClickDelegate( Button::OnClickDelegate( this, &SelectActionInputState::OnWaitButtonPressed ) );
+
+			Button* cancelButton = CreateActionButton( *itemTemplate, "Cancel" );
+			cancelButton->SetOnClickDelegate( Button::OnClickDelegate( this, &SelectActionInputState::OnCancelButtonPressed ) );
+		}
+		else
+		{
+			WarnFail( "Could not create item button template for action menu!" );
+		}
+
+		// Show the action menu Widget.
+		mActionMenu->Show();
+	}
+}
+
+
+void SelectActionInputState::OnExit()
+{
+	GameplayState* owner = GetOwnerDerived();
+	MapView* mapView = owner->GetMapView();
+
+	// Deselect the currently selected UnitSprite.
+	mapView->DeselectUnitSprite();
+
+	if( mActionMenu )
+	{
+		// Hide the action menu Widget.
+		mActionMenu->Hide();
+	}
+}
+
+
+Button* SelectActionInputState::CreateActionButton( WidgetTemplate& widgetTemplate, const std::string& label )
+{
+	// Create the button.
+	Button* result = mActionMenu->CreateItem< Button >( widgetTemplate );
+
+	if( result )
+	{
+		// If the button was created successfully, set the label.
+		result->SetLabel( label );
+	}
+	else
+	{
+		WarnFail( "Could not create item Button \"%s\" for action menu!", label.c_str() );
+	}
+
+	return result;
+}
+
+
+void SelectActionInputState::OnWaitButtonPressed()
+{
+	GameplayState* owner = GetOwnerDerived();
+	MapView* mapView = owner->GetMapView();
+
+	// Get the currently selected Unit.
+	UnitSprite* selectedUnitSprite = mapView->GetSelectedUnitSprite();
+	assertion( selectedUnitSprite, "Cannot display actions because no UnitSprite is selected!" );
+	Unit* unit = selectedUnitSprite->GetUnit();
+
+	// Move the selected Unit along the selected path.
+	const Path& path = mapView->GetSelectedUnitPath();
+	unit->Move( path );
+
+	// Exit the state.
+	owner->ChangeState( owner->GetSelectUnitInputState() );
+}
+
+
+void SelectActionInputState::OnCancelButtonPressed()
+{
+	GameplayState* owner = GetOwnerDerived();
+	MapView* mapView = owner->GetMapView();
+
+	// Exit the state.
+	owner->ChangeState( owner->GetSelectUnitInputState() );
+}

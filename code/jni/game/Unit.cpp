@@ -75,6 +75,14 @@ void Unit::Destroy()
 void Unit::OnTurnStart( int turnIndex )
 {
 	// Consume supplies.
+	MovementType* movementType = GetMovementType();
+	ConsumeSupplies( movementType->GetSuppliesConsumedPerTurn() );
+
+	if( movementType->RequiresSuppliesToSurvive() && !HasSupplies() )
+	{
+		// If the Unit runs out of supplies and it needs them to survive, kill it.
+		Die();
+	}
 }
 
 
@@ -201,9 +209,8 @@ int Unit::GetMovementRange() const
 	UnitType* type = GetUnitType();
 	int movementRange = type->GetMovementRange();
 
-	// TODO: Take supplies into account.
-
-	return movementRange;
+	// Take supplies into account.
+	return std::min( movementRange, mSupplies );
 }
 
 
@@ -220,7 +227,7 @@ int Unit::CalculatePathCost( const Path& path ) const
 	int totalCost = 0;
 
 	// Get the current tile for this Unit.
-	Map::Iterator currentTile = GetTile();
+	Map::Iterator currentTile = mMap->GetTile( path.GetOrigin() );
 
 	for( size_t i = 0; i < path.GetLength(); ++i )
 	{
@@ -243,6 +250,71 @@ int Unit::CalculatePathCost( const Path& path ) const
 bool Unit::CanMoveAcrossTerrain( TerrainType* terrainType ) const
 {
 	return ( GetMovementCostAcrossTerrain( terrainType ) > -1 );
+}
+
+
+void Unit::Teleport( const Vec2s& tilePos )
+{
+	// Teleport to the Tile at the position.
+	Map::Iterator tile = mMap->GetTile( tilePos );
+	Teleport( tile );
+}
+
+
+void Unit::Teleport( Map::Iterator tile )
+{
+	// Set the tile for the Unit.
+	SetTile( tile );
+
+	// Fire the teleport event.
+	OnTeleport.Invoke( tile );
+}
+
+
+void Unit::Move( const Path& path )
+{
+	if( path.GetLength() > 0 )
+	{
+		// TODO: Check for traps.
+		Path verifiedPath = path;
+
+		// Move to the destination tile.
+		Vec2s destination = verifiedPath.GetDestination();
+		Map::Iterator tile = mMap->GetTile( destination );
+		SetTile( tile );
+
+		// Consume supplies equal to the cost of traversing the path.
+		int pathCost = CalculatePathCost( verifiedPath );
+		ConsumeSupplies( pathCost );
+	}
+
+	// TODO: Deactivate the Unit.
+
+	// Fire the move event.
+	OnMove.Invoke( path );
+}
+
+
+void Unit::SetTile( Map::Iterator tile )
+{
+	// Make sure the tile is valid and not occupied.
+	assertion( tile.IsValid(), "Cannot place Unit into invalid Tile (%d,%d)!", tile.GetX(), tile.GetY() );
+	assertion( tile->IsEmpty(), "Cannot place Unit into Tile (%d,%d) because the tile is occupied by another Unit!", tile.GetX(), tile.GetY() );
+
+	// Tell the previous Tile that the Unit left.
+	if( mTile.IsValid() )
+	{
+		mTile->ClearUnit();
+	}
+
+	// Update the current Tile for the Unit.
+	mTile = tile;
+
+	// Tell the new Tile that the Unit has entered.
+	mTile->SetUnit( this );
+
+	// Fire the tile changed event.
+	OnTileChanged.Invoke( mTile );
 }
 
 
@@ -583,17 +655,7 @@ bool Unit::HasAmmo() const
 void Unit::SetSupplies( int supplies )
 {
 	mSupplies = Mathi::Clamp( supplies, 0, mUnitType->GetMaxSupplies() );
-
-	if( IsInitialized() )
-	{
-		MovementType* movementType = GetMovementType();
-
-		if( movementType->RequiresSuppliesToSurvive() && !HasSupplies() )
-		{
-			// If the Unit runs out of supplies and it needs them to survive, kill it.
-			Die();
-		}
-	}
+	DebugPrintf( "Unit now has %d supplies.", mSupplies );
 }
 
 
@@ -605,6 +667,7 @@ void Unit::ResetSupplies()
 
 void Unit::ConsumeSupplies( int supplies )
 {
+	DebugPrintf( "Consuming %d supplies from Unit.", supplies );
 	SetSupplies( mSupplies - supplies );
 }
 

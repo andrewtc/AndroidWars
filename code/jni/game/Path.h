@@ -25,9 +25,11 @@ namespace mage
 		bool ContainsWaypoint( const Vec2s& waypoint ) const;
 		Vec2s GetDestination() const;
 		void RemoveWaypointsAfterIndex( size_t index );
+		Vec2f Interpolate( float percentage ) const;
 		void Clear();
 
 		size_t GetLength() const;
+		size_t GetWaypointCount() const;
 		bool IsValid() const;
 
 	protected:
@@ -114,7 +116,7 @@ namespace mage
 			if( currentWaypoint == waypoint )
 			{
 				// If the requested waypoint is found, return true.
-				result = (int) index;
+				result = (int) ( index + 1 );
 				break;
 			}
 
@@ -135,7 +137,7 @@ namespace mage
 
 	inline Vec2s Path::GetDestination() const
 	{
-		return GetWaypoint( mDirections.size() - 1 );
+		return GetWaypoint( mDirections.size() );
 	}
 
 
@@ -145,6 +147,28 @@ namespace mage
 		assertion( index < mDirections.size(), "Cannot remove waypoints after index because the index (%d) is out of bounds!", index );
 		mDirections.erase( mDirections.begin() + index, mDirections.end() );
 		OnChanged.Invoke();
+	}
+
+
+	inline Vec2f Path::Interpolate( float percentage ) const
+	{
+		// Clamp the percentage value to a value between 0.0 and 1.0.
+		Mathf::ClampToRange( percentage, 0.0f, 1.0f );
+
+		// Get the index of the first waypoint to interpolate between.
+		float interpolatedIndex = ( percentage * GetWaypointCount() );
+		size_t firstWaypointIndex = (size_t) interpolatedIndex;
+
+		// Get the two waypoints as float vectors.
+		Vec2f firstWaypoint = GetWaypoint( firstWaypointIndex );
+		Vec2f secondWaypoint = GetWaypoint( firstWaypointIndex + 1 );
+		Vec2f displacement = ( secondWaypoint - firstWaypoint );
+
+		// Get the percentage between both waypoints.
+		float t = ( interpolatedIndex - firstWaypointIndex );
+
+		// Return the interpolated value.
+		return ( firstWaypoint + ( t * displacement ) );
 	}
 
 
@@ -158,6 +182,12 @@ namespace mage
 	inline size_t Path::GetLength() const
 	{
 		return mDirections.size();
+	}
+
+
+	inline size_t Path::GetWaypointCount() const
+	{
+		return ( mDirections.size() + 1 );
 	}
 
 

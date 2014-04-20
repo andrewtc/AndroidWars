@@ -54,6 +54,7 @@ namespace mage
 		Event<> OnChanged;
 
 		friend class Map;
+		friend class Unit;
 	};
 
 
@@ -104,8 +105,8 @@ namespace mage
 		void ForEachPlayer( ForEachPlayerCallback callback );
 		void ForEachPlayer( ForEachConstPlayerCallback callback ) const;
 
-		Unit* CreateUnit( UnitType* unitType, Faction* owner, short tileX, short tileY, int health = -1, int ammo = -1 );
-		Unit* CreateUnit( UnitType* unitType, Faction* owner, const Vec2s& tilePos, int health = -1, int ammo = -1 );
+		Unit* CreateUnit( UnitType* unitType, Faction* owner, short tileX, short tileY, int health = -1, int ammo = -1, int supplies = -1 );
+		Unit* CreateUnit( UnitType* unitType, Faction* owner, const Vec2s& tilePos, int health = -1, int ammo = -1, int supplies = -1 );
 		const Units& GetUnits() const;
 		size_t GetUnitCount() const;
 		void DestroyUnit( Unit* unit );

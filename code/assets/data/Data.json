@@ -329,6 +329,7 @@
             "animationSet":  "Tank",
             "movementType":  "Tires",
             "movementRange": 6,
+            "supplies":      50,
             "attackRange":   "1~1",
             "cost":          400
         },
@@ -337,6 +338,7 @@
             "animationSet":  "Tank",
             "movementType":  "Treads",
             "movementRange": 6,
+            "supplies":      50,
             "attackRange":   "1~1",
             "cost":          500
         },
@@ -345,6 +347,7 @@
             "animationSet":  "Tank",
             "movementType":  "Treads",
             "movementRange": 6,
+            "supplies":      50,
             "attackRange":   "1~1",
             "cost":          600
         },
@@ -353,6 +356,7 @@
             "animationSet":  "Tank",
             "movementType":  "Treads",
             "movementRange": 6,
+            "supplies":      50,
             "attackRange":   "1~1",
             "cost":          700
         },
@@ -361,6 +365,7 @@
             "animationSet":  "Tank",
             "movementType":  "Treads",
             "movementRange": 6,
+            "supplies":      50,
             "attackRange":   "1~1",
             "cost":          800
         },
@@ -369,6 +374,7 @@
             "animationSet":  "Tank",
             "movementType":  "Tires",
             "movementRange": 6,
+            "supplies":      50,
             "attackRange":   "1~1",
             "cost":          1000
         },
@@ -377,17 +383,19 @@
             "animationSet":  "Tank",
             "movementType":  "Tires",
             "movementRange": 6,
+            "supplies":      50,
             "attackRange":   "1~1",
             "cost":          1200
         },
         {
-            "name":            "MediumTank",
-            "displayName":     "Medium Tank",
-            "animationSet":    "Tank",
-            "movementType":    "Tires",
-            "movementRange":   6,
-            "attackRange":     "1~1",
-            "cost":            1500,
+            "name":          "MediumTank",
+            "displayName":   "Medium Tank",
+            "animationSet":  "Tank",
+            "movementType":  "Tires",
+            "movementRange": 6,
+            "supplies":      50,
+            "attackRange":   "1~1",
+            "cost":          1500,
             "weapons":
             [
                 {
