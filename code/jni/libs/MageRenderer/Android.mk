@@ -7,6 +7,9 @@ magerenderer_export_includes := \
   
 magerenderer_sources := \
  ./GLRenderer/GLRenderer.cpp \
+ ./GLRenderer/GLContext.cpp \
+ ./GLRenderer/ESContext.cpp \
+ ./GLRenderer/gl3stub.c \
  ./Scene/CameraNode.cpp \
  ./Scene/DrawAxesNode.cpp \
  ./Scene/DrawBoneNode.cpp \

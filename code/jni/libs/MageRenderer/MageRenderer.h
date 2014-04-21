@@ -14,6 +14,11 @@
 
 #include "BloomEffect.h"
 
+#include "RenderContext.h"
+#include "GLRenderer/GLContext.h"
+#ifdef ANDROID
+#	include "GLRenderer/ESContext.h"
+#endif
 #include "Renderer.h"
 
 #include "Stroke.h"
