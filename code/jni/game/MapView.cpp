@@ -84,6 +84,12 @@ void MapView::Update( float elapsedTime )
 		tileSprite->Update( elapsedTime );
 	});
 
+	for( auto it = mUnitSprites.begin(); it != mUnitSprites.end(); ++it )
+	{
+		UnitSprite* unitSprite = *it;
+		unitSprite->Update( elapsedTime );
+	}
+
 	if( mArrowSprite.IsInitialized() )
 	{
 		// Draw the arrow sprite (if necessary).

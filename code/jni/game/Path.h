@@ -144,7 +144,7 @@ namespace mage
 	inline void Path::RemoveWaypointsAfterIndex( size_t index )
 	{
 		// Remove all directions after the specified index.
-		assertion( index < mDirections.size(), "Cannot remove waypoints after index because the index (%d) is out of bounds!", index );
+		assertion( index < GetWaypointCount(), "Cannot remove waypoints after index because the waypoint index (%d) is out of bounds!", index );
 		mDirections.erase( mDirections.begin() + index, mDirections.end() );
 		OnChanged.Invoke();
 	}
@@ -152,23 +152,35 @@ namespace mage
 
 	inline Vec2f Path::Interpolate( float percentage ) const
 	{
-		// Clamp the percentage value to a value between 0.0 and 1.0.
-		Mathf::ClampToRange( percentage, 0.0f, 1.0f );
+		Vec2f result;
 
-		// Get the index of the first waypoint to interpolate between.
-		float interpolatedIndex = ( percentage * GetWaypointCount() );
-		size_t firstWaypointIndex = (size_t) interpolatedIndex;
+		if( GetLength() == 0 )
+		{
+			// If the path is empty, return the origin.
+			result = mOrigin;
+		}
+		else
+		{
+			// Otherwise, clamp the percentage value to a value between 0.0 and 1.0.
+			Mathf::ClampToRange( percentage, 0.0f, 1.0f );
 
-		// Get the two waypoints as float vectors.
-		Vec2f firstWaypoint = GetWaypoint( firstWaypointIndex );
-		Vec2f secondWaypoint = GetWaypoint( firstWaypointIndex + 1 );
-		Vec2f displacement = ( secondWaypoint - firstWaypoint );
+			// Get the index of the first waypoint to interpolate between.
+			float interpolatedIndex = ( percentage * GetLength() );
+			size_t firstWaypointIndex = (size_t) interpolatedIndex;
 
-		// Get the percentage between both waypoints.
-		float t = ( interpolatedIndex - firstWaypointIndex );
+			// Get the two waypoints as float vectors.
+			Vec2f firstWaypoint = GetWaypoint( firstWaypointIndex );
+			Vec2f secondWaypoint = GetWaypoint( firstWaypointIndex + 1 );
+			Vec2f displacement = ( secondWaypoint - firstWaypoint );
 
-		// Return the interpolated value.
-		return ( firstWaypoint + ( t * displacement ) );
+			// Get the percentage between both waypoints.
+			float t = ( interpolatedIndex - firstWaypointIndex );
+
+			// Return the interpolated value.
+			result = ( firstWaypoint + ( t * displacement ) );
+		}
+
+		return result;
 	}
 
 

@@ -59,6 +59,27 @@ bool UnitSprite::IsInitialized() const
 
 void UnitSprite::Update( float elapsedTime )
 {
+	if( mIsMoving )
+	{
+		// Update the movement timer.
+		mMoveAnimationTimer += elapsedTime;
+
+		if( mMoveAnimationTimer >= 1.0f )
+		{
+			// If the move animation is finished, set the position of the sprite to the destination.
+			mSprite->Position = mMapView->TileToWorldCoords( mMovementPath.GetDestination() );
+
+			// End the animation.
+			mIsMoving = false;
+		}
+		else
+		{
+			// Otherwise, update the position of the sprite.
+			Vec2f tilePosition = mMovementPath.Interpolate( mMoveAnimationTimer );
+			mSprite->Position = ( tilePosition * MapView::TILE_WORLD_SCALE );
+		}
+	}
+
 	// Update the Sprite.
 	mSprite->OnUpdate( elapsedTime );
 }
@@ -127,6 +148,9 @@ void UnitSprite::OnUnitTeleport( const Map::Iterator& tile )
 
 void UnitSprite::OnUnitMove( const Path& path )
 {
-	// TODO: Start the move animation.
-	SetPosition( mMapView->TileToWorldCoords( mUnit->GetTilePos() ) );
+	// Start the move animation.
+	DebugPrintf( "Starting UnitSprite move animation." );
+	mIsMoving = true;
+	mMoveAnimationTimer = 0.0f;
+	mMovementPath = path;
 }

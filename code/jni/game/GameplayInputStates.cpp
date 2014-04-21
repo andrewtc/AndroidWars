@@ -165,7 +165,9 @@ bool MoveUnitInputState::OnPointerMotion( const Pointer& activePointer, const Po
 				if( index != -1 )
 				{
 					// If the tile is already in the selected Unit path, truncate the path after the tile.
-					selectedUnitPath.RemoveWaypointsAfterIndex( index );
+					int previousIndex = std::max( index - 1, 0 );
+					DebugPrintf( "Removing waypoints after index %d.", previousIndex );
+					selectedUnitPath.RemoveWaypointsAfterIndex( previousIndex );
 				}
 				else
 				{

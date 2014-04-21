@@ -15,9 +15,6 @@ namespace mage
 		void Update( float elapsedTime );
 		void Draw( const Camera& camera );
 
-		void StartMoveAnimation( const Path& path );
-		void CancelMoveAnimation();
-
 		void SetPosition( const Vec2f& position );
 		Vec2f GetPosition() const;
 
@@ -34,6 +31,7 @@ namespace mage
 		bool mIsInitialized;
 		bool mIsMoving;
 		float mMoveAnimationTimer;
+		Vec2f mMoveAnimationOrigin;
 		Path mMovementPath;
 		MapView* mMapView;
 		Unit* mUnit;
