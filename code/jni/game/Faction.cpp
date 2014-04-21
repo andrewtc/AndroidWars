@@ -3,6 +3,9 @@
 using namespace mage;
 
 
+const float Faction::INACTIVE_COLOR_VALUE_SHIFT = 0.5f;
+
+
 Faction::Faction( Map* map ) :
 	mMap( map ),
 	mFunds( 0 ),
@@ -158,6 +161,14 @@ void Faction::SetColor( const Color& color )
 Color Faction::GetColor() const
 {
 	return mColor;
+}
+
+
+Color Faction::GetInactiveColor() const
+{
+	// Return a darker version of the Faction color.
+	HSV hsv = Color::ColorToHSV( mColor );
+	return Color::HSVToColor( hsv.hue, hsv.saturation, Mathf::Clamp( hsv.value - INACTIVE_COLOR_VALUE_SHIFT, 0.0f, 1.0f ) );
 }
 
 

@@ -256,7 +256,7 @@ UnitSprite* MapView::GetUnitSpriteAtWorldCoords( const Vec2f& worldCoords ) cons
 }
 
 
-void MapView::SelectUnitSprite( UnitSprite* unitSprite )
+void MapView::SelectUnitSprite( UnitSprite* unitSprite, bool showArrow )
 {
 	if( mSelectedUnitSprite )
 	{
@@ -266,7 +266,7 @@ void MapView::SelectUnitSprite( UnitSprite* unitSprite )
 
 	// Set the new UnitSprite.
 	mSelectedUnitSprite = unitSprite;
-	UnitSpriteSelected( mSelectedUnitSprite );
+	UnitSpriteSelected( mSelectedUnitSprite, showArrow );
 
 	if( mSelectedUnitSprite )
 	{
@@ -403,9 +403,9 @@ void MapView::TileChanged( const Map::Iterator& tile )
 }
 
 
-void MapView::UnitSpriteSelected( UnitSprite* unitSprite )
+void MapView::UnitSpriteSelected( UnitSprite* unitSprite, bool showArrow )
 {
-	if( unitSprite )
+	if( showArrow && unitSprite )
 	{
 		// If a Unit was selected, initialize the arrow sprite (if necessary).
 		if( !mArrowSprite.IsInitialized() )

@@ -30,6 +30,7 @@ namespace mage
 		virtual bool OnPointerUp( const Pointer& pointer );
 		virtual bool OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID );
 
+		bool mAllowMovement;
 		Vec2s mLastPointerTilePos;
 
 		friend class GameState;

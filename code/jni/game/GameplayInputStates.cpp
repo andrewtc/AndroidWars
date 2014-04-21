@@ -14,6 +14,10 @@ SelectUnitInputState::~SelectUnitInputState() { }
 void SelectUnitInputState::OnEnter( const Dictionary& parameters )
 {
 	GameplayState* owner = GetOwnerDerived();
+	MapView* mapView = owner->GetMapView();
+
+	// Deselect the current UnitSprite (if any).
+	mapView->DeselectUnitSprite();
 
 	// Show the tile palette.
 	//owner->GetTilePalette()->Show();
@@ -47,7 +51,7 @@ bool SelectUnitInputState::OnPointerDown( const Pointer& pointer )
 		// Go to the unit movement InputState.
 		Dictionary parameters;
 		parameters.Set( "Unit", unitSpriteToSelect );
-		owner->PushState( owner->GetMoveUnitInputState(), parameters );
+		owner->ChangeState( owner->GetMoveUnitInputState(), parameters );
 	}
 
 	return false; //InputState::OnPointerDown( pointer );
@@ -72,7 +76,8 @@ bool SelectUnitInputState::OnPointerMotion( const Pointer& activePointer, const 
 
 
 MoveUnitInputState::MoveUnitInputState( GameState* owner ) :
-	DerivedInputState( owner )
+	DerivedInputState( owner ),
+	mAllowMovement( false )
 { }
 
 
@@ -83,18 +88,26 @@ void MoveUnitInputState::OnEnter( const Dictionary& parameters )
 {
 	GameplayState* owner = GetOwnerDerived();
 	MapView* mapView = owner->GetMapView();
+	Game* game = owner->GetGame();
 
 	// Get the UnitSprite to select.
 	UnitSprite* unitSpriteToSelect;
 	Dictionary::DictionaryError error = parameters.Get( "unit", unitSpriteToSelect );
 	assertion( error == Dictionary::DErr_SUCCESS, "No \"unit\" property was provided to MoveUnitInputState!" );
 
+	// Get the Unit for this UnitSprite.
+	Unit* unit = unitSpriteToSelect->GetUnit();
+
+	// Only allow the Player to move the Unit if it is his own and the Unit is active.
+	Player* currentPlayer = game->GetCurrentPlayer();
+	mAllowMovement = ( currentPlayer && currentPlayer->GetFaction() == unit->GetOwner() && unit->IsActive() );
+
 	// Select the UnitSprite.
 	assertion( unitSpriteToSelect, "Cannot select null UnitSprite for MoveUnitInputState!" );
-	mapView->SelectUnitSprite( unitSpriteToSelect );
+	mapView->SelectUnitSprite( unitSpriteToSelect, mAllowMovement );
 
 	// Keep track of the tile pos of the active pointer.
-	mLastPointerTilePos = unitSpriteToSelect->GetUnit()->GetTilePos();
+	mLastPointerTilePos = unit->GetTilePos();
 
 	// TODO: Show unit info.
 }
@@ -125,8 +138,16 @@ bool MoveUnitInputState::OnPointerUp( const Pointer& pointer )
 
 	if( GetPointerCount() == 1 )
 	{
-		// If the last pointer left the screen, go to the action menu state.
-		owner->ChangeState( owner->GetSelectActionInputState() );
+		if( mAllowMovement )
+		{
+			// If the last pointer left the screen, go to the action menu state.
+			owner->ChangeState( owner->GetSelectActionInputState() );
+		}
+		else
+		{
+			// Otherwise, go back to unit selection.
+			owner->ChangeState( owner->GetSelectUnitInputState() );
+		}
 	}
 
 	bool wasHandled = false; //InputState::OnPointerUp( pointer );
@@ -139,7 +160,7 @@ bool MoveUnitInputState::OnPointerMotion( const Pointer& activePointer, const Po
 	GameplayState* owner = GetOwnerDerived();
 	MapView* mapView = owner->GetMapView();
 
-	if( activePointer.isMoving )
+	if( mAllowMovement && activePointer.isMoving )
 	{
 		// Get the selected UnitSprite.
 		UnitSprite* selectedUnitSprite = mapView->GetSelectedUnitSprite();

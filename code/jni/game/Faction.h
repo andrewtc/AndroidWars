@@ -5,6 +5,8 @@ namespace mage
 	class Faction
 	{
 	public:
+		static const float INACTIVE_COLOR_VALUE_SHIFT;
+
 		typedef std::set< Unit* > Units;
 		typedef std::set< Map::Iterator > Tiles;
 
@@ -30,6 +32,7 @@ namespace mage
 
 		void SetColor( const Color& color );
 		Color GetColor() const;
+		Color GetInactiveColor() const;
 
 	private:
 		Faction( Map* map );

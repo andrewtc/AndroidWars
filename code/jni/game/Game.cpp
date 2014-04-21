@@ -26,6 +26,16 @@ void Game::Init( Map* map )
 	mMap = map;
 	assertion( mMap, "Cannot create game without a valid Map!" );
 
+	for( int i = 0; i < mPlayers.size(); ++i )
+	{
+		// Validate Players.
+		Player* player = GetPlayerByIndex( i );
+		Faction* faction = player->GetFaction();
+
+		assertion( player->GetFaction(), "Cannot initialize Game because Player %d does not control a Faction!", i );
+		assertion( faction->GetMap() == mMap, "Cannot initialize Game because Player %d controls a Faction that is not part of the current Map!", i );
+	}
+
 	// Make sure the number of Players makes sense.
 	size_t playerCount = GetPlayerCount();
 	size_t maxPlayerCount = mMap->GetFactionCount();
@@ -172,7 +182,6 @@ void Game::EndTurn()
 Player* Game::CreatePlayer( Faction* faction )
 {
 	assertion( faction, "Cannot create Player because no Faction to control was specified!" );
-	assertion( faction->GetMap() == mMap, "Cannot create Player that controls a Faction that is not part of the current Map!" );
 
 	// Create a new Player.
 	Player* player = new Player( this, faction );

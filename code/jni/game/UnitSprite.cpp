@@ -3,7 +3,7 @@
 using namespace mage;
 
 
-const float UnitSprite::MOVE_ANIMATION_SPEED = 7.5f;
+const float UnitSprite::MOVE_ANIMATION_SPEED = 8.0f;
 
 
 UnitSprite::UnitSprite( MapView* mapView, Unit* unit ) :
@@ -79,6 +79,9 @@ void UnitSprite::Update( float elapsedTime )
 
 			// End the animation.
 			mIsMoving = false;
+
+			// Update the UnitSprite's color (to display as inactive).
+			UpdateColor();
 		}
 		else
 		{
@@ -192,10 +195,16 @@ void UnitSprite::OnUnitMove( const Path& path )
 
 void UnitSprite::UpdateColor()
 {
-	// Set the color of the Unit to the owning Faction's color.
-	Color color = mUnit->GetOwner()->GetColor();
+	Color color;
 
-	// TODO: Adjust color for inactive state.
-
-	mSprite->DrawColor = color;
+	if( mIsMoving || mUnit->IsActive() )
+	{
+		// Set the color of the Unit to the owning Faction's color.
+		mSprite->DrawColor = mUnit->GetOwner()->GetColor();
+	}
+	else
+	{
+		// Adjust color for inactive state.
+		mSprite->DrawColor = mUnit->GetOwner()->GetInactiveColor();
+	}
 }

@@ -256,6 +256,24 @@ bool Unit::CanMoveAcrossTerrain( TerrainType* terrainType ) const
 }
 
 
+bool Unit::CanEnterTile( const Map::Iterator& tile ) const
+{
+	bool result = false;
+
+	if( tile->IsEmpty() || tile->GetUnit()->GetOwner() == mOwner )
+	{
+		// If the Tile is not occupied by an enemy Unit, check the Tile's TerrainType.
+		MovementType* movementType = GetMovementType();
+		TerrainType* terrainType = tile->GetTerrainType();
+
+		// Return true only if the Unit can cross the TerrainType of the Tile.
+		result = movementType->CanMoveAcrossTerrain( terrainType );
+	}
+
+	return result;
+}
+
+
 void Unit::Teleport( const Vec2s& tilePos )
 {
 	// Teleport to the Tile at the position.
@@ -276,25 +294,36 @@ void Unit::Teleport( Map::Iterator tile )
 
 void Unit::Move( const Path& path )
 {
-	if( path.GetLength() > 0 )
+	if( IsActive() )
 	{
-		// TODO: Check for traps.
-		Path verifiedPath = path;
+		// Make sure the destination Tile is empty.
+		Map::Iterator destinationTile = mMap->GetTile( path.GetDestination() );
 
-		// Move to the destination tile.
-		Vec2s destination = verifiedPath.GetDestination();
-		Map::Iterator tile = mMap->GetTile( destination );
-		SetTile( tile );
+		if( path.GetLength() > 0 )
+		{
+			// TODO: Check for traps.
+			Path validatedPath = path;
 
-		// Consume supplies equal to the cost of traversing the path.
-		int pathCost = CalculatePathCost( verifiedPath );
-		ConsumeSupplies( pathCost );
+			// Move to the destination tile.
+			Vec2s destination = validatedPath.GetDestination();
+			Map::Iterator tile = mMap->GetTile( destination );
+			SetTile( tile );
+
+			// Consume supplies equal to the cost of traversing the path.
+			int pathCost = CalculatePathCost( validatedPath );
+			ConsumeSupplies( pathCost );
+		}
+
+		// Deactivate the Unit.
+		Deactivate();
+
+		// Fire the move event.
+		OnMove.Invoke( path );
 	}
-
-	// TODO: Deactivate the Unit.
-
-	// Fire the move event.
-	OnMove.Invoke( path );
+	else
+	{
+		WarnFail( "Cannot order inactive Unit to move!" );
+	}
 }
 
 
@@ -708,6 +737,12 @@ void Unit::Deactivate()
 bool Unit::IsActive() const
 {
 	return mIsActive;
+}
+
+
+bool Unit::IsInactive() const
+{
+	return !mIsActive;
 }
 
 

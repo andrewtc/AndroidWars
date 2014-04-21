@@ -420,54 +420,68 @@ Unit* Map::CreateUnit( UnitType* unitType, Faction* owner, short tileX, short ti
 
 Unit* Map::CreateUnit( UnitType* unitType, Faction* owner, const Vec2s& tilePos, int health, int ammo, int supplies )
 {
-	// Create a new Unit.
-	Unit* unit = new Unit();
-
-	// Load Unit properties.
-	unit->SetUnitType( unitType );
-	unit->SetOwner( owner );
+	Unit* unit = nullptr;
 
 	// Get the Tile where the Unit will be placed.
 	Iterator tile = GetTile( tilePos );
-	assertion( tile.IsValid(), "Cannot create Unit at invalid Tile (%d,%d)!", tilePos.x, tilePos.y );
-	assertion( tile->IsEmpty(), "Cannot create Unit at Tile (%d,%d) because the Tile is occupied by another Unit!", tilePos.x, tilePos.y );
 
-	// Set the health and ammo for the Unit.
-	if( health >= 0 )
+	if( tile.IsValid() )
 	{
-		unit->SetHealth( health );
+		if( tile->IsEmpty() )
+		{
+			// Create a new Unit.
+			unit = new Unit();
+
+			// Load Unit properties.
+			unit->SetUnitType( unitType );
+			unit->SetOwner( owner );
+
+			// Set the health and ammo for the Unit.
+			if( health >= 0 )
+			{
+				unit->SetHealth( health );
+			}
+			else
+			{
+				unit->ResetHealth();
+			}
+
+			if( ammo >= 0 )
+			{
+				unit->SetAmmo( ammo );
+			}
+			else
+			{
+				unit->ResetAmmo();
+			}
+
+			if( supplies >= 0 )
+			{
+				unit->SetSupplies( supplies );
+			}
+			else
+			{
+				unit->ResetSupplies();
+			}
+
+			// Initialize the Unit.
+			unit->Init( this, tile );
+
+			// Place the Unit into the Tile.
+			tile->SetUnit( unit );
+
+			// Add the Unit to the list of Units.
+			mUnits.push_back( unit );
+		}
+		else
+		{
+			WarnFail( "Cannot create Unit at Tile (%d,%d) because the Tile is occupied by another Unit!", tilePos.x, tilePos.y );
+		}
 	}
 	else
 	{
-		unit->ResetHealth();
+		WarnFail( "Cannot create Unit at invalid Tile (%d,%d)!", tilePos.x, tilePos.y );
 	}
-
-	if( ammo >= 0 )
-	{
-		unit->SetAmmo( ammo );
-	}
-	else
-	{
-		unit->ResetAmmo();
-	}
-
-	if( supplies >= 0 )
-	{
-		unit->SetSupplies( supplies );
-	}
-	else
-	{
-		unit->ResetSupplies();
-	}
-
-	// Initialize the Unit.
-	unit->Init( this, tile );
-
-	// Place the Unit into the Tile.
-	tile->SetUnit( unit );
-
-	// Add the Unit to the list of Units.
-	mUnits.push_back( unit );
 
 	return unit;
 }
@@ -537,11 +551,11 @@ void Map::FindReachableTiles( const Unit* unit, TileSet& result )
 
 			if( adjacent.IsValid() && !adjacent->IsClosed( searchIndex ) )
 			{
-				// If the adjacent tile is valid and isn't already closed, get the TerrainType of the adjacent tile.
-				TerrainType* adjacentTerrainType = adjacent->GetTerrainType();
-
-				if( movementType->CanMoveAcrossTerrain( adjacentTerrainType ) )
+				if( unit->CanEnterTile( adjacent ) )
 				{
+					// If the adjacent tile is valid and isn't already closed, get the TerrainType of the adjacent tile.
+					TerrainType* adjacentTerrainType = adjacent->GetTerrainType();
+
 					// If the adjacent tile is passable, find the total cost of entering the tile.
 					int costToEnterAdjacent = movementType->GetMovementCostAcrossTerrain( adjacentTerrainType );
 					int adjacentTotalCost = ( tile->GetBestTotalCostToEnter() + costToEnterAdjacent );

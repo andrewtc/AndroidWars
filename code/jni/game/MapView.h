@@ -44,7 +44,7 @@ namespace mage
 		UnitSprite* GetUnitSpriteAtTileCoords( short tileX, short tileY ) const;
 		UnitSprite* GetUnitSpriteAtTileCoords( const Vec2s& tilePos ) const;
 
-		void SelectUnitSprite( UnitSprite* unitSprite );
+		void SelectUnitSprite( UnitSprite* unitSprite, bool showArrow = true );
 		void DeselectUnitSprite();
 		UnitSprite* GetSelectedUnitSprite() const;
 		bool HasSelectedUnitSprite() const;
@@ -68,7 +68,7 @@ namespace mage
 	private:
 		void MapResized( const Vec2s& oldSize, const Vec2s& newSize );
 		void TileChanged( const Map::Iterator& tile );
-		void UnitSpriteSelected( UnitSprite* unitSprite );
+		void UnitSpriteSelected( UnitSprite* unitSprite, bool showArrow );
 
 		void SelectAllReachableTilesForUnit( Unit* unit );
 		void DeselectAllTiles();

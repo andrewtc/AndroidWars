@@ -42,6 +42,7 @@ namespace mage
 		int GetMovementCostAcrossTerrain( TerrainType* terrainType ) const;
 		int CalculatePathCost( const Path& path ) const;
 		bool CanMoveAcrossTerrain( TerrainType* terrainType ) const;
+		bool CanEnterTile( const Map::Iterator& tile ) const;
 		void Teleport( const Vec2s& tilePos );
 		void Teleport( Map::Iterator tile );
 		void Move( const Path& path );
@@ -84,6 +85,7 @@ namespace mage
 		void Activate();
 		void Deactivate();
 		bool IsActive() const;
+		bool IsInactive() const;
 
 		Map* GetMap() const;
 
