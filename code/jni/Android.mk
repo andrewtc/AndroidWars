@@ -101,6 +101,9 @@ magerenderer_export_includes := \
   
 magerenderer_sources := \
  $(magerenderer_path)/GLRenderer/GLRenderer.cpp \
+ $(magerenderer_path)/GLRenderer/GLContext.cpp \
+ $(magerenderer_path)/GLRenderer/ESContext.cpp \
+ $(magerenderer_path)/GLRenderer/gl3stub.c \
  $(magerenderer_path)/Scene/CameraNode.cpp \
  $(magerenderer_path)/Scene/DrawAxesNode.cpp \
  $(magerenderer_path)/Scene/DrawBoneNode.cpp \

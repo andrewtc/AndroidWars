@@ -9,7 +9,6 @@ static std::stack< Matrix4f > gMatrixStack;
 static Matrix4f gCurrentMatrix;
 static bool gYUp = false;
 static int gPickingID;
-static Font* gDefaultFont;
 
 static Surface* gActiveSurface;
 
@@ -18,16 +17,15 @@ static float height;
 static float halfWidth;
 static float halfHeight;
 
-bool InitRenderer( IRenderer* renderer )
+bool InitRenderer( IRenderer* renderer, GLContext* context )
 {
+	if ( pRenderer )
+		delete pRenderer;
 	pRenderer = renderer;
 	if ( !pRenderer )
 		return false;
 
-	if ( !Font::InitFont() )
-		return false;
-
-	gDefaultFont = new Font( "C:/windows/fonts/arial.ttf", 14 );
+	pRenderer->SetGLContext( context );
 
 	return true;
 }
@@ -39,6 +37,21 @@ void DestroyRenderer()
 		delete pRenderer;
 		pRenderer = NULL;
 	}
+}
+
+IRenderer* GetRenderer()
+{
+	return pRenderer;
+}
+
+void StartRenderer()
+{
+	IRenderCall( Start() );
+}
+
+void StopRenderer()
+{
+	IRenderCall( Stop() );
 }
 
 void SetTextureYUp( bool up )
@@ -677,6 +690,11 @@ void ClearScreen()
 		gActiveSurface->Clear();
 	else
 		IRenderCall( ClearScreen() );
+}
+
+void SwapBuffers()
+{
+	IRenderCall( SwapBuffers() );
 }
 
 void CreateTexture( IRenderer::TextureHandle* hTexture, void* pixels, unsigned int w, unsigned int h, IRenderer::PixelFormat format, bool linearFilter )

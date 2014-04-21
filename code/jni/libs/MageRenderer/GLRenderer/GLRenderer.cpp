@@ -127,16 +127,62 @@ static Shader* basicFS;
 static Uniform1i* gDefaultTextureSampler;
 static Uniform1i* gUseTexture;
 
+#ifdef ANDROID
+static ANativeWindow** gWindow;
+#endif
+
+//---------------------------------------
 GLRenderer::GLRenderer()
+    : mIsInitialized( false )
+	, mContext( 0 )
 {
-#ifdef GLEW
-	GLenum glewErr = glewInit();
-	if ( glewErr != GLEW_OK )
+    DebugPrintf( "Renderer: Created\n" );
+    // Initialization moved to Start()
+}
+//---------------------------------------
+GLRenderer::~GLRenderer()
+{
+    Destroy();
+}
+//---------------------------------------
+void GLRenderer::SetGLContext( GLContext* glContext )
+{
+	mContext = glContext;
+}
+//---------------------------------------
+void GLRenderer::Start()
+{
+	// Render has already been initialized
+	if ( mIsInitialized )
 	{
-		assertion( false, "glewInit failed!\n%s\n",  glewGetErrorString( glewErr ) );
+		return;
+	}
+
+#ifdef ANDROID
+	// Ensure context has been set
+	if ( !mContext )
+	{
+		FatalError( "Renderer: Start() called before SetGLContext()!\n" );
+		return;
+	}
+
+	// Make sure context is initialized
+	if ( !mContext->Initialized() )
+	{
+		FatalError( "Renderer: GLContext not initialized before Start()!\n" );
 	}
 #endif
 	
+	//
+	// Set up OpenGL and renderer state
+	//
+
+	if ( !Initialize() )
+	{
+		FatalError( "Renderer: Initialize() failed\n" );
+		return;
+	}
+
 	// Enable transparency
 	glEnable( GL_BLEND );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -163,26 +209,17 @@ GLRenderer::GLRenderer()
 	gBasicEffect->AddUniform( gUseTexture );
 
 	mActiveEffect = gBasicEffect;
-    
-    delete basicVS;
-    delete basicFS;
+
+	delete basicVS;
+	delete basicFS;
 
 	//mCurrentProgram = new ShaderProgram( vs, fs );
 	//memset( mView, 0, sizeof( float ) * 16 );
-}
 
-GLRenderer::~GLRenderer()
-{
-	std::for_each( mTextures.begin(), mTextures.end(), [&]( IRenderer::TextureHandle& id )
-	{
-		glDeleteTextures( 1, &id );
-	});
-    
-	delete gBasicEffect;
-	delete gDefaultTextureSampler;
-    delete gUseTexture;
+	DebugPrintf( "Renderer: Initialized\n" );
+	mIsInitialized = true;
 }
-
+//---------------------------------------
 void GLRenderer::CopyVertexListToBuffer( const VertexList& verts )
 {
 	// Flush if buffer is full
@@ -208,7 +245,55 @@ void GLRenderer::RenderVerticies( RenderMode mode, IRenderer::TextureHandle text
 	// Copy verts to be rendered
 	CopyVertexListToBuffer( verts );
 }
+//---------------------------------------
+void GLRenderer::Stop()
+{
+	Destroy();
+	DebugPrintf( "Renderer: Stopped\n" );
+	mIsInitialized = false;
+}
+//---------------------------------------
+void GLRenderer::SetWindowHandle( void** hWindow )
+{
+#ifdef ANDROID
+	gWindow = (ANativeWindow**) hWindow;
+#endif
+}
+//---------------------------------------
+bool GLRenderer::Initialize()
+{
+#ifdef GLEW
+	GLenum glewErr = glewInit();
+	if ( glewErr != GLEW_OK )
+	{
+		assertion( false, "glewInit failed!\n%s\n",  glewGetErrorString( glewErr ) );
+		return false;
+	}
+#endif
+    return true;
+}
+//---------------------------------------
+void GLRenderer::Destroy()
+{
+	DebugPrintf( "Renderer: Destroying\n" );
 
+#ifdef ANDROID
+	if ( mContext->IsValid() )
+	{
+#endif
+		std::for_each( mTextures.begin(), mTextures.end(), [&]( IRenderer::TextureHandle& id )
+		{
+			glDeleteTextures( 1, &id );
+		});
+#ifdef ANDROID
+	}
+#endif
+
+	delete gBasicEffect;
+	delete gDefaultTextureSampler;
+	delete gUseTexture;
+}
+//---------------------------------------
 void GLRenderer::SetViewMatrix( const float* view )
 {
 #if USE_GL33
@@ -410,4 +495,16 @@ void GLRenderer::BindTexture( IRenderer::TextureHandle hTexture, int channel )
 void GLRenderer::SetBlendFunc( IRenderer::BlendFunc sFactor, IRenderer::BlendFunc dFactor )
 {
 	glBlendFunc( BlendFuncToGL[ sFactor ], BlendFuncToGL[ dFactor ] );
+}
+
+void GLRenderer::SwapBuffers() const
+{
+#ifdef ANDROID
+		if ( !mContext->SwapBuffers() )
+		{
+			FatalError( "eglSwapBuffers : failed : %d", eglGetError() );
+		}
+#else
+		SDL_GL_SwapBuffers();
+#endif
 }

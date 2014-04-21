@@ -1,9 +1,8 @@
 #include "MageApp.h"
 
-#include <EGL/egl.h>
-#include <GLES/gl.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#ifdef ANDROID
+#	include <EGL/egl.h>
+#endif
 
 namespace mage
 {
@@ -12,19 +11,18 @@ namespace mage
 	struct Engine
 	{
 		android_app* app;
-		int32 width, height;
 		float volume;
 
-		EGLDisplay display;
-		EGLSurface surface;
-		EGLContext context;
+		GLContext* glContext;
+		int32 Width, Height;
+		bool IsRunning;
+		bool IsPaused;
+		bool HasFocus;
+		bool NeedTextureReload;
+		bool ResourcesInitialized;
+		Clock* AppClock;
 	};
-	static Engine gEngine;
-
-	static bool gIsRunning;
-	static bool gIsPaused;
-	static bool gNeedTextureReload = false;
-	static Clock* gMasterClock;
+	static Engine gApp;
 
 	// Touch stuff
 	static const float POINTER_INITIAL_MOTION_TOLERANCE = 10.0f;
@@ -39,7 +37,7 @@ namespace mage
 	static OnSaveStateRestoredFn gOnSaveStateRestoredFn = DefaultOnSaveStateRestoredFn;
 	static OnSaveStateFn gOnSaveStateFn = DefaultOnSaveStateFn;
 	static OnDestroyFn gOnDestroyFn = DefaultOnDestroyFn;
-	static OnScreenSizeChangedFn gOnScreenSizeChanged = DefaultOnScreenSizeChangedFn;
+	static OnScreenSizeChangedFn gOnScreenSizeChangedFn = DefaultOnScreenSizeChangedFn;
 	static OnWindowShownFn gOnWindowShownFn = DefaultOnWindowShownFn;
 	static OnPointerDownFn gOnPointerDown = 0;
 	static OnPointerUpFn gOnPointerUp = 0;
@@ -61,9 +59,9 @@ namespace mage
 
 	static void OnDraw();
 
-	static int initGL();
-	static void shutdownGL();
-	static void printGLString( const char *name, GLenum s );
+    static void InitGraphics();
+	static void ShutdownGraphics();
+
 	//---------------------------------------
 
 
@@ -75,26 +73,34 @@ namespace mage
 
 		DebugPrintf( "Initializing Application\n" );
 
-		memset( &gEngine, 0, sizeof(gEngine) );
-		gEngine.app = app;
-		app->userData = &gEngine;
+		memset( &gApp, 0, sizeof(gApp) );
+		gApp.app = app;
+        gApp.glContext = ESContext::GetContext();
+		app->userData = &gApp;
 		app->onAppCmd = handleAppCmd;
 		app->onInputEvent = handleInputEvent;
-		gEngine.volume = 0.1f;
+		gApp.volume = 0.1f;
+        
+        void** hWindow = (void**)&app->window;
+        
+        DebugPrintf( "Creating clock\n" );
+		gApp.AppClock = &Clock::Initialize();
 
 		DebugPrintf( "Registering asset manager\n" );
-
 		InitializeAssetManager( app->activity->assetManager );
-
-		DebugPrintf( "Creating clock\n" );
-
-		gMasterClock = &Clock::Initialize();
 
 		if( app->savedState != NULL )
 		{
 			// We are starting with a previous saved state; restore from it.
 			DebugPrintf( "Restoring previous savestate\n" );
 			gOnSaveStateRestoredFn( app->savedState );
+		}
+        
+        // Renderer
+		if ( !CreateRenderer( gApp.glContext ) )
+		{
+			WarnCrit( "Failed to create a renderer!\n" );
+			return false;
 		}
 
 		DebugPrintf( "Init complete\n" );
@@ -104,48 +110,54 @@ namespace mage
 	//---------------------------------------
 	void Run()
 	{
-		gIsRunning = true;
+		gApp.IsRunning = true;
 		const float dt = 1.0f / 60.0f;
+        
+        // Read all pending events.
+        int ident;
+        int events;
+        struct android_poll_source* source;
 
-		while( gIsRunning )
+		while( gApp.IsRunning )
 		{
-			// Read all pending events.
-			int ident;
-			int events;
-			struct android_poll_source* source;
-
 			// Reset the velocity of each Pointer.
 			resetPointers();
 
-			while( (ident = ALooper_pollAll( 0, NULL, &events, (void**)&source ) ) >= 0 )
+			while( (ident = ALooper_pollAll( gApp.HasFocus ? 0 : -1, NULL, &events, (void**)&source ) ) >= 0 )
 			{
 				// Process this event.
 				if( source != NULL )
-					source->process( gEngine.app, source );
+					source->process( gApp.app, source );
 
 				// Check if we are exiting.
-				if( gEngine.app->destroyRequested != 0 )
+				if( gApp.app->destroyRequested != 0 )
 				{
-					DebugPrintf( "Shuting Down\n" );
-					shutdownGL();
-					gOnDestroyFn();
+                    gOnDestroyFn();
+                    gApp.HasFocus = false;
+					ShutdownGraphics();
+					DestroyRenderer();
 					return;
 				}
 			}
-
+            
 			// Only do stuff if not paused
-			if ( !gIsPaused )
+			if ( gApp.HasFocus )
 			{
-				gMasterClock->AdvanceTime( dt );
+				gApp.AppClock->AdvanceTime( dt );
 				gUpdateFn( dt );
-				OnDraw();
+				gRenderFn();
+                FlushRenderer();
+                SwapBuffers();
 			}
 		}
+        
+        gOnDestroyFn();
+		DestroyRenderer();
 	}
 	//---------------------------------------
 	void ExitApp()
 	{
-		ANativeActivity_finish( gEngine.app->activity );
+		ANativeActivity_finish( gApp.app->activity );
 	}
 	//---------------------------------------
 	// Default Callbacks
@@ -204,7 +216,7 @@ namespace mage
 	//---------------------------------------
 	void RegisterOnScreenSizeChangedFn( OnScreenSizeChangedFn fn )
 	{
-		gOnScreenSizeChanged = fn;
+		gOnScreenSizeChangedFn = fn;
 	}
 	//---------------------------------------
 	void RegisterOnWindowShownFn( OnWindowShownFn fn )
@@ -440,12 +452,14 @@ namespace mage
 				{
 					DebugPrintf( "Showing window\n" );
 
-					// Init graphics
-					initGL();
-					// OnWindowShownFn requires GL is init first
-					gOnWindowShownFn();
+					// Initialize the renderer
+                    InitGraphics();
+
+                    // Notify user code the window is ready
+                    gOnWindowShownFn();
+                
 					if ( gOnVolumeChangedFn )
-						gOnVolumeChangedFn( gEngine.volume );
+						gOnVolumeChangedFn( gApp.volume );
 				}
 			}
 			break;
@@ -454,15 +468,21 @@ namespace mage
 			{
 				// The window is being hidden or closed, clean it up.
 				DebugPrintf( "Hiding window\n" );
-				shutdownGL();
+
+				engine->HasFocus = false;
+				engine->IsPaused = true;
+
+				ShutdownGraphics();
 			}
 			break;
 
 			case APP_CMD_GAINED_FOCUS:
 			{
 				DebugPrintf( "Focus gained...\n" );
-				if ( gNeedTextureReload )
-					Texture2D::ReloadAllTextures();
+				engine->HasFocus = true;
+
+				// User callback
+				gOnFocusGainedFn();
 				if ( gOnFocusGainedFn )
 					gOnFocusGainedFn();
 			}
@@ -471,26 +491,43 @@ namespace mage
 			case APP_CMD_LOST_FOCUS:
 			{
 				DebugPrintf( "Focus lost...\n" );
+
+				// User callback
 				if ( gOnFocusLostFn )
 					gOnFocusLostFn();
-				gNeedTextureReload = true;
-				shutdownGL();
+
+				// Set app flags
+				engine->NeedTextureReload = true;
+				engine->HasFocus = false;
 			}
 			break;
 
 			case APP_CMD_PAUSE:
 			{
 				DebugPrintf( "Pausing Activity...\n" );
-				gIsPaused = true;
+				engine->IsPaused = true;
 			}
 			break;
 
 			case APP_CMD_RESUME:
 			{
 				DebugPrintf( "Resuming Activity...\n" );
-				gIsPaused = false;
+				engine->IsPaused = false;
 			}
 			break;
+            
+            case APP_CMD_LOW_MEMORY:
+			{
+				WarnInfo( "Memory low\n" );
+				gApp.glContext->Invalidate();
+			}
+			break;
+            
+            case APP_CMD_CONFIG_CHANGED:
+			{
+				DebugPrintf( "Config Changed...\n" );
+            }
+            break;
 		}
 	}
 	//---------------------------------------
@@ -604,13 +641,13 @@ namespace mage
 				if ( code == 25 )
 				{
 					engine->volume -= 0.05f;
-					Mathf::ClampToRange( gEngine.volume, 0.0f, 1.0f );
+					Mathf::ClampToRange( gApp.volume, 0.0f, 1.0f );
 					volumeChanged = true;
 				}
 				if ( code == 24 )
 				{
 					engine->volume += 0.05f;
-					Mathf::ClampToRange( gEngine.volume, 0.0f, 1.0f );
+					Mathf::ClampToRange( gApp.volume, 0.0f, 1.0f );
 					volumeChanged = true;
 				}
 
@@ -618,7 +655,7 @@ namespace mage
 				{
 					DebugPrintf( "Volume changed: %.3f\n", engine->volume );
 					if ( gOnVolumeChangedFn )
-						gOnVolumeChangedFn( gEngine.volume );
+						gOnVolumeChangedFn( gApp.volume );
 				}
 
 				wasHandled = false;
@@ -631,141 +668,58 @@ namespace mage
 	//---------------------------------------
 	void OnDraw()
 	{
-		if( gEngine.display == NULL )
-		{
-			// No display.
-			return;
-		}
 
-		gRenderFn();
-
-		eglSwapBuffers( gEngine.display, gEngine.surface );
 	}
 	//---------------------------------------
 	// OpenGL Initialization
-	int initGL()
+    void InitGraphics()
 	{
-		// initialize OpenGL ES and EGL
-
-		//
-		// Here specify the attributes of the desired configuration.
-		// Below, we select an EGLConfig with at least 8 bits per color
-		// that supports OpenGL ES 2.0.
-		//
-
-		const EGLint attribs[] =
+		if ( !gApp.ResourcesInitialized )
 		{
-			EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-			EGL_BLUE_SIZE, 8,
-			EGL_GREEN_SIZE, 8,
-			EGL_RED_SIZE, 8,
-			EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-			EGL_NONE
-		};
+#ifdef ANDROID
+			DebugPrintf( "Initializing GLContext" );
+			gApp.glContext->Init( (void**)&gApp.app->window );
+#endif
+			DebugPrintf( "Starting Renderer..." );
+			// Get ready to render
+			StartRenderer();
 
-		EGLint w, h, dummy, format;
-		EGLint numConfigs;
-		EGLConfig config;
-		EGLSurface surface;
-		EGLContext context;
+			gApp.ResourcesInitialized = true;
 
-		EGLDisplay display = eglGetDisplay( EGL_DEFAULT_DISPLAY );
+			// note: moved into ESContext::Init() - seems to work ok
+			//((ESContext*) gApp.glContext)->QueryScreenSize();
+#ifdef ANDROID
+			gApp.Width = gApp.glContext->GetScreenWidth();
+			gApp.Height = gApp.glContext->GetScreenHeight();
+#endif
 
-		eglInitialize( display, 0, 0 );
-
-		//
-		// Here, the application chooses the configuration it desires. In this
-		// sample, we have a very simplified selection process, where we pick
-		// the first EGLConfig that matches our criteria.
-		//
-
-		eglChooseConfig( display, attribs, &config, 1, &numConfigs );
-
-		//
-		// EGL_NATIVE_VISUAL_ID is an attribute of the EGLConfig that is
-		// guaranteed to be accepted by ANativeWindow_setBuffersGeometry().
-		// As soon as we picked a EGLConfig, we can safely reconfigure the
-		// ANativeWindow buffers to match, using EGL_NATIVE_VISUAL_ID.
-		//
-
-		eglGetConfigAttrib( display, config, EGL_NATIVE_VISUAL_ID, &format );
-
-		ANativeWindow_setBuffersGeometry( gEngine.app->window, 0, 0, format );
-
-		surface = eglCreateWindowSurface( display, config, gEngine.app->window, NULL );
-
-		const EGLint attrib_list [] =
+			//gOnScreenSizeChangedFnFn( gApp.Width, gApp.Height );
+			SetViewport( 0, 0, gApp.Width, gApp.Height );
+			SetOrthoView( 0, gApp.Width, gApp.Height, 0, 0, 1 );
+			if ( gOnScreenSizeChangedFn )
+			{
+				gOnScreenSizeChangedFn( gApp.Width, gApp.Height );
+			}
+		}
+		else
 		{
-			EGL_CONTEXT_CLIENT_VERSION, 2,
-			EGL_NONE
-		};
-
-		context = eglCreateContext( display, config, NULL, attrib_list );
-
-		if( eglMakeCurrent( display, surface, surface, context ) == EGL_FALSE )
-		{
-			WarnCrit( "Unable to eglMakeCurrent" );
-			return -1;
+#ifdef ANDROID
+			if ( gApp.glContext->Resume( (void**)&gApp.app->window ) != EGL_SUCCESS )
+			{
+				StopRenderer();
+				StartRenderer();
+				Texture2D::ReloadAllTextures();
+			}
+#endif
 		}
 
-		eglQuerySurface( display, surface, EGL_WIDTH, &w );
-		eglQuerySurface( display, surface, EGL_HEIGHT, &h );
-
-		gEngine.display = display;
-		gEngine.context = context;
-		gEngine.surface = surface;
-		gEngine.width = w;
-		gEngine.height = h;
-
-		// Initialize GL state.
-		//glEnable( GL_DEPTH_TEST );
-		//glEnable( GL_CULL_FACE );
-		glFrontFace( GL_CCW );
-
-		printGLString( "Version", GL_VERSION );
-		printGLString( "Vendor", GL_VENDOR );
-		printGLString( "Renderer", GL_RENDERER );
-		//printGLString( "Extensions", GL_EXTENSIONS );
-
-		if ( !CreateRenderer() )
-		{
-			FatalError( "Failed to create Renderer\n" );
-			return -1;
-		}
-
-		SetViewport( 0, 0, w, h );
-		SetOrthoView( 0, w, h, 0, 0, 1 );
-
-		gOnScreenSizeChanged( w, h );
-
-		return 0;
 	}
-	//---------------------------------------
-	// OpenGL shutdown
-	void shutdownGL()
+    //--------------------------------------
+	void ShutdownGraphics()
 	{
-		if( gEngine.display != EGL_NO_DISPLAY )
-		{
-			eglMakeCurrent( gEngine.display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT );
-
-			if( gEngine.context != EGL_NO_CONTEXT )
-				eglDestroyContext( gEngine.display, gEngine.context );
-
-			if( gEngine.surface != EGL_NO_SURFACE )
-				eglDestroySurface( gEngine.display, gEngine.surface );
-
-			eglTerminate( gEngine.display );
-		}
-
-		gEngine.display = EGL_NO_DISPLAY;
-		gEngine.context = EGL_NO_CONTEXT;
-		gEngine.surface = EGL_NO_SURFACE;
-	}
-	//---------------------------------------
-	void printGLString( const char *name, GLenum s )
-	{
-		const char *v = (const char *) glGetString( s );
-		DebugPrintf( "GL %s = %s\n", name, v );
+		// Free the active context and halt rendering
+		gApp.glContext->Suspend();
+		//StopRenderer();
 	}
 	//---------------------------------------
 

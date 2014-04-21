@@ -2,8 +2,13 @@
 
 #ifdef MAGE_USE_GLRENDERER
 #	include "GLRenderer/GLRenderer.h"
-#	define CreateRenderer()						\
-		InitRenderer( new mage::GLRenderer() )
+#	ifdef ANDROID
+#		define CreateRenderer( glContext )						\
+			InitRenderer( new mage::GLRenderer(), glContext )
+#	else
+#		define CreateRenderer( ... )						\
+			InitRenderer( new mage::GLRenderer(), 0 )
+#	endif
 #	define IRenderCall( x ) { assertion( pRenderer != NULL, "You must call 'CreateRenderer()' first!!\n", "" ); pRenderer->x; }
 #else
 #	define NO_RENDERER_PRESENT "No renderer is present. All draw calls are nops."
@@ -25,10 +30,18 @@
 namespace mage
 {
 
-	bool InitRenderer( IRenderer* renderer );
+	bool InitRenderer( IRenderer* renderer, GLContext* context );
 	void DestroyRenderer();
 	void FlushRenderer();
 	void ClearScreen();
+    void SwapBuffers();
+    IRenderer* GetRenderer();
+    
+    // Call after CreateRenderer()
+	void StartRenderer();
+	// Call to stop rendering and free graphics resources
+	// Renderer is NOT destroyed - call StartRenderer() to resume rendering
+	void StopRenderer();
 
 	void DrawRect( float x, float y, float w, float h, const mage::Color& color );
 	void DrawRectOutline( float x, float y, float w, float h, const mage::Color& color, float lineWidth=1.0f );

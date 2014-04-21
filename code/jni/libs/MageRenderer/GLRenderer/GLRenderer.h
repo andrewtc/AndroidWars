@@ -25,8 +25,26 @@ namespace mage
 		void ClearActiveEffect();
 		void BindTexture( IRenderer::TextureHandle hTexture, int channel );
 		void SetBlendFunc( IRenderer::BlendFunc sFactor, IRenderer::BlendFunc dFactor );
+        
+        // Requires a valid context be set
+        void SwapBuffers() const;
+        
+        // GLContext - set based on platform
+        void SetGLContext( GLContext* glContext );
+        
+        // Handle to the window, plaform dependant
+        void SetWindowHandle( void** hWindow );
+        
+        // Initializes the renderer so drawing can begin
+        // Must call before any rendering functions
+		void Start();
+        
+        // De-initializes the render to free graphics resources
+		void Stop();
 
 	protected:
+        bool Initialize();
+		void Destroy();
 		void CopyVertexListToBuffer( const VertexList& verts );
 	
 		static const size_t MAX_VERTEX_BATCH = 1024;
@@ -43,6 +61,9 @@ namespace mage
 
 		// List of all the textures
 		std::list< IRenderer::TextureHandle > mTextures;
+        
+        bool mIsInitialized;
+		GLContext* mContext;
 	};
 
 }
