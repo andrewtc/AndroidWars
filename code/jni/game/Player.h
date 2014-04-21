@@ -9,15 +9,16 @@ namespace mage
 	class Player
 	{
 	public:
+		typedef std::set< Faction* > Factions;
+
 		Game* GetGame() const;
-		Faction* GetFaction() const;
+		Factions GetFactions() const;
 
 	protected:
-		Player( Game* game, Faction* faction );
+		Player( Game* game );
 		~Player();
 
 		Game* mGame;
-		Faction* mFaction;
 
 		friend class Game;
 	};

@@ -47,9 +47,11 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 
 	// Create Factions.
 	Faction* redFaction = mMap.CreateFaction();
+	redFaction->SetControllable( true );
 	redFaction->SetColor( Color::RED );
 
 	Faction* blueFaction = mMap.CreateFaction();
+	blueFaction->SetControllable( true );
 	blueFaction->SetColor( Color::BLUE );
 
 	// Create two test Units.
@@ -58,9 +60,12 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 	Unit* testUnit1 = mMap.CreateUnit( testUnitType, redFaction, 5, 5 );
 	Unit* testUnit2 = mMap.CreateUnit( testUnitType, blueFaction, 10, 5, 9 );
 
-	// Create Players for each Faction.
-	mGame.CreatePlayer( redFaction );
-	mGame.CreatePlayer( blueFaction );
+	// Create a local Player controlling both Factions.
+	Player* localPlayer = mGame.CreatePlayer();
+	mGame.SetLocalPlayer( localPlayer );
+
+	mGame.GivePlayerControlOfFaction( localPlayer, redFaction );
+	mGame.GivePlayerControlOfFaction( localPlayer, blueFaction );
 
 	// Initialize the Game.
 	mGame.Init( &mMap );

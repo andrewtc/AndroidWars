@@ -172,6 +172,18 @@ Color Faction::GetInactiveColor() const
 }
 
 
+void Faction::SetControllable( bool controllable )
+{
+	mIsControllable = controllable;
+}
+
+
+bool Faction::IsControllable() const
+{
+	return mIsControllable;
+}
+
+
 void Faction::UnitGained( Unit* unit )
 {
 	// Keep track of the Units owned by this Faction.

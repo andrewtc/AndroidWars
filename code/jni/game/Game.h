@@ -13,9 +13,9 @@ namespace mage
 	{
 	public:
 		typedef std::vector< Player* > Players;
+		typedef std::vector< std::pair< Player*, Faction* > > FactionControllerMappings;
 
-		static const size_t MIN_PLAYER_COUNT = 2;
-		static const size_t MAX_PLAYER_COUNT = 4;
+		static const size_t MIN_CONTROLLED_FACTION_COUNT = 1;
 
 		enum Status
 		{
@@ -38,19 +38,33 @@ namespace mage
 		void LoadState( const rapidjson::Document& state );
 		void SaveState( rapidjson::Document& result );
 
-		Player* CreatePlayer( Faction* faction );
-		Player* GetPlayerByIndex( int index ) const;
-		int GetCurrentPlayerIndex() const;
-		Player* GetCurrentPlayer() const;
+		Player* CreatePlayer();
 		const Players& GetPlayers() const;
 		size_t GetPlayerCount() const;
 		void DestroyPlayer( Player* player );
 		void DestroyAllPlayers();
 
+		void GivePlayerControlOfFaction( Player* player, Faction* faction );
+		void ReleaseControlOfFaction( Faction* faction );
+		Player* GetControllerOfFaction( Faction* faction ) const;
+		bool PlayerControlsFaction( Player* player, Faction* faction ) const;
+		bool FactionHasController( Faction* faction ) const;
+		size_t GetControlledFactionCount() const;
+
+		Player* GetControllerByTurnOrder( int turnOrder ) const;
+		Faction* GetFactionByTurnOrder( int turnOrder ) const;
+		int GetTurnOrderOfFaction( Faction* faction ) const;
+		int GetTurnOrderOfCurrentFaction() const;
+		Faction* GetCurrentFaction() const;
+
+		void SetLocalPlayer( Player* player );
+		Player* GetLocalPlayer() const;
+		bool HasLocalPlayer() const;
+
 		void NextTurn();
 		int GetTurnNumber() const;
-		Event< int, Player* > OnTurnStart;
-		Event< int, Player* > OnTurnEnd;
+		Event< int, Faction* > OnTurnStart;
+		Event< int, Faction* > OnTurnEnd;
 
 		Map* GetMap() const;
 		Scenario* GetScenario() const;
@@ -66,11 +80,13 @@ namespace mage
 		void DestroyRemovedUnits();
 
 		int mCurrentTurnIndex;
-		int mCurrentPlayerIndex;
+		int mCurrentFactionIndex;
 		Map* mMap;
 		Camera* mCamera;
+		Player* mLocalPlayer;
 		Status mStatus;
 		Players mPlayers;
+		FactionControllerMappings mFactionControllerMappings;
 
 		friend class Unit;
 	};

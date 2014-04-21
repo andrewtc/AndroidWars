@@ -34,6 +34,9 @@ namespace mage
 		Color GetColor() const;
 		Color GetInactiveColor() const;
 
+		void SetControllable( bool controllable );
+		bool IsControllable() const;
+
 	private:
 		Faction( Map* map );
 		~Faction();
@@ -47,6 +50,7 @@ namespace mage
 		void TileGained( const Map::Iterator& tile );
 		void TileLost( const Map::Iterator& tile );
 
+		bool mIsControllable;
 		int mFunds;
 		Map* mMap;
 		Color mColor;

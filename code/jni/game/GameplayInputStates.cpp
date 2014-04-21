@@ -98,9 +98,10 @@ void MoveUnitInputState::OnEnter( const Dictionary& parameters )
 	// Get the Unit for this UnitSprite.
 	Unit* unit = unitSpriteToSelect->GetUnit();
 
-	// Only allow the Player to move the Unit if it is his own and the Unit is active.
-	Player* currentPlayer = game->GetCurrentPlayer();
-	mAllowMovement = ( currentPlayer && currentPlayer->GetFaction() == unit->GetOwner() && unit->IsActive() );
+	// Only allow the local player to move this Unit if it is his own and the Unit is active.
+	Player* localPlayer = game->GetLocalPlayer();
+	Faction* currentFaction = game->GetCurrentFaction();
+	mAllowMovement = ( currentFaction && game->PlayerControlsFaction( localPlayer, currentFaction ) && unit->GetOwner() == currentFaction && unit->IsActive() );
 
 	// Select the UnitSprite.
 	assertion( unitSpriteToSelect, "Cannot select null UnitSprite for MoveUnitInputState!" );

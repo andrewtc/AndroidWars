@@ -7,7 +7,7 @@ Game::Game() :
 	mStatus( STATUS_NOT_STARTED ),
 	mCamera( nullptr ),
 	mCurrentTurnIndex( -1 ),
-	mCurrentPlayerIndex( -1 )
+	mCurrentFactionIndex( -1 )
 { }
 
 
@@ -26,22 +26,9 @@ void Game::Init( Map* map )
 	mMap = map;
 	assertion( mMap, "Cannot create game without a valid Map!" );
 
-	for( int i = 0; i < mPlayers.size(); ++i )
-	{
-		// Validate Players.
-		Player* player = GetPlayerByIndex( i );
-		Faction* faction = player->GetFaction();
-
-		assertion( player->GetFaction(), "Cannot initialize Game because Player %d does not control a Faction!", i );
-		assertion( faction->GetMap() == mMap, "Cannot initialize Game because Player %d controls a Faction that is not part of the current Map!", i );
-	}
-
-	// Make sure the number of Players makes sense.
-	size_t playerCount = GetPlayerCount();
-	size_t maxPlayerCount = mMap->GetFactionCount();
-
-	assertion( maxPlayerCount >= MIN_PLAYER_COUNT, "Cannot start Game with fewer than %d players! (%d requested)", MIN_PLAYER_COUNT, maxPlayerCount );
-	assertion( maxPlayerCount <= maxPlayerCount, "Cannot start Game with %d players because there are only %d Factions for the current Map!", playerCount, maxPlayerCount );
+	// Make sure there are at least two controllable Factions.
+	size_t controlledFactionCount = GetControlledFactionCount();
+	assertion( controlledFactionCount >= MIN_CONTROLLED_FACTION_COUNT, "Cannot start Game with fewer than %d controllable Faction(s)! (The number of Factions currently controlled by a Player is %d.)", MIN_CONTROLLED_FACTION_COUNT, controlledFactionCount );
 
 	// Make sure the game hasn't been started yet.
 	assertion( IsNotStarted(), "Cannot start Game that has already been started!" );
@@ -49,9 +36,9 @@ void Game::Init( Map* map )
 	// Start the game.
 	mStatus = STATUS_IN_PROGRESS;
 
-	// Reset the game to the first turn and set the starting Player index.
+	// Reset the game to the first turn and set the starting Faction index.
 	mCurrentTurnIndex = -1;
-	mCurrentPlayerIndex = -1;
+	mCurrentFactionIndex = -1;
 
 	// Start the first turn.
 	NextTurn();
@@ -153,14 +140,13 @@ void Game::FetchTurn()
 
 void Game::StartTurn()
 {
-	DebugPrintf( "Starting turn %d. It is Player %d's turn.", mCurrentTurnIndex, mCurrentPlayerIndex );
+	DebugPrintf( "Starting turn %d. It is Player %d's turn.", mCurrentTurnIndex, mCurrentFactionIndex );
 
-	// Get the current player.
-	Player* player = GetCurrentPlayer();
-	assertion( player, "Cannot start turn because current Player index (%d) is invalid!", mCurrentPlayerIndex );
+	// Get the current Faction.
+	Faction* faction = GetCurrentFaction();
+	assertion( faction, "Cannot start turn because current Faction index (%d) is invalid!", mCurrentFactionIndex );
 
-	// Let the current Player's Faction process the next turn.
-	Faction* faction = player->GetFaction();
+	// Let the current Faction process the next turn.
 	faction->OnTurnStart( mCurrentTurnIndex );
 }
 
@@ -169,22 +155,19 @@ void Game::EndTurn()
 {
 	DebugPrintf( "Ending turn %d.", mCurrentTurnIndex );
 
-	// Get the current player.
-	Player* player = GetCurrentPlayer();
-	assertion( player, "Cannot end turn because current Player index (%d) is invalid!", mCurrentPlayerIndex );
+	// Get the current Faction.
+	Faction* faction = GetCurrentFaction();
+	assertion( faction, "Cannot end turn because current Faction index (%d) is invalid!", mCurrentFactionIndex );
 
-	// Notify the current Player's Faction that the turn is over.
-	Faction* faction = player->GetFaction();
+	// Notify the current Faction that the turn is over.
 	faction->OnTurnEnd( mCurrentTurnIndex );
 }
 
 
-Player* Game::CreatePlayer( Faction* faction )
+Player* Game::CreatePlayer()
 {
-	assertion( faction, "Cannot create Player because no Faction to control was specified!" );
-
 	// Create a new Player.
-	Player* player = new Player( this, faction );
+	Player* player = new Player( this );
 
 	// Add the player to the list of Players.
 	mPlayers.push_back( player );
@@ -193,34 +176,189 @@ Player* Game::CreatePlayer( Faction* faction )
 }
 
 
-Player* Game::GetPlayerByIndex( int index ) const
+const Game::Players& Game::GetPlayers() const
 {
-	Player* result = nullptr;
-
-	if( index >= 0 && index < (int) mPlayers.size() )
-	{
-		result = mPlayers[ (size_t) index ];
-	}
-
-	return result;
-}
-
-
-int Game::GetCurrentPlayerIndex() const
-{
-	return mCurrentPlayerIndex;
-}
-
-
-Player* Game::GetCurrentPlayer() const
-{
-	return GetPlayerByIndex( mCurrentPlayerIndex );
+	return mPlayers;
 }
 
 
 size_t Game::GetPlayerCount() const
 {
 	return mPlayers.size();
+}
+
+
+void Game::DestroyPlayer( Player* player )
+{
+	assertion( player->GetGame() == this, "Cannot destroy Player created by another Game!" );
+	delete player;
+}
+
+
+void Game::DestroyAllPlayers()
+{
+	for( auto it = mPlayers.begin(); it != mPlayers.end(); ++it )
+	{
+		Player* player = *it;
+		delete player;
+	}
+
+	mPlayers.clear();
+}
+
+
+void Game::GivePlayerControlOfFaction( Player* player, Faction* faction )
+{
+	assertion( player, "Cannot give null Player control of Faction!" );
+	assertion( faction, "Cannot give Player control of null Faction!" );
+	assertion( player->GetGame() == this, "Cannot give Player created by another Game control of Faction!" );
+	assertion( !IsInitialized() || faction->GetMap() == mMap, "Cannot give Player control of Faction created by another Map!" );
+	assertion( faction->IsControllable(), "Cannot give Player control of uncontrollable Faction!" );
+
+	// Force the Player currently controlling this Faction to release control of it.
+	ReleaseControlOfFaction( faction );
+
+	// Add the Faction to the list of controlled Factions.
+	std::pair< Player*, Faction* > mapping( player, faction );
+	mFactionControllerMappings.push_back( mapping );
+}
+
+
+void Game::ReleaseControlOfFaction( Faction* faction )
+{
+	assertion( faction, "Cannot release control of null Faction!" );
+	assertion( !IsInitialized() || faction->GetMap() == mMap, "Cannot release control of Faction created by another Map!" );
+	assertion( faction->IsControllable(), "Cannot release control of uncontrollable Faction!" );
+
+	for( auto it = mFactionControllerMappings.begin(); it != mFactionControllerMappings.end(); ++it )
+	{
+		if( it->second == faction )
+		{
+			// If a controller mapping for this Faction was found, remove it.
+			mFactionControllerMappings.erase( it );
+			break;
+		}
+	}
+}
+
+
+Player* Game::GetControllerOfFaction( Faction* faction ) const
+{
+	assertion( faction, "Cannot get controller of null Faction!" );
+	assertion( faction->GetMap() == mMap, "Cannot get controller of Faction created by another Map!" );
+
+	Player* controller = nullptr;
+
+	for( auto it = mFactionControllerMappings.begin(); it != mFactionControllerMappings.end(); ++it )
+	{
+		if( it->second == faction )
+		{
+			// If a controller mapping for this Faction was found, return the controller.
+			controller = it->first;
+			break;
+		}
+	}
+
+	return controller;
+}
+
+
+bool Game::PlayerControlsFaction( Player* player, Faction* faction ) const
+{
+	return ( GetControllerOfFaction( faction ) == player );
+}
+
+
+bool Game::FactionHasController( Faction* faction ) const
+{
+	return ( GetControllerOfFaction( faction ) != nullptr );
+}
+
+
+size_t Game::GetControlledFactionCount() const
+{
+	return mFactionControllerMappings.size();
+}
+
+
+Player* Game::GetControllerByTurnOrder( int index ) const
+{
+	Player* result = nullptr;
+
+	if( index >= 0 && index < (int) GetControlledFactionCount() )
+	{
+		result = mFactionControllerMappings[ (size_t) index ].first;
+	}
+
+	return result;
+}
+
+
+Faction* Game::GetFactionByTurnOrder( int index ) const
+{
+	Faction* result = nullptr;
+
+	if( index >= 0 && index < (int) GetControlledFactionCount() )
+	{
+		result = mFactionControllerMappings[ (size_t) index ].second;
+	}
+
+	return result;
+}
+
+
+int Game::GetTurnOrderOfFaction( Faction* faction ) const
+{
+	assertion( faction, "Cannot get turn order of null Faction!" );
+	assertion( faction->GetMap() == mMap, "Cannot get turn order of Faction created by another Map!" );
+	assertion( faction->IsControllable(), "Cannot get turn order of uncontrollable Faction!" );
+
+	int result = -1;
+
+	for( int turnOrder = 0, controlledFactionCount = GetControlledFactionCount(); turnOrder < controlledFactionCount; ++turnOrder )
+	{
+		auto factionControllerMapping = mFactionControllerMappings[ turnOrder ];
+
+		if( factionControllerMapping.second == faction )
+		{
+			// If the Faction was found in the list of mappings, return its turn order.
+			result = turnOrder;
+			break;
+		}
+	}
+
+	return mCurrentFactionIndex;
+}
+
+
+int Game::GetTurnOrderOfCurrentFaction() const
+{
+	return mCurrentFactionIndex;
+}
+
+
+Faction* Game::GetCurrentFaction() const
+{
+	return GetFactionByTurnOrder( mCurrentFactionIndex );
+}
+
+
+void Game::SetLocalPlayer( Player* player )
+{
+	assertion( player->GetGame() == this, "Cannot set local Player because the specified Player was created by another Game!" );
+	mLocalPlayer = player;
+}
+
+
+Player* Game::GetLocalPlayer() const
+{
+	return mLocalPlayer;
+}
+
+
+bool Game::HasLocalPlayer() const
+{
+	return ( mLocalPlayer != nullptr );
 }
 
 
@@ -365,14 +503,14 @@ void Game::NextTurn()
 	if( mCurrentTurnIndex > -1 )
 	{
 		// If this isn't the first turn, end the previous turn.
-		OnTurnEnd.Invoke( mCurrentTurnIndex, GetCurrentPlayer() );
+		OnTurnEnd.Invoke( mCurrentTurnIndex, GetCurrentFaction() );
 	}
 
 	// Increment the turn counter.
 	++mCurrentTurnIndex;
 
-	// Choose the next Player to take a turn.
-	mCurrentPlayerIndex = ( ( mCurrentPlayerIndex + 1 ) % GetPlayerCount() );
+	// Choose the next Faction to take a turn.
+	mCurrentFactionIndex = ( ( mCurrentFactionIndex + 1 ) % GetControlledFactionCount() );
 
 	// Start the next turn.
 	StartTurn();
