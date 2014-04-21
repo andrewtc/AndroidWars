@@ -46,11 +46,22 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 	mMap.FillWithDefaultTerrainType();
 
 	// Create a Faction.
-	Faction* testFaction = mMap.CreateFaction();
+	Faction* redFaction = mMap.CreateFaction();
+	redFaction->SetColor( Color::RED );
+
+	Faction* blueFaction = mMap.CreateFaction();
+	blueFaction->SetColor( Color::BLUE );
 
 	// Create a test Unit.
 	UnitType* testUnitType = mScenario.UnitTypes.FindByName( "Tank" );
-	mMap.CreateUnit( testUnitType, testFaction, 5, 5, 10, 99 );
+	Unit* testUnit = mMap.CreateUnit( testUnitType, redFaction, 5, 5, 10, 99 );
+
+	// Test color change.
+	// TODO: Remove this.
+	redFaction->SetColor( Color::PURPLE );
+
+	// Test Faction change.
+	testUnit->SetOwner( blueFaction );
 
 	// Set the default font for the MapView.
 	mMapView.SetDefaultFont( gWidgetManager->GetFontByName( "default_s.fnt" ) );

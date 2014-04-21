@@ -3,8 +3,12 @@
 using namespace mage;
 
 
+const float UnitSprite::MOVE_ANIMATION_SPEED = 7.5f;
+
+
 UnitSprite::UnitSprite( MapView* mapView, Unit* unit ) :
-	mMapView( mapView ), mUnit( unit ), mIsInitialized( false ), mSprite( nullptr )
+	mMapView( mapView ), mUnit( unit ), mIsInitialized( false ), mSprite( nullptr ),
+	mIsMoving( false ), mMoveAnimationTimer( 0.0f ), mMoveAnimationSpeed( 0.0f ), mMoveAnimationOrigin( Vec2f::ZERO )
 {
 	assertion( mMapView, "Cannot create UnitSprite without a valid MapView!" );
 	assertion( mUnit, "Cannot create UnitSprite without a valid Unit!" );
@@ -25,7 +29,8 @@ void UnitSprite::Init()
 	assertion( !IsInitialized(), "Cannot initialize UnitSprite that has already been initialized!" );
 	mIsInitialized = true;
 
-	// Listen for changes to the Unit's position.
+	// Listen for changes to the Unit.
+	mUnit->OnOwnerChanged.AddCallback( this, &UnitSprite::OnUnitOwnerChanged );
 	mUnit->OnTeleport.AddCallback( this, &UnitSprite::OnUnitTeleport );
 	mUnit->OnMove.AddCallback( this, &UnitSprite::OnUnitMove );
 
@@ -38,6 +43,9 @@ void UnitSprite::Init()
 
 	// Move the Sprite to the proper location on the Map.
 	SetPosition( mMapView->TileToWorldCoords( mUnit->GetTilePos() ) );
+
+	// Call initial callbacks to update unit properties.
+	OnUnitOwnerChanged( mUnit->GetOwner(), nullptr );
 }
 
 
@@ -62,7 +70,7 @@ void UnitSprite::Update( float elapsedTime )
 	if( mIsMoving )
 	{
 		// Update the movement timer.
-		mMoveAnimationTimer += elapsedTime;
+		mMoveAnimationTimer += ( mMoveAnimationSpeed * elapsedTime );
 
 		if( mMoveAnimationTimer >= 1.0f )
 		{
@@ -139,6 +147,29 @@ RectF UnitSprite::GetWorldBounds() const
 }
 
 
+void UnitSprite::OnOwnerColorChanged( const Color& color )
+{
+	// Update the color of the Sprite.
+	UpdateColor();
+}
+
+
+void UnitSprite::OnUnitOwnerChanged( Faction* owner, Faction* formerOwner )
+{
+	// Update the color of the sprite.
+	UpdateColor();
+
+	if( formerOwner )
+	{
+		// Unbind callbacks from the old Faction.
+		formerOwner->OnColorChanged.RemoveCallback( this, &UnitSprite::OnOwnerColorChanged );
+	}
+
+	// Bind callbacks on the new Faction.
+	owner->OnColorChanged.AddCallback( this, &UnitSprite::OnOwnerColorChanged );
+}
+
+
 void UnitSprite::OnUnitTeleport( const Map::Iterator& tile )
 {
 	// Update the sprite position.
@@ -153,4 +184,18 @@ void UnitSprite::OnUnitMove( const Path& path )
 	mIsMoving = true;
 	mMoveAnimationTimer = 0.0f;
 	mMovementPath = path;
+
+	// Calculate move animation speed.
+	mMoveAnimationSpeed = ( MOVE_ANIMATION_SPEED / mMovementPath.GetLength() );
+}
+
+
+void UnitSprite::UpdateColor()
+{
+	// Set the color of the Unit to the owning Faction's color.
+	Color color = mUnit->GetOwner()->GetColor();
+
+	// TODO: Adjust color for inactive state.
+
+	mSprite->DrawColor = color;
 }

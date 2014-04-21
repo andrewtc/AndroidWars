@@ -171,14 +171,14 @@ short Unit::GetTileY() const
 
 void Unit::SetOwner( Faction* owner )
 {
+	assertion( owner, "Cannot give Unit to null Player!" );
+
 	// Give the Unit to the new owner.
 	Faction* formerOwner = mOwner;
 	mOwner = owner;
 
-	if( IsInitialized() )
+	if( IsInitialized() && mOwner != formerOwner )
 	{
-		assertion( owner, "Cannot give Unit to null Player!" );
-
 		if( formerOwner != nullptr )
 		{
 			// If there was a previous owner, notify it that it no longer owns this Unit.
@@ -187,6 +187,9 @@ void Unit::SetOwner( Faction* owner )
 
 		// Notify the new player that it gained a Unit.
 		mOwner->UnitGained( this );
+
+		// Fire the owner changed event.
+		OnOwnerChanged.Invoke( owner, formerOwner );
 	}
 }
 

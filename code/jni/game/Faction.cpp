@@ -5,7 +5,8 @@ using namespace mage;
 
 Faction::Faction( Map* map ) :
 	mMap( map ),
-	mFunds( 0 )
+	mFunds( 0 ),
+	mColor( Color::WHITE )
 {
 	assertion( mMap, "Cannot create Faction without a valid Map!" );
 }
@@ -146,7 +147,11 @@ bool Faction::HasHeadquarters() const
 
 void Faction::SetColor( const Color& color )
 {
+	// Set the color of the Faction.
 	mColor = color;
+
+	// Fire the color changed event.
+	OnColorChanged.Invoke( mColor );
 }
 
 

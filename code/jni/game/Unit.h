@@ -11,6 +11,10 @@ namespace mage
 
 	public:
 		typedef Delegate< const Map::Iterator& > OnTileChangedDelegate;
+		typedef Delegate< const Map::Iterator& > OnTeleportDelegate;
+		typedef Delegate< const Path& > OnMoveDelegate;
+		typedef Delegate< int, Unit* > OnTakeDamageDelegate;
+		typedef Delegate< Faction*, Faction* > OnOwnerChangedDelegate;
 
 		static const int MAX_HEALTH = 10;
 
@@ -105,6 +109,7 @@ namespace mage
 		Map::Iterator mTile;
 
 	public:
+		Event< Faction*, Faction* > OnOwnerChanged;
 		Event< const Map::Iterator& > OnTileChanged;
 		Event< const Map::Iterator& > OnTeleport;
 		Event< const Path& > OnMove;

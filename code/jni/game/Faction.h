@@ -51,6 +51,9 @@ namespace mage
 		Units mUnits;
 		Tiles mTiles;
 
+	public:
+		Event< const Color& > OnColorChanged;
+
 		friend class Game;
 		friend class Map;
 		friend class Unit;

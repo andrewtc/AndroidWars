@@ -5,6 +5,8 @@ namespace mage
 	class UnitSprite
 	{
 	public:
+		static const float MOVE_ANIMATION_SPEED;
+
 		UnitSprite( MapView* mapView, Unit* unit );
 		~UnitSprite();
 
@@ -25,12 +27,17 @@ namespace mage
 		RectF GetWorldBounds() const;
 
 	private:
+		void OnOwnerColorChanged( const Color& color );
+		void OnUnitOwnerChanged( Faction* owner, Faction* formerOwner );
 		void OnUnitTeleport( const Map::Iterator& tile );
 		void OnUnitMove( const Path& path );
+
+		void UpdateColor();
 
 		bool mIsInitialized;
 		bool mIsMoving;
 		float mMoveAnimationTimer;
+		float mMoveAnimationSpeed;
 		Vec2f mMoveAnimationOrigin;
 		Path mMovementPath;
 		MapView* mMapView;
