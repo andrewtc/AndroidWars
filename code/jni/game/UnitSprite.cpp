@@ -33,6 +33,8 @@ void UnitSprite::Init()
 	mUnit->OnOwnerChanged.AddCallback( this, &UnitSprite::OnUnitOwnerChanged );
 	mUnit->OnTeleport.AddCallback( this, &UnitSprite::OnUnitTeleport );
 	mUnit->OnMove.AddCallback( this, &UnitSprite::OnUnitMove );
+	mUnit->OnActivate.AddCallback( this, &UnitSprite::OnUnitActivate );
+	mUnit->OnDeactivate.AddCallback( this, &UnitSprite::OnUnitDeactivate );
 
 	// Determine the position of the Unit in the MapView.
 	Vec2f worldPos = mMapView->TileToWorldCoords( mUnit->GetTilePos() );
@@ -190,6 +192,24 @@ void UnitSprite::OnUnitMove( const Path& path )
 
 	// Calculate move animation speed.
 	mMoveAnimationSpeed = ( MOVE_ANIMATION_SPEED / mMovementPath.GetLength() );
+}
+
+
+void UnitSprite::OnUnitActivate()
+{
+	DebugPrintf( "Activating Unit!" );
+
+	// Update the color of the Sprite.
+	UpdateColor();
+}
+
+
+void UnitSprite::OnUnitDeactivate()
+{
+	DebugPrintf( "Deactivating Unit!" );
+
+	// Update the color of the Sprite.
+	UpdateColor();
 }
 
 

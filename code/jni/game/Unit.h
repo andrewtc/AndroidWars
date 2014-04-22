@@ -116,6 +116,8 @@ namespace mage
 		Event< const Map::Iterator& > OnTeleport;
 		Event< const Path& > OnMove;
 		Event< int, Unit* > OnTakeDamage;
+		Event<> OnActivate;
+		Event<> OnDeactivate;
 		Event<> OnDeath;
 		Event<> OnDestroyed;
 

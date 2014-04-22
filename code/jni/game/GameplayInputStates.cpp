@@ -19,8 +19,13 @@ void SelectUnitInputState::OnEnter( const Dictionary& parameters )
 	// Deselect the current UnitSprite (if any).
 	mapView->DeselectUnitSprite();
 
-	// Show the tile palette.
-	//owner->GetTilePalette()->Show();
+	// Show the gameplay interface.
+	Widget* gameplayInterface = owner->GetGameplayInterface();
+
+	if( gameplayInterface )
+	{
+		gameplayInterface->Show();
+	}
 }
 
 
@@ -28,8 +33,13 @@ void SelectUnitInputState::OnExit()
 {
 	GameplayState* owner = GetOwnerDerived();
 
-	// Hide the tile palette.
-	//owner->GetTilePalette()->Hide();
+	// Hide the gameplay interface.
+	Widget* gameplayInterface = owner->GetGameplayInterface();
+
+	if( gameplayInterface )
+	{
+		gameplayInterface->Hide();
+	}
 }
 
 

@@ -138,8 +138,8 @@ Color Color::Lerp( const Color& A, const Color& B, float alpha )
 	const float a = 1.0f - alpha;
 	Color c;
 	c.r = (uint8) ( A.r * a + B.r * alpha );
-	c.b = (uint8) ( A.g * a + B.g * alpha );
-	c.g = (uint8) ( A.b * a + B.b * alpha );
+	c.g = (uint8) ( A.g * a + B.g * alpha );
+	c.b = (uint8) ( A.b * a + B.b * alpha );
 	c.a = (uint8) ( A.a * a + B.a * alpha );
 	return c;
 }

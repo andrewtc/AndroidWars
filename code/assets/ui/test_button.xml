@@ -3,6 +3,7 @@
     >
     <Graphic name="background"
         animationSet="main_menu_button.anim"
+        layer="-1"
         />
     <Include template="TestLabel" name="label"
         position="20,20"

@@ -140,7 +140,7 @@ void Game::FetchTurn()
 
 void Game::StartTurn()
 {
-	DebugPrintf( "Starting turn %d. It is Player %d's turn.", mCurrentTurnIndex, mCurrentFactionIndex );
+	DebugPrintf( "Starting turn %d. It is Faction %d's turn.", mCurrentTurnIndex, mCurrentFactionIndex );
 
 	// Get the current Faction.
 	Faction* faction = GetCurrentFaction();
@@ -503,7 +503,7 @@ void Game::NextTurn()
 	if( mCurrentTurnIndex > -1 )
 	{
 		// If this isn't the first turn, end the previous turn.
-		OnTurnEnd.Invoke( mCurrentTurnIndex, GetCurrentFaction() );
+		EndTurn();
 	}
 
 	// Increment the turn counter.

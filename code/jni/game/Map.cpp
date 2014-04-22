@@ -648,11 +648,11 @@ void Map::FindBestPathToTile( const Unit* unit, const Vec2s& tilePos, Path& resu
 
 				if( adjacent.IsValid() && !adjacent->IsClosed( searchIndex ) )
 				{
-					// If the adjacent tile is valid and isn't already closed, get the TerrainType of the adjacent tile.
-					TerrainType* adjacentTerrainType = adjacent->GetTerrainType();
-
-					if( movementType->CanMoveAcrossTerrain( adjacentTerrainType ) )
+					if( unit->CanEnterTile( adjacent ) )
 					{
+						// If the adjacent tile is valid and isn't already closed, get the TerrainType of the adjacent tile.
+						TerrainType* adjacentTerrainType = adjacent->GetTerrainType();
+
 						// If the adjacent tile is passable, find the total cost of entering the tile.
 						int costToEnterAdjacent = movementType->GetMovementCostAcrossTerrain( adjacentTerrainType );
 						int adjacentTotalCost = ( tile->GetBestTotalCostToEnter() + costToEnterAdjacent );

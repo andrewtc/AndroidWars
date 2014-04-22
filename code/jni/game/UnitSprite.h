@@ -31,6 +31,8 @@ namespace mage
 		void OnUnitOwnerChanged( Faction* owner, Faction* formerOwner );
 		void OnUnitTeleport( const Map::Iterator& tile );
 		void OnUnitMove( const Path& path );
+		void OnUnitActivate();
+		void OnUnitDeactivate();
 
 		void UpdateColor();
 

@@ -167,8 +167,12 @@ Color Faction::GetColor() const
 Color Faction::GetInactiveColor() const
 {
 	// Return a darker version of the Faction color.
-	HSV hsv = Color::ColorToHSV( mColor );
-	return Color::HSVToColor( hsv.hue, hsv.saturation, Mathf::Clamp( hsv.value - INACTIVE_COLOR_VALUE_SHIFT, 0.0f, 1.0f ) );
+
+	// TODO: Fix HSV color.
+	//HSV hsv = Color::ColorToHSV( mColor );
+	//return Color::HSVToColor( hsv.hue, hsv.saturation, Mathf::Clamp( hsv.value - INACTIVE_COLOR_VALUE_SHIFT, 0.0f, 1.0f ) );
+
+	return Color::Lerp( mColor, Color::BLACK, INACTIVE_COLOR_VALUE_SHIFT );
 }
 
 

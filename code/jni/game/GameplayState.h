@@ -26,6 +26,8 @@ namespace mage
 		MoveUnitInputState* GetMoveUnitInputState() const;
 		SelectActionInputState* GetSelectActionInputState() const;
 
+		Widget* GetGameplayInterface() const;
+
 	private:
 		virtual void OnEnter( const Dictionary& parameters );
 		virtual void OnUpdate( float elapsedTime );
@@ -38,7 +40,7 @@ namespace mage
 		virtual bool OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID );
 
 		bool mIsNetworkGame;
-		Widget* mActionsDialog;
+		Widget* mGameplayInterface;
 		SelectUnitInputState* mSelectUnitInputState;
 		MoveUnitInputState* mMoveUnitInputState;
 		SelectActionInputState* mSelectActionInputState;

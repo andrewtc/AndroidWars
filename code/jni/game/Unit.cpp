@@ -44,6 +44,9 @@ void Unit::Init( Map* map, const Map::Iterator& tile )
 	// Make sure a valid owner was specified.
 	assertion( mOwner, "Could not initialize Unit because no owning Faction was specified!" );
 
+	// Notify the owner that it owns this Unit.
+	mOwner->UnitGained( this );
+
 	// Keep track of the Unit's current tile.
 	mTile = tile;
 	assertion( mTile.IsValid(), "Cannot initialize Unit at invalid Map tile (%d,%d)!", mTile.GetX(), mTile.GetY() );
@@ -718,7 +721,24 @@ bool Unit::HasSupplies() const
 
 void Unit::SetActive( bool active )
 {
-	mIsActive = active;
+	if( mIsActive != active )
+	{
+		mIsActive = active;
+
+		if( IsInitialized() )
+		{
+			if( mIsActive )
+			{
+				// Call the activate event.
+				OnActivate.Invoke();
+			}
+			else
+			{
+				// Call the deactivate event.
+				OnDeactivate.Invoke();
+			}
+		}
+	}
 }
 
 

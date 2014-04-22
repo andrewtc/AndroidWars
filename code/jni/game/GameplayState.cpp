@@ -9,7 +9,7 @@ GameplayState::GameplayState() :
 	mSelectUnitInputState( nullptr ),
 	mMoveUnitInputState( nullptr ),
 	mSelectActionInputState( nullptr ),
-	mActionsDialog( nullptr )
+	mGameplayInterface( nullptr )
 {
 	DebugPrintf( "GameplayState created!" );
 }
@@ -76,6 +76,32 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 	// Initialize the MapView.
 	mMapView.Init( &mMap );
 
+	// Create the gameplay interface.
+	mGameplayInterface = gWidgetManager->CreateWidgetFromTemplate( "GameplayInterface" );
+
+	if( mGameplayInterface )
+	{
+		// Add the gameplay interface to the root.
+		gWidgetManager->GetRootWidget()->AddChild( mGameplayInterface );
+
+		// Get the next turn button.
+		Button* nextTurnButton = mGameplayInterface->GetChildByName< Button >( "nextTurnButton" );
+
+		if( nextTurnButton )
+		{
+			// Bind the next turn callback to the next turn button.
+			nextTurnButton->SetOnClickDelegate( [this]()
+			{
+				// Go to the next turn.
+				mGame.NextTurn();
+			});
+		}
+	}
+	else
+	{
+		WarnFail( "Could not create gameplay interface!" );
+	}
+
 	// Create input states.
 	mSelectUnitInputState = CreateState< SelectUnitInputState >();
 	mMoveUnitInputState = CreateState< MoveUnitInputState >();
@@ -134,6 +160,12 @@ void GameplayState::OnDraw()
 
 void GameplayState::OnExit()
 {
+	if( mGameplayInterface )
+	{
+		// Destroy the gameplay interface.
+		gWidgetManager->DestroyWidget( mGameplayInterface );
+	}
+
 	DebugPrintf( "GameplayState exited!" );
 }
 
@@ -213,4 +245,10 @@ MoveUnitInputState* GameplayState::GetMoveUnitInputState() const
 SelectActionInputState* GameplayState::GetSelectActionInputState() const
 {
 	return mSelectActionInputState;
+}
+
+
+Widget* GameplayState::GetGameplayInterface() const
+{
+	return mGameplayInterface;
 }
