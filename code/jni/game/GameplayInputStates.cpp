@@ -367,18 +367,26 @@ void SelectActionInputState::OnWaitButtonPressed()
 {
 	GameplayState* owner = GetOwnerDerived();
 	MapView* mapView = owner->GetMapView();
+	Map* map = owner->GetMap();
 
 	// Get the currently selected Unit.
 	UnitSprite* selectedUnitSprite = mapView->GetSelectedUnitSprite();
 	assertion( selectedUnitSprite, "Cannot display actions because no UnitSprite is selected!" );
 	Unit* unit = selectedUnitSprite->GetUnit();
 
-	// Move the selected Unit along the selected path.
+	// Get the destination Tile.
 	const Path& path = mapView->GetSelectedUnitPath();
-	unit->Move( path );
+	Map::Iterator tile = map->GetTile( path.GetDestination() );
+	TerrainType* terrainType = tile->GetTerrainType();
 
-	// Exit the state.
-	owner->ChangeState( owner->GetSelectUnitInputState() );
+	if( tile->IsEmpty() )
+	{
+		// If the Unit is not blocked by another friendly unit, move the selected Unit along the path.
+		unit->Move( path );
+
+		// Exit the state.
+		owner->ChangeState( owner->GetSelectUnitInputState() );
+	}
 }
 
 
