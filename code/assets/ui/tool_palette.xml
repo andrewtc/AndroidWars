@@ -2,4 +2,5 @@
     <Include name="brushToolButton" template="ToolButton" position="0,0" />
     <Include name="placeToolButton" template="ToolButton" position="0,100" />
     <Include name="eraserToolButton" template="ToolButton" position="0,200" />
+    <Include name="testButton" template="TestButton" position="100,0" label="Test Map" />
 </Widget>

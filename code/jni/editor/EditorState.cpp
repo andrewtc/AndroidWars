@@ -120,6 +120,7 @@ void EditorState::OnEnter( const Dictionary& parameters )
 		Button* brushToolButton = mToolPalette->GetChildByName< Button >( "brushToolButton" );
 		Button* placeToolButton = mToolPalette->GetChildByName< Button >( "placeToolButton" );
 		Button* eraserToolButton = mToolPalette->GetChildByName< Button >( "eraserToolButton" );
+		Button* testButton = mToolPalette->GetChildByName< Button >( "testButton" );
 
 		if( brushToolButton )
 		{
@@ -149,6 +150,12 @@ void EditorState::OnEnter( const Dictionary& parameters )
 				DebugPrintf( "Switching to eraser tool." );
 				ChangeState( mEraserToolInputState );
 			});
+		}
+
+		if( testButton )
+		{
+			// Make the test button run the Map.
+			testButton->SetOnClickDelegate( Button::OnClickDelegate( this, &EditorState::TestMap ) );
 		}
 	}
 
@@ -217,6 +224,8 @@ void EditorState::OnExit()
 {
 	// Destroy the tool palette.
 	gWidgetManager->DestroyWidget( mToolPalette );
+	gWidgetManager->DestroyWidget( mTilePalette );
+	gWidgetManager->DestroyWidget( mUnitPalette );
 
 	// Destroy all states.
 	DestroyState( mBrushToolInputState );
@@ -391,4 +400,21 @@ void EditorState::BuildUnitPalette()
 			WarnFail( "Could not build tile palette because no tile selector template was found!" );
 		}
 	}
+}
+
+
+void EditorState::TestMap()
+{
+	DebugPrintf( "Launching Map..." );
+
+	// Serialize the Map.
+	rapidjson::Document* mapData;
+	mMap.SaveToJSON( *mapData, *mapData );
+
+	// Pass the Map data to the GameplayState.
+	Dictionary parameters;
+	parameters.Set( "mapData", mapData );
+
+	// Launch the Map.
+	gGameStateManager->ChangeState< GameplayState >( parameters );
 }

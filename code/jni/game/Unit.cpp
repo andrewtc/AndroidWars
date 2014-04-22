@@ -302,26 +302,31 @@ void Unit::Move( const Path& path )
 		// Make sure the destination Tile is empty.
 		Map::Iterator destinationTile = mMap->GetTile( path.GetDestination() );
 
-		if( path.GetLength() > 0 )
+		if( destinationTile->IsEmpty() )
 		{
-			// TODO: Check for traps.
-			Path validatedPath = path;
+			if( path.GetLength() > 0 )
+			{
+				// TODO: Check for traps.
+				Path validatedPath = path;
 
-			// Move to the destination tile.
-			Vec2s destination = validatedPath.GetDestination();
-			Map::Iterator tile = mMap->GetTile( destination );
-			SetTile( tile );
+				// Move to the destination tile.
+				SetTile( destinationTile );
 
-			// Consume supplies equal to the cost of traversing the path.
-			int pathCost = CalculatePathCost( validatedPath );
-			ConsumeSupplies( pathCost );
+				// Consume supplies equal to the cost of traversing the path.
+				int pathCost = CalculatePathCost( validatedPath );
+				ConsumeSupplies( pathCost );
+			}
+
+			// Deactivate the Unit.
+			Deactivate();
+
+			// Fire the move event.
+			OnMove.Invoke( path );
 		}
-
-		// Deactivate the Unit.
-		Deactivate();
-
-		// Fire the move event.
-		OnMove.Invoke( path );
+		else
+		{
+			WarnFail( "Cannot move Unit to Tile (%d,%d) because the Tile is occupied by another Unit!", destinationTile.GetX(), destinationTile.GetY() );
+		}
 	}
 	else
 	{

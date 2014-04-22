@@ -38,6 +38,8 @@ namespace mage
 		void BuildTilePalette();
 		void BuildUnitPalette();
 
+		void TestMap();
+
 		bool mIsPanningCamera;
 
 		BrushToolInputState* mBrushToolInputState;

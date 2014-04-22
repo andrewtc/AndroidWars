@@ -66,7 +66,8 @@ namespace mage
 	public:
 		static const char* const MAPS_FOLDER_PATH;
 		static const char* const MAP_FILE_EXTENSION;
-		static const char* const TERRAIN_TYPE_PALETTE_CHARS;
+		static const char* const TERRAIN_TYPE_CHARS;
+		static const size_t TERRAIN_TYPE_CHAR_COUNT;
 
 		typedef std::vector< Faction* > Factions;
 		typedef std::vector< Unit* > Units;

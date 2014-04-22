@@ -10,6 +10,9 @@ namespace mage
 		typedef std::set< Unit* > Units;
 		typedef std::set< Map::Iterator > Tiles;
 
+		void SaveToJSON( rapidjson::Document& document, rapidjson::Value& value );
+		void LoadFromJSON( const rapidjson::Value& object );
+
 		Map* GetMap() const;
 
 		void SetFunds( int funds );

@@ -18,6 +18,45 @@ Faction::Faction( Map* map ) :
 Faction::~Faction() { }
 
 
+void Faction::SaveToJSON( rapidjson::Document& document, rapidjson::Value& object )
+{
+	// Save the Faction color.
+	rapidjson::Value color;
+	std::string colorAsString = StringUtil::ToString( mColor );
+	color.SetString( colorAsString.c_str() );
+	object.AddMember( "color", color, document.GetAllocator() );
+}
+
+
+
+void Faction::LoadFromJSON( const rapidjson::Value& object )
+{
+	if( object.HasMember( "color" ) )
+	{
+		const rapidjson::Value& color = object[ "color" ];
+
+		if( color.IsString() )
+		{
+			// Parse the Faction color.
+			std::string colorAsString = color.GetString();
+			bool success = StringUtil::ParseColor( colorAsString, Color::WHITE, mColor );
+
+			if( !success )
+			{
+				WarnFail( "Could not load Faction color from invalid string \"%s\"!", colorAsString.c_str() );
+			}
+		}
+		else
+		{
+			WarnFail( "Could not load Faction color from JSON because the \"color\" value is not a string!" );
+		}
+	}
+	else
+	{
+		WarnFail( "No Faction color found in JSON object!" );
+	}
+}
+
 void Faction::OnTurnStart( int turnIndex )
 {
 	// Determine how many funds to give the Faction based on the tiles the Faction owns.
