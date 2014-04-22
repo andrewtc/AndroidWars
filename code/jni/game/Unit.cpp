@@ -359,32 +359,32 @@ bool Unit::IsOwnedBy( Faction* faction ) const
 }
 
 
-bool Unit::CanAttack( const Unit& target ) const
+bool Unit::CanAttack( const Unit* target ) const
 {
-	DebugPrintf( "Checking whether %s can attack %s...", ToString().c_str(), target.ToString().c_str() );
+	assertion( target, "Cannot check whether Unit can attack null Unit!" );
+
+	DebugPrintf( "Checking whether %s can attack %s...", ToString().c_str(), target->ToString().c_str() );
 
 	// Make sure this Unit is still alive.
 	bool isAlive = IsAlive();
 	DebugPrintf( "%s is %s.", ToString().c_str(), ( isAlive ? "ALIVE" : "DEAD" ) );
 
-	// Check whether the target is in range.
-	bool isInRange = IsInRange( target );
-	DebugPrintf( "%s %s in range.", target.ToString().c_str(), ( isInRange ? "IS" : "IS NOT" ) );
-
 	// Check whether this Unit can target the other Unit.
 	bool canTarget = CanTarget( target );
-	DebugPrintf( "%s %s target %s.", ToString().c_str(), ( isInRange ? "CAN" : "CANNOT" ), target.ToString().c_str() );
+	DebugPrintf( "%s %s target %s.", ToString().c_str(), ( canTarget ? "CAN" : "CANNOT" ), target->ToString().c_str() );
 
-	bool result = ( isAlive && isInRange && canTarget );
-	DebugPrintf( "RESULT: %s %s attack %s.", ToString().c_str(), ( result ? "CAN" : "CANNOT" ), target.ToString().c_str() );
+	bool result = ( isAlive && canTarget );
+	DebugPrintf( "RESULT: %s %s attack %s.", ToString().c_str(), ( result ? "CAN" : "CANNOT" ), target->ToString().c_str() );
 
 	return result;
 }
 
 
-void Unit::Attack( Unit& target )
+void Unit::Attack( Unit* target )
 {
-	DebugPrintf( "%s attacks %s.", ToString().c_str(), target.ToString().c_str() );
+	assertion( target, "Cannot order Unit to attack null Unit!" );
+
+	DebugPrintf( "%s attacks %s.", ToString().c_str(), target->ToString().c_str() );
 
 	// Get the best weapon to use against the target.
 	int bestWeaponIndex = GetBestAvailableWeaponAgainst( target );
@@ -421,7 +421,7 @@ void Unit::Attack( Unit& target )
 	DebugPrintf( "TOTAL DAMAGE: %d", totalDamage );
 
 	// Apply the damage to the target Unit.
-	target.TakeDamage( totalDamage, this );
+	target->TakeDamage( totalDamage, this );
 
 	if( bestWeapon.ConsumesAmmo() )
 	{
@@ -433,18 +433,20 @@ void Unit::Attack( Unit& target )
 }
 
 
-int Unit::CalculateDamagePercentage( const Unit& target, int weaponIndex ) const
+int Unit::CalculateDamagePercentage( const Unit* target, int weaponIndex ) const
 {
+	assertion( target, "Cannot calculate damage percentage against null Unit!" );
+
 	int result = 0;
 
 	// Get the best weapon to use against the target.
 	const Weapon& weapon = mUnitType->GetWeaponByIndex( weaponIndex );
 
-	DebugPrintf( "Calculating damage of %s against %s with weapon %d (%s)...", ToString().c_str(), target.ToString().c_str(),
+	DebugPrintf( "Calculating damage of %s against %s with weapon %d (%s)...", ToString().c_str(), target->ToString().c_str(),
 				 weaponIndex, weapon.GetName().GetCString() );
 
 	// Get the base amount of damage to apply.
-	int baseDamagePercentage = weapon.GetDamagePercentageAgainstUnitType( target.GetUnitType() );
+	int baseDamagePercentage = weapon.GetDamagePercentageAgainstUnitType( target->GetUnitType() );
 	assertion( baseDamagePercentage > 0, "Cannot calculate damage: weapon cannot target Unit!" );
 
 	DebugPrintf( "Base damage percentage: %d%%", baseDamagePercentage );
@@ -454,7 +456,7 @@ int Unit::CalculateDamagePercentage( const Unit& target, int weaponIndex ) const
 	DebugPrintf( "Health scaling factor: %f", healthScale );
 
 	// Scale the damage amount based on the target's defense bonus.
-	float targetDefenseBonus = target.GetDefenseBonus();
+	float targetDefenseBonus = target->GetDefenseBonus();
 	float targetDefenseScale = Mathf::Clamp( 1.0f - targetDefenseBonus, 0.0f, 1.0f );
 	DebugPrintf( "Target defense bonus: %f (%f x damage)", targetDefenseBonus, targetDefenseScale );
 
@@ -489,40 +491,54 @@ float Unit::GetDefenseBonus() const
 }
 
 
-bool Unit::CanTarget( const Unit& target ) const
+bool Unit::CanTarget( const Unit* target ) const
 {
+	assertion( target, "Cannot check whether Unit can target null Unit!" );
+
 	// Return whether this Unit has a weapon that can attack the target.
-	int bestWeaponIndex = GetBestAvailableWeaponAgainst( target.GetUnitType() );
+	int bestWeaponIndex = GetBestAvailableWeaponAgainst( target->GetUnitType() );
 	return ( bestWeaponIndex >= 0 );
 }
 
 
-bool Unit::IsInRange( const Unit& target ) const
+bool Unit::IsInRange( const Unit* target ) const
 {
+	assertion( target, "Cannot check whether Unit is within range of null Unit!" );
 	return IsInRangeFromTile( target, mTile );
 }
 
 
-bool Unit::IsInRangeFromTile( const Unit& target, const Map::ConstIterator& tile ) const
+bool Unit::IsInRangeFromTile( const Unit* target, const Map::ConstIterator& tile ) const
 {
+	assertion( target, "Cannot check whether Unit is in range of null Unit!" );
+	assertion( tile.IsValid(), "Cannot test range to target from invalid Tile!" );
+
 	// Get the range of the Unit's unit type.
 	UnitType* type = GetUnitType();
 	const IntRange& range = type->GetAttackRange();
 
 	// Find the distance from the tile to the target.
-	short distanceToTarget = tile.GetPosition().GetManhattanDistanceTo( target.GetTilePos() );
+	short distanceToTarget = tile.GetPosition().GetManhattanDistanceTo( target->GetTilePos() );
 
 	// Determine whether this Unit is in range.
 	bool isInRange = range.IsValueInRange( distanceToTarget );
-	DebugPrintf( "%s %s in range of %s from tile (%d,%d).", target.ToString().c_str(), ( isInRange ? "is" : "is NOT" ), ToString().c_str(), tile.GetX(), tile.GetY() );
+	DebugPrintf( "%s %s in range of %s from tile (%d,%d).", target->ToString().c_str(), ( isInRange ? "is" : "is NOT" ), ToString().c_str(), tile.GetX(), tile.GetY() );
 
 	return isInRange;
 }
 
 
-int Unit::GetDistanceToUnit( const Unit& target ) const
+bool Unit::IsInRangeFromLocation( const Unit* target, const Vec2s& location ) const
 {
-	return GetTilePos().GetManhattanDistanceTo( target.GetTilePos() );
+	Map::ConstIterator tile = mMap->GetTile( location );
+	return IsInRangeFromTile( target, tile );
+}
+
+
+int Unit::GetDistanceToUnit( const Unit* target ) const
+{
+	assertion( target, "Cannot get distance of Unit to null Unit!" );
+	return GetTilePos().GetManhattanDistanceTo( target->GetTilePos() );
 }
 
 
@@ -533,9 +549,10 @@ bool Unit::CanFireWeapon( int weaponIndex ) const
 }
 
 
-int Unit::GetBestAvailableWeaponAgainst( const Unit& target ) const
+int Unit::GetBestAvailableWeaponAgainst( const Unit* target ) const
 {
-	return GetBestAvailableWeaponAgainst( target.GetUnitType() );
+	assertion( target, "Cannot get best available Weapon against null Unit!" );
+	return GetBestAvailableWeaponAgainst( target->GetUnitType() );
 }
 
 
@@ -586,12 +603,23 @@ int Unit::GetBestAvailableWeaponAgainst( const UnitType* unitType ) const
 void Unit::SetHealth( int health )
 {
 	// Set the current HP of the Unit.
-	mHealth = Mathi::Clamp( health, 0, MAX_HEALTH );
+	int verifiedHealth = Mathi::Clamp( health, 0, MAX_HEALTH );
 
-	if( IsInitialized() && mHealth == 0 )
+	if( mHealth != verifiedHealth )
 	{
-		// If the Unit runs out of health, kill it.
-		Die();
+		mHealth = verifiedHealth;
+
+		if( IsInitialized() )
+		{
+			// Fire the health changed event.
+			OnHealthChanged.Invoke( mHealth );
+
+			if( mHealth == 0 )
+			{
+				// If the Unit runs out of health, kill it.
+				Die();
+			}
+		}
 	}
 }
 

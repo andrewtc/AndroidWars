@@ -49,7 +49,6 @@ void MapView::Init( Map* map )
 	// Create initial UnitSprites.
 	mMap->ForEachUnit( [this]( Unit* unit )
 	{
-		DebugPrintf( "Creating UnitSprite at (%d,%d)!", unit->GetTileX(), unit->GetTileY() );
 		CreateUnitSprite( unit );
 	});
 
@@ -58,6 +57,9 @@ void MapView::Init( Map* map )
 
 	// Listen for when the Map is resized.
 	mMap->OnResize.AddCallback( this, &MapView::MapResized );
+
+	// Listen for when Units are created.
+	mMap->OnUnitCreated.AddCallback( this, &MapView::UnitCreated );
 
 	// Listen for when the Map is changed.
 	mMap->OnTileChanged.AddCallback( this, &MapView::TileChanged );
@@ -68,8 +70,10 @@ void MapView::Destroy()
 {
 	assertion( !IsInitialized(), "Cannot destroy MapView that is not initialized!" );
 
-	// Remove the resize callback.
+	// Remove the callbacks.
 	mMap->OnResize.RemoveCallback( this, &MapView::MapResized );
+	mMap->OnUnitCreated.RemoveCallback( this, &MapView::UnitCreated );
+	mMap->OnTileChanged.RemoveCallback( this, &MapView::TileChanged );
 
 	// Reset the Map reference.
 	mMap = nullptr;
@@ -204,6 +208,8 @@ const MapView::TileSpritesGrid& MapView::GetTileSprites() const
 
 UnitSprite* MapView::CreateUnitSprite( Unit* unit )
 {
+	DebugPrintf( "Creating UnitSprite at (%d,%d)!", unit->GetTileX(), unit->GetTileY() );
+
 	// Create and initialize a new UnitSprite.
 	UnitSprite* unitSprite = new UnitSprite( this, unit );
 	unitSprite->Init();
@@ -386,6 +392,16 @@ void MapView::MapResized( const Vec2s& oldSize, const Vec2s& newSize )
 
 	// Refresh the Camera bounds.
 	mCamera.SetWorldBounds( GetCameraBounds() );
+}
+
+
+void MapView::UnitCreated( Unit* unit )
+{
+	if( IsInitialized() )
+	{
+		// Create a UnitSprite for the Unit.
+		CreateUnitSprite( unit );
+	}
 }
 
 

@@ -66,6 +66,7 @@ namespace mage
 	public:
 		static const char* const MAPS_FOLDER_PATH;
 		static const char* const MAP_FILE_EXTENSION;
+		static const char* const TERRAIN_TYPE_PALETTE_CHARS;
 
 		typedef std::vector< Faction* > Factions;
 		typedef std::vector< Unit* > Units;
@@ -118,7 +119,6 @@ namespace mage
 		void FindReachableTiles( const Unit* unit, TileSet& result );
 		void ForEachReachableTile( const Unit* unit, ForEachReachableTileCallback callback );
 		void FindBestPathToTile( const Unit* unit, const Vec2s& tilePos, Path& result );
-		Event< Unit*, const Path& > OnUnitMoved;
 
 		Scenario* GetScenario() const;
 
@@ -140,6 +140,8 @@ namespace mage
 
 	public:
 		Event< const Iterator& > OnTileChanged;
+		Event< Unit* > OnUnitCreated;
+		Event< Unit*, const Path& > OnUnitMoved;
 
 		friend class Tile;
 		friend class Unit;

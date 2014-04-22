@@ -5,6 +5,7 @@ using namespace mage;
 
 const char* const Map::MAPS_FOLDER_PATH = "map";
 const char* const Map::MAP_FILE_EXTENSION = "maps/";
+const char* const Map::TERRAIN_TYPE_PALETTE_CHARS = "123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 
 Tile::Tile() :
@@ -260,17 +261,82 @@ void Map::Destroy()
 
 void Map::SaveToJSON( rapidjson::Document& document, rapidjson::Value& object )
 {
-	DebugPrintf( "Saving game state..." );
+	DebugPrintf( "Saving Map state..." );
 
 	// TODO: Add the ID.
 	//rapidjson::Value gameIDValue;
 	//gameIDValue.SetString( mGameID.c_str(), result.GetAllocator() );
 	//result.AddMember( "id", gameIDValue, result.GetAllocator() );
 
+	// Serialize the scenario name.
+	rapidjson::Value scenarioName;
+	scenarioName.SetString( mScenario->GetName().GetCString() );
+	object.AddMember( "scenarioName", scenarioName, document.GetAllocator() );
+
+	// Serialize the width and height of the Map.
+	rapidjson::Value width, height;
+	width.SetInt( GetWidth() );
+	height.SetInt( GetHeight() );
+	object.AddMember( "width", width, document.GetAllocator() );
+	object.AddMember( "height", height, document.GetAllocator() );
+
+	// Store a palette of all TerrainTypes in use by this Map.
+	std::map< TerrainType*, size_t > terrainTypesPalette;
+	size_t nextPaletteIndex = 0;
+	
+	std::string mapData;
+
+	ForEachTile( [ &mapData, &terrainTypesPalette, &nextPaletteIndex ]( ConstIterator tile )
+	{
+		// Get the TerrainType for this tile.
+		TerrainType* terrainType = tile->GetTerrainType();
+
+		// Look up the TerrainType mapping (if it exists).
+		auto it = terrainTypesPalette.find( terrainType );
+		size_t currentIndex = 0;
+
+		if( it == terrainTypesPalette.end() )
+		{
+			// If the TerrainType mapping does not already exist, map the TerrainType to a unique character that will be used when serializing the Map data.
+			assertion( nextPaletteIndex < sizeof( TERRAIN_TYPE_PALETTE_CHARS ), "There are too many TerrainTypes to represent in the TerrainTypes palette!" );
+			terrainTypesPalette[ terrainType ] = nextPaletteIndex;
+			currentIndex = nextPaletteIndex;
+			++nextPaletteIndex;
+		}
+		else
+		{
+			// Otherwise, look up the index for this TerrainType.
+			currentIndex = it->second;
+		}
+
+		// Print out a character for this Tile.
+		mapData.push_back( TERRAIN_TYPE_PALETTE_CHARS[ currentIndex ] );
+	});
+
+	// Create a palette of all TerrainTypes in use by this Map.
+	rapidjson::Value terrainTypes;
+	terrainTypes.SetObject();
+	std::string paletteChar;
+
+	for( auto it = terrainTypesPalette.begin(); it != terrainTypesPalette.end(); ++it )
+	{
+		// Serialize all mappings.
+		rapidjson::Value mapping;
+		mapping.SetString( it->first->GetName().GetCString() );
+		paletteChar = TERRAIN_TYPE_PALETTE_CHARS[ it->second ];
+		terrainTypes.AddMember( paletteChar.c_str(), mapping, document.GetAllocator() );
+	}
+
+	object.AddMember( "terrainTypes", terrainTypes, document.GetAllocator() );
+
+	// Serialize the Map data.
+	rapidjson::Value tiles;
+	tiles.SetString( mapData.c_str() );
+	object.AddMember( "tiles", tiles, document.GetAllocator() );
+
 	// Start an array for Units.
 	rapidjson::Value unitsArray;
 	unitsArray.SetArray();
-	DebugPrintf( "Created array!" );
 
 	ForEachUnit( [ &document, &object, &unitsArray ]( Unit* unit )
 	{
@@ -287,7 +353,6 @@ void Map::SaveToJSON( rapidjson::Document& document, rapidjson::Value& object )
 
 	// Add it to the result.
 	object.AddMember( "units", unitsArray, document.GetAllocator() );
-	DebugPrintf( "Added array!" );
 }
 
 
@@ -472,6 +537,12 @@ Unit* Map::CreateUnit( UnitType* unitType, Faction* owner, const Vec2s& tilePos,
 
 			// Add the Unit to the list of Units.
 			mUnits.push_back( unit );
+
+			if( mIsInitialized )
+			{
+				// Call the Unit created callback.
+				OnUnitCreated.Invoke( unit );
+			}
 		}
 		else
 		{

@@ -95,6 +95,13 @@ void EditorState::OnEnter( const Dictionary& parameters )
 	mMap.Resize( 16, 12 );
 	mMap.FillWithDefaultTerrainType();
 
+	// Create Factions.
+	Faction* redFaction = mMap.CreateFaction();
+	redFaction->SetColor( Color::RED );
+
+	Faction* blueFaction = mMap.CreateFaction();
+	blueFaction->SetColor( Color::BLUE );
+
 	// Set the default font for the MapView.
 	mMapView.SetDefaultFont( gWidgetManager->GetFontByName( "default_s.fnt" ) );
 
@@ -173,6 +180,13 @@ void EditorState::OnEnter( const Dictionary& parameters )
 	mBrushToolInputState = CreateState< BrushToolInputState >();
 	mBrushToolInputState->SetTileTemplate( CreateDefaultTileTemplate() );
 
+	mPlaceToolInputState = CreateState< PlaceToolInputState >();
+	mPlaceToolInputState->SetSelectedFaction( redFaction );
+
+	// TODO: Make this dynamic.
+	UnitType* defaultUnitType = mMap.GetScenario()->UnitTypes.FindByName( "Infantry" );
+	mPlaceToolInputState->SetSelectedUnitType( defaultUnitType );
+
 	mEraserToolInputState = CreateState< EraserToolInputState >();
 
 	// Allow the user to paint tiles.
@@ -206,6 +220,8 @@ void EditorState::OnExit()
 
 	// Destroy all states.
 	DestroyState( mBrushToolInputState );
+	DestroyState( mPlaceToolInputState );
+	DestroyState( mEraserToolInputState );
 
 	// Destroy the Map.
 	mMap.Destroy();
@@ -236,9 +252,9 @@ bool EditorState::OnPointerUp( const Pointer& pointer )
 
 	if( mIsPanningCamera )
 	{
-		if( GetPointerCount() == 1 )
+		if( GetPointerCount() == 2 )
 		{
-			// If the last pointer is being removed, stop panning the camera.
+			// If the second-to-last pointer is being removed, stop panning the camera.
 			mIsPanningCamera = false;
 		}
 	}

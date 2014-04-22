@@ -102,8 +102,8 @@ void OnWindowShown()
 
 		// TODO: Start in the Main Menu state.
 		//gGameStateManager->ChangeState< MainMenuState >();
-		//gGameStateManager->ChangeState< EditorState >();
-		gGameStateManager->ChangeState< GameplayState >();
+		gGameStateManager->ChangeState< EditorState >();
+		//gGameStateManager->ChangeState< GameplayState >();
 	}
 
 	gInit = true;

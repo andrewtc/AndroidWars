@@ -67,6 +67,7 @@ namespace mage
 
 	private:
 		void MapResized( const Vec2s& oldSize, const Vec2s& newSize );
+		void UnitCreated( Unit* unit );
 		void TileChanged( const Map::Iterator& tile );
 		void UnitSpriteSelected( UnitSprite* unitSprite, bool showArrow );
 

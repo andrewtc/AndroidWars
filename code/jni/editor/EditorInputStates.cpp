@@ -85,7 +85,10 @@ void BrushToolInputState::SetTileTemplate( const Tile& tile )
 
 
 PlaceToolInputState::PlaceToolInputState( GameState* owner ) :
-	DerivedInputState( owner )
+	DerivedInputState( owner ),
+	mUnitPlacementSprite( nullptr ),
+	mSelectedFaction( nullptr ),
+	mSelectedUnitType( nullptr )
 { }
 
 
@@ -100,11 +103,36 @@ void PlaceToolInputState::OnEnter( const Dictionary& parameters )
 
 void PlaceToolInputState::OnExit()
 {
+	// Destroy the Unit placement Sprite (if it exists).
+	DestroyUnitPlacementSprite();
+}
+
+
+void PlaceToolInputState::OnDraw()
+{
+	if( mUnitPlacementSprite )
+	{
+		EditorState* owner = GetOwnerDerived();
+		MapView* mapView = owner->GetMapView();
+
+		// Draw the Unit placement sprite.
+		mUnitPlacementSprite->OnDraw( *mapView->GetCamera() );
+	}
 }
 
 
 bool PlaceToolInputState::OnPointerDown( const Pointer& pointer )
 {
+	// Make sure there is a valid UnitType and Faction selected.
+	if( mSelectedUnitType && mSelectedFaction && pointer.IsActivePointer() )
+	{
+		EditorState* owner = GetOwnerDerived();
+		MapView* mapView = owner->GetMapView();
+
+		// If this is the active pointer, create a new Unit placement sprite under it.
+		CreateUnitPlacementSprite( mapView->ScreenToWorldCoords( pointer.position ) );
+	}
+
 	return false; //InputState::OnPointerDown( pointer );
 }
 
@@ -113,10 +141,24 @@ bool PlaceToolInputState::OnPointerUp( const Pointer& pointer )
 {
 	bool wasHandled = false; //InputState::OnPointerUp( pointer );
 
-	if( !wasHandled )
+	if( !wasHandled && mUnitPlacementSprite )
 	{
-		// TODO: Place a Unit.
-		wasHandled = true;
+		if( GetPointerCount() == 1 )
+		{
+			// If the last Pointer leaves the screen, destroy the Unit placement Sprite.
+			DestroyUnitPlacementSprite();
+
+			// Place a Unit.
+			Unit* unit = CreateUnitAtScreenCoords( pointer.position );
+
+			wasHandled = true;
+		}
+		else
+		{
+			// Otherwise, move the pointer to the new active pointer position.
+			const Pointer& activePointer = GetActivePointer();
+			MoveUnitPlacementSprite( activePointer.position );
+		}
 	}
 
 	return wasHandled;
@@ -127,9 +169,14 @@ bool PlaceToolInputState::OnPointerMotion( const Pointer& activePointer, const P
 {
 	bool wasHandled = false; //InputState::OnPointerMotion( activePointer, pointersByID );
 
-	if( !wasHandled )
+	if( !wasHandled && mUnitPlacementSprite && activePointer.isMoving )
 	{
-		// TODO: Move a unit.
+		EditorState* owner = GetOwnerDerived();
+		MapView* mapView = owner->GetMapView();
+
+		// Move the Unit placement Sprite to the position of the active pointer.
+		MoveUnitPlacementSprite( mapView->ScreenToWorldCoords( activePointer.position ) );
+
 		wasHandled = true;
 	}
 
@@ -146,6 +193,104 @@ void PlaceToolInputState::SetSelectedUnitType( UnitType* unitType )
 void PlaceToolInputState::SetSelectedFaction( Faction* faction )
 {
 	mSelectedFaction = faction;
+}
+
+
+void PlaceToolInputState::CreateUnitPlacementSprite( const Vec2f& position )
+{
+	assertion( mUnitPlacementSprite == nullptr, "Tried to create another Unit placement Sprite when one already exists!" );
+
+	if( mSelectedUnitType )
+	{
+		if( mSelectedFaction )
+		{
+			// Get the color of the selected Faction and the UnitType animation set name.
+			HashString animationSet = mSelectedUnitType->GetAnimationSetName();
+			Color factionColor = mSelectedFaction->GetColor();
+
+			// Create a new Unit placement Sprite.
+			mUnitPlacementSprite = SpriteManager::CreateSprite( animationSet, Vec2f::ZERO, UnitSprite::DEFAULT_ANIMATION_NAME );
+			mUnitPlacementSprite->DrawColor = factionColor;
+
+			// Move the Unit placement sprite into position.
+			MoveUnitPlacementSprite( position );
+		}
+		else
+		{
+			WarnFail( "Cannot create Unit placement Sprite because no Faction was selected!" );
+		}
+	}
+	else
+	{
+		WarnFail( "Cannot create Unit placement Sprite because no UnitType was selected!" );
+	}
+}
+
+
+void PlaceToolInputState::MoveUnitPlacementSprite( const Vec2f& position )
+{
+	if( mUnitPlacementSprite )
+	{
+		// Get the bounds of the animation.
+		RectI bounds = mUnitPlacementSprite->GetClippingRectForCurrentAnimation();
+
+		// Calculate an offset to center the sprite.
+		Vec2f offset( -1.0f * bounds.CenterX(), -1.0f * bounds.CenterY() );
+
+		// Move the Sprite to the position with an offset.
+		mUnitPlacementSprite->Position = ( position + offset );
+	}
+}
+
+
+void PlaceToolInputState::DestroyUnitPlacementSprite()
+{
+	if( mUnitPlacementSprite )
+	{
+		SpriteManager::DestroySprite( mUnitPlacementSprite );
+	}
+}
+
+
+Unit* PlaceToolInputState::CreateUnitAtScreenCoords( const Vec2f& screenCoords )
+{
+	Unit* unit = nullptr;
+
+	if( mSelectedUnitType )
+	{
+		if( mSelectedFaction )
+		{
+			EditorState* owner = GetOwnerDerived();
+			MapView* mapView = owner->GetMapView();
+			Map* map = owner->GetMap();
+
+			// Get the Tile at the screen coords.
+			Vec2f worldPos = mapView->ScreenToWorldCoords( screenCoords );
+			Vec2s tilePos = mapView->WorldToTileCoords( worldPos );
+			Map::Iterator tile = map->GetTile( tilePos );
+
+			if( tile.IsValid() && tile->IsEmpty() && mSelectedUnitType->CanMoveAcrossTerrain( tile->GetTerrainType() ) )
+			{
+				// If the selected UnitType can be placed into the Tile, create a new Unit.
+				DebugPrintf( "Placing Unit at tile (%d,%d)!", tilePos.x, tilePos.y );
+				unit = map->CreateUnit( mSelectedUnitType, mSelectedFaction, tilePos );
+			}
+			else
+			{
+				WarnFail( "Cannot place Unit into tile (%d,%d)!", tilePos.x, tilePos.y );
+			}
+		}
+		else
+		{
+			WarnFail( "Cannot create Unit because no Faction was selected!" );
+		}
+	}
+	else
+	{
+		WarnFail( "Cannot create Unit because no UnitType was selected!" );
+	}
+
+	return unit;
 }
 
 

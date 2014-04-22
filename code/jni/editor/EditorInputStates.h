@@ -34,6 +34,8 @@ namespace mage
 		PlaceToolInputState( GameState* owner );
 		~PlaceToolInputState();
 
+		virtual void OnDraw();
+
 		virtual void OnEnter( const Dictionary& parameters );
 		virtual void OnExit();
 
@@ -41,8 +43,14 @@ namespace mage
 		virtual bool OnPointerUp( const Pointer& pointer );
 		virtual bool OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID );
 
+		void CreateUnitPlacementSprite( const Vec2f& position );
+		void MoveUnitPlacementSprite( const Vec2f& position );
+		void DestroyUnitPlacementSprite();
+		Unit* CreateUnitAtScreenCoords( const Vec2f& screenCoords );
+
 		UnitType* mSelectedUnitType;
 		Faction* mSelectedFaction;
+		Sprite* mUnitPlacementSprite;
 
 		friend class GameState;
 	};

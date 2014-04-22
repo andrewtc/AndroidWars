@@ -48,17 +48,18 @@ namespace mage
 		void Move( const Path& path );
 		bool IsOwnedBy( Faction* faction ) const;
 
-		bool CanAttack( const Unit& target ) const;
-		void Attack( Unit& target );
-		int CalculateDamagePercentage( const Unit& target, int weaponIndex ) const;
+		bool CanAttack( const Unit* target ) const;
+		void Attack( Unit* target );
+		int CalculateDamagePercentage( const Unit* target, int weaponIndex ) const;
 		float GetDefenseBonus() const;
-		bool CanTarget( const Unit& target ) const;
-		bool IsInRange( const Unit& target ) const;
-		bool IsInRangeFromTile( const Unit& target, const Map::ConstIterator& tile ) const;
-		int GetDistanceToUnit( const Unit& target ) const;
+		bool CanTarget( const Unit* target ) const;
+		bool IsInRange( const Unit* target ) const;
+		bool IsInRangeFromTile( const Unit* target, const Map::ConstIterator& tile ) const;
+		bool IsInRangeFromLocation( const Unit* target, const Vec2s& location ) const;
+		int GetDistanceToUnit( const Unit* target ) const;
 		bool CanFireWeapon( int weaponIndex ) const;
 		int GetBestAvailableWeaponAgainst( const UnitType* unitType ) const;
-		int GetBestAvailableWeaponAgainst( const Unit& target ) const;
+		int GetBestAvailableWeaponAgainst( const Unit* target ) const;
 
 		void SetHealth( int health );
 		void ResetHealth();
@@ -116,6 +117,7 @@ namespace mage
 		Event< const Map::Iterator& > OnTeleport;
 		Event< const Path& > OnMove;
 		Event< int, Unit* > OnTakeDamage;
+		Event< int > OnHealthChanged;
 		Event<> OnActivate;
 		Event<> OnDeactivate;
 		Event<> OnDeath;

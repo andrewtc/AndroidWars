@@ -5,6 +5,7 @@ namespace mage
 	class UnitSprite
 	{
 	public:
+		static const char* const DEFAULT_ANIMATION_NAME;
 		static const float MOVE_ANIMATION_SPEED;
 
 		UnitSprite( MapView* mapView, Unit* unit );
@@ -31,6 +32,8 @@ namespace mage
 		void OnUnitOwnerChanged( Faction* owner, Faction* formerOwner );
 		void OnUnitTeleport( const Map::Iterator& tile );
 		void OnUnitMove( const Path& path );
+		void OnUnitTakeDamage( int health, Unit* instigator );
+		void OnUnitHealthChanged( int health );
 		void OnUnitActivate();
 		void OnUnitDeactivate();
 

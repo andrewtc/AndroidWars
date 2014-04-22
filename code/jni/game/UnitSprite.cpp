@@ -3,6 +3,7 @@
 using namespace mage;
 
 
+const char* const UnitSprite::DEFAULT_ANIMATION_NAME = "Idle";
 const float UnitSprite::MOVE_ANIMATION_SPEED = 8.0f;
 
 
@@ -33,6 +34,8 @@ void UnitSprite::Init()
 	mUnit->OnOwnerChanged.AddCallback( this, &UnitSprite::OnUnitOwnerChanged );
 	mUnit->OnTeleport.AddCallback( this, &UnitSprite::OnUnitTeleport );
 	mUnit->OnMove.AddCallback( this, &UnitSprite::OnUnitMove );
+	mUnit->OnTakeDamage.AddCallback( this, &UnitSprite::OnUnitTakeDamage );
+	mUnit->OnHealthChanged.AddCallback( this, &UnitSprite::OnUnitHealthChanged );
 	mUnit->OnActivate.AddCallback( this, &UnitSprite::OnUnitActivate );
 	mUnit->OnDeactivate.AddCallback( this, &UnitSprite::OnUnitDeactivate );
 
@@ -192,6 +195,18 @@ void UnitSprite::OnUnitMove( const Path& path )
 
 	// Calculate move animation speed.
 	mMoveAnimationSpeed = ( MOVE_ANIMATION_SPEED / mMovementPath.GetLength() );
+}
+
+
+void UnitSprite::OnUnitTakeDamage( int health, Unit* instigator )
+{
+	// TODO: Show damage animation.
+}
+
+
+void UnitSprite::OnUnitHealthChanged( int health )
+{
+	// TODO
 }
 
 

@@ -1,0 +1,6 @@
+<Widget name="gameplayInterface">
+    <Include name="nextTurnButton" template="TestButton"
+        position="20,20"
+        label="Next Turn"
+        />
+</Widget>

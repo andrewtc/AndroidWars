@@ -57,8 +57,14 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 	// Create two test Units.
 	// TODO: Remove this.
 	UnitType* testUnitType = mScenario.UnitTypes.FindByName( "Tank" );
-	Unit* testUnit1 = mMap.CreateUnit( testUnitType, redFaction, 5, 5 );
-	Unit* testUnit2 = mMap.CreateUnit( testUnitType, blueFaction, 10, 5, 9 );
+
+	mMap.CreateUnit( testUnitType, redFaction, 5, 5 );
+	mMap.CreateUnit( testUnitType, redFaction, 3, 3 );
+	mMap.CreateUnit( testUnitType, redFaction, 3, 7 );
+
+	mMap.CreateUnit( testUnitType, blueFaction, 10, 5, 9 );
+	mMap.CreateUnit( testUnitType, blueFaction, 12, 3 );
+	mMap.CreateUnit( testUnitType, blueFaction, 12, 7 );
 
 	// Create a local Player controlling both Factions.
 	Player* localPlayer = mGame.CreatePlayer();
