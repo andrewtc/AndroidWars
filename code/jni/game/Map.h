@@ -141,6 +141,7 @@ namespace mage
 	public:
 		Event< const Iterator& > OnTileChanged;
 		Event< Unit* > OnUnitCreated;
+		Event< Unit* > OnUnitDestroyed;
 		Event< Unit*, const Path& > OnUnitMoved;
 
 		friend class Tile;

@@ -69,6 +69,8 @@ namespace mage
 		virtual bool OnPointerUp( const Pointer& pointer );
 		virtual bool OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID );
 
+		void DestroyUnitAtScreenCoords( const Vec2f& screenCoords );
+
 		friend class GameState;
 	};
 }

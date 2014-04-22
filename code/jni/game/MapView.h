@@ -36,7 +36,6 @@ namespace mage
 		TileSpritesGrid& GetTileSprites();
 		const TileSpritesGrid& GetTileSprites() const;
 
-		UnitSprite* CreateUnitSprite( Unit* unit );
 		UnitSprite* GetUnitSpriteAtScreenCoords( float screenX, float screenY ) const;
 		UnitSprite* GetUnitSpriteAtScreenCoords( const Vec2f& screenCoords ) const;
 		UnitSprite* GetUnitSpriteAtWorldCoords( float worldX, float worldY ) const;
@@ -66,6 +65,9 @@ namespace mage
 		bool IsInitialized() const;
 
 	private:
+		UnitSprite* CreateUnitSprite( Unit* unit );
+		void DestroyUnitSprite( UnitSprite* unitSprite );
+
 		void MapResized( const Vec2s& oldSize, const Vec2s& newSize );
 		void UnitCreated( Unit* unit );
 		void TileChanged( const Map::Iterator& tile );
@@ -81,5 +83,7 @@ namespace mage
 		ArrowSprite mArrowSprite;
 		UnitSprites mUnitSprites;
 		TileSpritesGrid mTileSprites;
+
+		friend class UnitSprite;
 	};
 }

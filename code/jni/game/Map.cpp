@@ -793,7 +793,34 @@ size_t Map::GetUnitCount() const
 
 void Map::DestroyUnit( Unit* unit )
 {
-	// TODO
+	assertion( unit, "Cannot destroy null Unit!" );
+	assertion( unit->IsInitialized(), "Cannot destroy Unit that has not been initialized!" );
+	assertion( unit->GetMap() == this, "Cannot destroy Unit created by another Map!" );
+
+	for( auto it = mUnits.begin(); it != mUnits.end(); ++it )
+	{
+		if( *it == unit )
+		{
+			// Remove the Unit from the list of Units.
+			mUnits.erase( it );
+			break;
+		}
+	}
+
+	if( mIsInitialized )
+	{
+		// Call the Unit destroyed callback.
+		OnUnitDestroyed.Invoke( unit );
+	}
+
+	// Remove the Unit from its current Tile.
+	Iterator tile = unit->GetTile();
+	assertion( tile->GetUnit() == unit, "Cannot remove Unit from Tile that it does not occupy!" );
+	tile->ClearUnit();
+
+	// Destroy the Unit.
+	unit->Destroy();
+	delete unit;
 }
 
 

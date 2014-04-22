@@ -221,6 +221,29 @@ UnitSprite* MapView::CreateUnitSprite( Unit* unit )
 }
 
 
+void MapView::DestroyUnitSprite( UnitSprite* unitSprite )
+{
+	assertion( unitSprite->GetMapView() == this, "Cannot destroy UnitSprite that was created by another MapView!" );
+
+	Unit* unit = unitSprite->GetUnit();
+	DebugPrintf( "Destroying UnitSprite at (%d,%d)!", unit->GetTileX(), unit->GetTileY() );
+
+	for( auto it = mUnitSprites.begin(); it != mUnitSprites.end(); ++it )
+	{
+		if( *it == unitSprite )
+		{
+			// Remove the UnitSprite from the list of UnitSprites.
+			mUnitSprites.erase( it );
+			break;
+		}
+	}
+
+	// Destroy the UnitSprite.
+	unitSprite->Destroy();
+	delete unitSprite;
+}
+
+
 UnitSprite* MapView::GetUnitSpriteAtScreenCoords( float screenX, float screenY ) const
 {
 	return GetUnitSpriteAtScreenCoords( Vec2f( screenX, screenY ) );

@@ -36,6 +36,7 @@ void UnitSprite::Init()
 	mUnit->OnMove.AddCallback( this, &UnitSprite::OnUnitMove );
 	mUnit->OnTakeDamage.AddCallback( this, &UnitSprite::OnUnitTakeDamage );
 	mUnit->OnHealthChanged.AddCallback( this, &UnitSprite::OnUnitHealthChanged );
+	mUnit->OnDestroyed.AddCallback( this, &UnitSprite::OnUnitDestroyed );
 	mUnit->OnActivate.AddCallback( this, &UnitSprite::OnUnitActivate );
 	mUnit->OnDeactivate.AddCallback( this, &UnitSprite::OnUnitDeactivate );
 
@@ -155,6 +156,12 @@ RectF UnitSprite::GetWorldBounds() const
 }
 
 
+MapView* UnitSprite::GetMapView() const
+{
+	return mMapView;
+}
+
+
 void UnitSprite::OnOwnerColorChanged( const Color& color )
 {
 	// Update the color of the Sprite.
@@ -207,6 +214,13 @@ void UnitSprite::OnUnitTakeDamage( int health, Unit* instigator )
 void UnitSprite::OnUnitHealthChanged( int health )
 {
 	// TODO
+}
+
+
+void UnitSprite::OnUnitDestroyed()
+{
+	// Tell the MapView to destroy this UnitSprite.
+	mMapView->DestroyUnitSprite( this );
 }
 
 

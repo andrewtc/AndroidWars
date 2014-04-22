@@ -310,21 +310,19 @@ void EraserToolInputState::OnExit() { }
 
 bool EraserToolInputState::OnPointerDown( const Pointer& pointer )
 {
+	if( pointer.IsActivePointer() )
+	{
+		// Destroy the Unit at the pointer location.
+		DestroyUnitAtScreenCoords( pointer.position );
+	}
+
 	return false; //InputState::OnPointerDown( pointer );
 }
 
 
 bool EraserToolInputState::OnPointerUp( const Pointer& pointer )
 {
-	bool wasHandled = false; //InputState::OnPointerUp( pointer );
-
-	if( !wasHandled )
-	{
-		// TODO: Erase a Unit.
-		wasHandled = true;
-	}
-
-	return wasHandled;
+	return false;
 }
 
 
@@ -332,11 +330,32 @@ bool EraserToolInputState::OnPointerMotion( const Pointer& activePointer, const 
 {
 	bool wasHandled = false; //InputState::OnPointerMotion( activePointer, pointersByID );
 
-	if( !wasHandled )
+	if( !wasHandled && activePointer.isMoving )
 	{
-		// TODO: Erase a unit.
+		// Destroy the Unit at the pointer location.
+		DestroyUnitAtScreenCoords( activePointer.position );
+
 		wasHandled = true;
 	}
 
 	return wasHandled;
+}
+
+
+void EraserToolInputState::DestroyUnitAtScreenCoords( const Vec2f& screenCoords )
+{
+	EditorState* owner = GetOwnerDerived();
+	MapView* mapView = owner->GetMapView();
+	Map* map = owner->GetMap();
+
+	// Get the UnitSprite under the pointer (if any).
+	UnitSprite* unitSprite = mapView->GetUnitSpriteAtScreenCoords( screenCoords );
+
+	if( unitSprite )
+	{
+		// If there is a Unit under the pointer, destroy it.
+		Unit* unit = unitSprite->GetUnit();
+		DebugPrintf( "Erasing UnitSprite at Tile (%d,%d)!", unit->GetTileX(), unit->GetTileY() );
+		map->DestroyUnit( unit );
+	}
 }

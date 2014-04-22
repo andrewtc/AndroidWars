@@ -794,6 +794,12 @@ bool Unit::IsInactive() const
 }
 
 
+Map* Unit::GetMap() const
+{
+	return mMap;
+}
+
+
 std::string Unit::ToString() const
 {
 	std::stringstream formatter;

@@ -11,8 +11,6 @@ namespace mage
 		UnitSprite( MapView* mapView, Unit* unit );
 		~UnitSprite();
 
-		void Init();
-		void Destroy();
 		bool IsInitialized() const;
 
 		void Update( float elapsedTime );
@@ -27,13 +25,19 @@ namespace mage
 		Sprite* GetSprite() const;
 		RectF GetWorldBounds() const;
 
+		MapView* GetMapView() const;
+
 	private:
+		void Init();
+		void Destroy();
+
 		void OnOwnerColorChanged( const Color& color );
 		void OnUnitOwnerChanged( Faction* owner, Faction* formerOwner );
 		void OnUnitTeleport( const Map::Iterator& tile );
 		void OnUnitMove( const Path& path );
 		void OnUnitTakeDamage( int health, Unit* instigator );
 		void OnUnitHealthChanged( int health );
+		void OnUnitDestroyed();
 		void OnUnitActivate();
 		void OnUnitDeactivate();
 
@@ -48,5 +52,7 @@ namespace mage
 		MapView* mMapView;
 		Unit* mUnit;
 		Sprite* mSprite;
+
+		friend class MapView;
 	};
 }
