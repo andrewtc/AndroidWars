@@ -67,6 +67,7 @@ namespace mage
 		void TakeDamage( int damageAmount, Unit* instigator = nullptr );
 		void Die();
 		int GetHealth() const;
+		bool IsDamaged() const;
 		bool IsAlive() const;
 		bool IsDead() const;
 		float GetHealthScale() const;

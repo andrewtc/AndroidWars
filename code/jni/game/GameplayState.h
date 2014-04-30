@@ -5,6 +5,7 @@ namespace mage
 	class SelectUnitInputState;
 	class MoveUnitInputState;
 	class SelectActionInputState;
+	class SelectTargetInputState;
 
 	/**
 	 * Encapsulates all gameplay functionality.
@@ -25,6 +26,7 @@ namespace mage
 		SelectUnitInputState* GetSelectUnitInputState() const;
 		MoveUnitInputState* GetMoveUnitInputState() const;
 		SelectActionInputState* GetSelectActionInputState() const;
+		SelectTargetInputState* GetSelectTargetInputState() const;
 
 		Widget* GetGameplayInterface() const;
 
@@ -44,6 +46,7 @@ namespace mage
 		SelectUnitInputState* mSelectUnitInputState;
 		MoveUnitInputState* mMoveUnitInputState;
 		SelectActionInputState* mSelectActionInputState;
+		SelectTargetInputState* mSelectTargetInputState;
 		Scenario mScenario;
 		Game mGame;
 		Map mMap;

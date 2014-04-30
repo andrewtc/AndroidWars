@@ -36,6 +36,7 @@ namespace mage
 		TileSpritesGrid& GetTileSprites();
 		const TileSpritesGrid& GetTileSprites() const;
 
+		UnitSprite* GetUnitSpriteForUnit( Unit* unit ) const;
 		UnitSprite* GetUnitSpriteAtScreenCoords( float screenX, float screenY ) const;
 		UnitSprite* GetUnitSpriteAtScreenCoords( const Vec2f& screenCoords ) const;
 		UnitSprite* GetUnitSpriteAtWorldCoords( float worldX, float worldY ) const;
@@ -47,6 +48,11 @@ namespace mage
 		void DeselectUnitSprite();
 		UnitSprite* GetSelectedUnitSprite() const;
 		bool HasSelectedUnitSprite() const;
+
+		void TargetUnitSprite( UnitSprite* unitSprite );
+		void UntargetUnitSprite();
+		UnitSprite* GetTargetedUnitSprite() const;
+		bool HasTargetedUnitSprite() const;
 
 		const ArrowSprite& GetArrowSprite() const;
 		Path& GetSelectedUnitPath();
@@ -80,9 +86,11 @@ namespace mage
 
 		Map* mMap;
 		UnitSprite* mSelectedUnitSprite;
+		UnitSprite* mTargetedUnitSprite;
 		BitmapFont* mDefaultFont;
 		Camera mCamera;
 		Actions mSelectedUnitActions;
+		TargetSprite mTargetSprite;
 		ArrowSprite mArrowSprite;
 		UnitSprites mUnitSprites;
 		TileSpritesGrid mTileSprites;

@@ -55,4 +55,29 @@ namespace mage
 
 		friend class GameState;
 	};
+
+
+	class SelectTargetInputState : public DerivedInputState< GameplayState >
+	{
+		SelectTargetInputState( GameState* owner );
+		~SelectTargetInputState();
+
+		virtual void OnEnter( const Dictionary& parameters );
+		virtual void OnExit();
+
+		virtual bool OnPointerDown( const Pointer& pointer );
+
+		Unit* GetTargetForAction( const Action& action ) const;
+		UnitSprite* GetTargetUnitSpriteForAction( const Action& action ) const;
+		bool IsValidTarget( const Unit* unit ) const;
+
+		void OnConfirmButtonPressed();
+		void OnCancelButtonPressed();
+
+		ListLayout* mSelectionMenu;
+		HashString mActionType;
+		Actions mValidActions;
+
+		friend class GameState;
+	};
 }

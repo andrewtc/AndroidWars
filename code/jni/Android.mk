@@ -170,6 +170,7 @@ $(aw_game_path)/MapView.cpp \
 $(aw_game_path)/TileSprite.cpp \
 $(aw_game_path)/UnitSprite.cpp \
 $(aw_game_path)/ArrowSprite.cpp \
+$(aw_game_path)/TargetSprite.cpp \
 $(aw_editor_path)/EditorState.cpp \
 $(aw_editor_path)/EditorInputStates.cpp \
  ui/WidgetManager.cpp \

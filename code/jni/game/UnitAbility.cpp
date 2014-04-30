@@ -69,9 +69,6 @@ void UnitWaitAbility::ProcessAction( Action& action )
 
 		if( error == Dictionary::DErr_SUCCESS )
 		{
-			// Tell the Unit to move along the path.
-			Map* map = unit->GetMap();
-
 			// Make the Unit move.
 			ProcessMove( unit, path );
 
@@ -120,8 +117,12 @@ void UnitAttackAbility::DetermineAvailableActions( const Unit* unit, const Path&
 				if( unit->CanAttack( target ) )
 				{
 					// Add an attack action to the list of actions.
-					// TODO: Add important data.
 					Action attackAction( NAME );
+
+					attackAction.Parameters.Set( "unit", ( Unit* ) unit );
+					attackAction.Parameters.Set( "target", ( Unit* ) target );
+					attackAction.Parameters.Set( "path", Path( movementPath ) );
+
 					result.push_back( attackAction );
 				}
 			}
@@ -132,5 +133,57 @@ void UnitAttackAbility::DetermineAvailableActions( const Unit* unit, const Path&
 
 void UnitAttackAbility::ProcessAction( Action& action )
 {
-	// TODO
+	Dictionary::DictionaryError error;
+
+	// Get the Unit from the Action.
+	Unit* unit = nullptr;
+	error = action.Parameters.Get( "unit", unit );
+
+	if( error == Dictionary::DErr_SUCCESS )
+	{
+		// Get the target Unit from the Action.
+		Unit* target = nullptr;
+		error = action.Parameters.Get( "target", target );
+
+		if( error == Dictionary::DErr_SUCCESS )
+		{
+			// Get the Path from the Action.
+			Path path;
+			error = action.Parameters.Get( "path", path );
+
+			if( error == Dictionary::DErr_SUCCESS )
+			{
+				// Make the Unit move.
+				bool success = ProcessMove( unit, path );
+
+				if( success )
+				{
+					// Make the Unit attack the target.
+					unit->Attack( target );
+
+					if( target->IsAlive() )
+					{
+						// Allow the target to counter-attack the first Unit.
+						// TODO: Disallow for indirect fire Units.
+						target->Attack( unit );
+					}
+				}
+
+				// Deactivate the Unit.
+				unit->Deactivate();
+			}
+			else
+			{
+				WarnFail( "Could not process Action \"%s\" because no Path was specified!", action.Type.GetCString() );
+			}
+		}
+		else
+		{
+			WarnFail( "Could not process Action \"%s\" because no target Unit was specified!", action.Type.GetCString() );
+		}
+	}
+	else
+	{
+		WarnFail( "Could not process Action \"%s\" because no Unit was specified!", action.Type.GetCString() );
+	}
 }

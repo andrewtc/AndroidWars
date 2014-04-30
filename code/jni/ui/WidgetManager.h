@@ -143,7 +143,7 @@ namespace mage
 		}
 		else
 		{
-			WarnFail( "Could not create Widget from template because the template \"%s\" was not found!", name.GetCString() );
+			WarnFail( "Could not create Widget from template because the template \"%s\" was not found!", templateName.GetCString() );
 		}
 
 		return widget;

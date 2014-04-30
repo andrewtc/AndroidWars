@@ -314,9 +314,6 @@ void SelectActionInputState::OnExit()
 	GameplayState* owner = GetOwnerDerived();
 	MapView* mapView = owner->GetMapView();
 
-	// Deselect the currently selected UnitSprite.
-	mapView->DeselectUnitSprite();
-
 	if( mActionMenu )
 	{
 		// Hide the action menu Widget.
@@ -459,6 +456,9 @@ void SelectActionInputState::OnActionButtonPressed( const HashString& type )
 					WarnFail( "Could not perform Action \"%s\" because no Action was found in the list of available Actions for the selected Unit!", type.GetCString() );
 				}
 
+				// Deselect the currently selected UnitSprite.
+				mapView->DeselectUnitSprite();
+
 				// Exit the state.
 				// TODO: Separate InputState for Unit animation.
 				owner->ChangeState( owner->GetSelectUnitInputState() );
@@ -467,7 +467,12 @@ void SelectActionInputState::OnActionButtonPressed( const HashString& type )
 
 			case UnitAbility::TARGET_TYPE_SINGLE:
 			{
-				// TODO: Go to the InputState for selecting a target.
+				// Add the Action type to the dictionary.
+				Dictionary parameters;
+				parameters.Set( "actionType", HashString( type ) );
+
+				// Go to the InputState for selecting a target.
+				owner->ChangeState( owner->GetSelectTargetInputState(), parameters );
 			}
 			break;
 		}
@@ -484,6 +489,263 @@ void SelectActionInputState::OnCancelButtonPressed()
 	GameplayState* owner = GetOwnerDerived();
 	MapView* mapView = owner->GetMapView();
 
+	// Deselect the currently selected UnitSprite.
+	mapView->DeselectUnitSprite();
+
 	// Exit the state.
 	owner->ChangeState( owner->GetSelectUnitInputState() );
+}
+
+
+SelectTargetInputState::SelectTargetInputState( GameState* owner ) :
+	DerivedInputState( owner ),
+	mSelectionMenu( nullptr )
+{ }
+
+
+SelectTargetInputState::~SelectTargetInputState() { }
+
+
+void SelectTargetInputState::OnEnter( const Dictionary& parameters )
+{
+	GameplayState* owner = GetOwnerDerived();
+	MapView* mapView = owner->GetMapView();
+
+	// Get the type of Action to use for targeting.
+	Dictionary::DictionaryError error = parameters.Get( "actionType", mActionType );
+	assertion( error == Dictionary::DErr_SUCCESS, "Cannot enter SelectTargetInputState because no Action type was specified!" );
+
+	// Select all valid Actions for the selected UnitSprite.
+	Actions actions = mapView->GetAvailableActionsForSelectedUnit();
+
+	for( auto it = actions.begin(); it != actions.end(); ++it )
+	{
+		if( it->Type == mActionType )
+		{
+			mValidActions.push_back( *it );
+		}
+	}
+
+	if( actions.size() > 0 )
+	{
+		// Get the first valid Action.
+		const Action& action = mValidActions[ 0 ];
+
+		// Get the UnitSprite for the first Action and target it.
+		UnitSprite* unitSprite = GetTargetUnitSpriteForAction( action );
+
+		if( unitSprite )
+		{
+			mapView->TargetUnitSprite( unitSprite );
+		}
+		else
+		{
+			WarnFail( "No initial UnitSprite found!" );
+		}
+	}
+	else
+	{
+		WarnFail( "No valid Actions found of type \"%s\"!", mActionType.GetCString() );
+	}
+
+	// Create the selection menu.
+	// TODO: Display custom information about each action.
+	mSelectionMenu = gWidgetManager->CreateWidgetFromTemplate< ListLayout >( "Actions", "selectionMenu" );
+
+	if( mSelectionMenu )
+	{
+		// Display the selection menu.
+		gWidgetManager->GetRootWidget()->AddChild( mSelectionMenu );
+
+		// Build the selection menu.
+		WidgetTemplate* itemTemplate = gWidgetManager->GetTemplate( "ActionMenuButton" );
+
+		if( itemTemplate )
+		{
+			// Create the confirm button.
+			Button* confirmButton = mSelectionMenu->CreateItem< Button >( *itemTemplate );
+
+			if( confirmButton )
+			{
+				// If the button was created successfully, set the label and callback.
+				confirmButton->SetLabel( "Confirm" );
+				confirmButton->SetOnClickDelegate( Delegate< void >( this, &SelectTargetInputState::OnConfirmButtonPressed ) );
+			}
+			else
+			{
+				WarnFail( "Could not create item confirm button for selection menu!" );
+			}
+
+			// Create the cancel button.
+			Button* cancelButton = mSelectionMenu->CreateItem< Button >( *itemTemplate );
+
+			if( cancelButton )
+			{
+				// If the button was created successfully, set the label and callback.
+				cancelButton->SetLabel( "Cancel" );
+				cancelButton->SetOnClickDelegate( Delegate< void >( this, &SelectTargetInputState::OnCancelButtonPressed ) );
+			}
+			else
+			{
+				WarnFail( "Could not create item cancel button for selection menu!" );
+			}
+		}
+		else
+		{
+			WarnFail( "Could not build selection menu because the item template was not found!" );
+		}
+	}
+	else
+	{
+		WarnFail( "Could not create selection menu!" );
+	}
+}
+
+
+void SelectTargetInputState::OnExit()
+{
+	// Clear the list of Actions.
+	mValidActions.clear();
+
+	if( mSelectionMenu )
+	{
+		// Destroy the selection menu.
+		gWidgetManager->DestroyWidget( mSelectionMenu );
+	}
+}
+
+
+bool SelectTargetInputState::OnPointerDown( const Pointer& pointer )
+{
+	GameplayState* owner = GetOwnerDerived();
+	MapView* mapView = owner->GetMapView();
+
+	if( pointer.IsActivePointer() )
+	{
+		// Get the UnitSprite under the pointer (if any).
+		UnitSprite* unitSprite = mapView->GetUnitSpriteAtScreenCoords( pointer.position );
+
+		if( unitSprite && IsValidTarget( unitSprite->GetUnit() ) )
+		{
+			// If a valid UnitSprite was selected, target the UnitSprite.
+			mapView->TargetUnitSprite( unitSprite );
+		}
+	}
+
+	return false; //InputState::OnPointerDown( pointer );
+}
+
+
+Unit* SelectTargetInputState::GetTargetForAction( const Action& action ) const
+{
+	Unit* result = nullptr;
+
+	// Get the Unit for the specified Action.
+	action.Parameters.Get( "target", result );
+
+	if( !result )
+	{
+		WarnFail( "No Target specified for Action!" );
+	}
+
+	return result;
+}
+
+
+UnitSprite* SelectTargetInputState::GetTargetUnitSpriteForAction( const Action& action ) const
+{
+	UnitSprite* result = nullptr;
+
+	GameplayState* owner = GetOwnerDerived();
+	MapView* mapView = owner->GetMapView();
+
+	// Get the Unit for the specified Action.
+	Unit* target = GetTargetForAction( action );
+
+	if( target )
+	{
+		// Look up the UnitSprite for the Unit.
+		result = mapView->GetUnitSpriteForUnit( target );
+
+		if( !result )
+		{
+			WarnFail( "No UnitSprite found for target!" );
+		}
+	}
+
+	return result;
+}
+
+
+bool SelectTargetInputState::IsValidTarget( const Unit* unit ) const
+{
+	bool result = false;
+
+	for( auto it = mValidActions.begin(); it != mValidActions.end(); ++it )
+	{
+		const Action& action = *it;
+
+		if( GetTargetForAction( action ) == unit )
+		{
+			result = true;
+			break;
+		}
+	}
+
+	return result;
+}
+
+
+void SelectTargetInputState::OnConfirmButtonPressed()
+{
+	GameplayState* owner = GetOwnerDerived();
+	MapView* mapView = owner->GetMapView();
+	Map* map = mapView->GetMap();
+
+	// Get the currently targeted UnitSprite.
+	UnitSprite* targetSprite = mapView->GetTargetedUnitSprite();
+
+	if( targetSprite )
+	{
+		// Get the currently targeted Unit.
+		Unit* target = targetSprite->GetUnit();
+
+		for( auto it = mValidActions.begin(); it != mValidActions.end(); ++it )
+		{
+			Action& action = *it;
+
+			if( GetTargetForAction( action ) == target )
+			{
+				// Find the Action that targets the currently targeted Unit and perform it.
+				map->PerformAction( action );
+				break;
+			}
+		}
+	}
+	else
+	{
+		WarnFail( "Could not perform action because no target was selected!" );
+	}
+
+	// Untarget the currently targeted UnitSprite.
+	mapView->UntargetUnitSprite();
+
+	// Deselect the currently selected UnitSprite.
+	mapView->DeselectUnitSprite();
+
+	// Go back to UnitSelection.
+	owner->ChangeState( owner->GetSelectUnitInputState() );
+}
+
+
+void SelectTargetInputState::OnCancelButtonPressed()
+{
+	GameplayState* owner = GetOwnerDerived();
+	MapView* mapView = owner->GetMapView();
+
+	// Untarget the current target.
+	mapView->UntargetUnitSprite();
+
+	// Exit the state.
+	owner->ChangeState( owner->GetSelectActionInputState() );
 }

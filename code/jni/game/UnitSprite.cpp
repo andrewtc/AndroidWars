@@ -104,14 +104,17 @@ void UnitSprite::Update( float elapsedTime )
 
 void UnitSprite::Draw( const Camera& camera )
 {
-	// Draw the Sprite at the location of the Unit.
+	// Draw the Sprite.
 	mSprite->OnDraw( camera );
 
-	// Draw health.
-	BitmapFont* font = mMapView->GetDefaultFont();
-	Vec2f textPos = ( GetPosition() - camera.GetPosition() );
-	float height = ( mSprite->GetClippingRectForCurrentAnimation().Height() * 0.5f );
-	DrawTextFormat( textPos.x, textPos.y + height - font->GetLineHeight(), font, "%d", mUnit->GetHealth() );
+	if( mUnit->IsDamaged() )
+	{
+		// Draw health.
+		BitmapFont* font = mMapView->GetDefaultFont();
+		Vec2f textPos = ( GetPosition() - camera.GetPosition() );
+		float height = ( mSprite->GetClippingRectForCurrentAnimation().Height() * 0.5f );
+		DrawTextFormat( textPos.x, textPos.y + height - font->GetLineHeight(), font, "%d", mUnit->GetHealth() );
+	}
 }
 
 

@@ -9,6 +9,7 @@ GameplayState::GameplayState() :
 	mSelectUnitInputState( nullptr ),
 	mMoveUnitInputState( nullptr ),
 	mSelectActionInputState( nullptr ),
+	mSelectTargetInputState( nullptr ),
 	mGameplayInterface( nullptr )
 {
 	DebugPrintf( "GameplayState created!" );
@@ -214,6 +215,7 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 	mSelectUnitInputState = CreateState< SelectUnitInputState >();
 	mMoveUnitInputState = CreateState< MoveUnitInputState >();
 	mSelectActionInputState = CreateState< SelectActionInputState >();
+	mSelectTargetInputState = CreateState< SelectTargetInputState >();
 
 	// Start by letting the player select a Unit.
 	ChangeState( mSelectUnitInputState );
@@ -353,6 +355,12 @@ MoveUnitInputState* GameplayState::GetMoveUnitInputState() const
 SelectActionInputState* GameplayState::GetSelectActionInputState() const
 {
 	return mSelectActionInputState;
+}
+
+
+SelectTargetInputState* GameplayState::GetSelectTargetInputState() const
+{
+	return mSelectTargetInputState;
 }
 
 

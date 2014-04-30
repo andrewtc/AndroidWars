@@ -1084,7 +1084,8 @@ void Map::UnitMoved( Unit* unit, const Path& path )
 
 void Map::UnitDied( Unit* unit )
 {
-	// TODO
+	// Destroy the Unit.
+	DestroyUnit( unit );
 }
 
 

@@ -77,6 +77,7 @@ const size_t MAP_SIZE_POWER_OF_TWO = 10;
 #include "game/Map.h"
 #include "game/Faction.h"
 #include "game/TileSprite.h"
+#include "game/TargetSprite.h"
 #include "game/UnitSprite.h"
 #include "game/ArrowSprite.h"
 #include "game/MapView.h"

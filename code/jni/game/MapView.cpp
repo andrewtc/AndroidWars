@@ -12,7 +12,8 @@ MapView::MapView() :
 	mMap( nullptr ),
 	mDefaultFont( nullptr ),
 	mCamera( gWindowWidth, gWindowHeight ),
-	mSelectedUnitSprite( nullptr )
+	mSelectedUnitSprite( nullptr ),
+	mTargetedUnitSprite( nullptr )
 { }
 
 
@@ -99,6 +100,11 @@ void MapView::Update( float elapsedTime )
 		// Draw the arrow sprite (if necessary).
 		mArrowSprite.Update( elapsedTime );
 	}
+
+	if( mTargetSprite.IsInitialized() )
+	{
+		mTargetSprite.Update( elapsedTime );
+	}
 }
 
 
@@ -131,6 +137,12 @@ void MapView::Draw()
 	{
 		// Draw the selected Unit.
 		mSelectedUnitSprite->Draw( mCamera );
+	}
+
+	if( mTargetSprite.IsInitialized() )
+	{
+		// Draw the target over the targeted UnitSprite.
+		mTargetSprite.Draw( mCamera );
 	}
 }
 
@@ -238,9 +250,41 @@ void MapView::DestroyUnitSprite( UnitSprite* unitSprite )
 		}
 	}
 
+	if( mTargetedUnitSprite == unitSprite )
+	{
+		// If the targeted UnitSprite is destroyed, destroy the TargetSprite.
+		UntargetUnitSprite();
+	}
+
 	// Destroy the UnitSprite.
 	unitSprite->Destroy();
 	delete unitSprite;
+}
+
+
+UnitSprite* MapView::GetUnitSpriteForUnit( Unit* unit ) const
+{
+	UnitSprite* result = nullptr;
+
+	if( unit )
+	{
+		for( auto it = mUnitSprites.begin(); it != mUnitSprites.end(); ++it )
+		{
+			UnitSprite* unitSprite = *it;
+
+			if( unitSprite->GetUnit() == unit )
+			{
+				result = unitSprite;
+				break;
+			}
+		}
+	}
+	else
+	{
+		WarnFail( "Cannot get UnitSprite for null Unit!" );
+	}
+
+	return result;
 }
 
 
@@ -320,6 +364,48 @@ UnitSprite* MapView::GetSelectedUnitSprite() const
 bool MapView::HasSelectedUnitSprite() const
 {
 	return ( mSelectedUnitSprite != nullptr );
+}
+
+
+void MapView::TargetUnitSprite( UnitSprite* unitSprite )
+{
+	// Set the new targeted UnitSprite.
+	mTargetedUnitSprite = unitSprite;
+
+	if( mTargetedUnitSprite )
+	{
+		if( !mTargetSprite.IsInitialized() )
+		{
+			// Initialize the TargetSprite (if necessary).
+			mTargetSprite.Init();
+		}
+
+		// Update the position of the TargetSprite.
+		mTargetSprite.SetPosition( mTargetedUnitSprite->GetPosition() );
+	}
+	else if( mTargetSprite.IsInitialized() )
+	{
+		// If the current Unit is untargeted, destroy the TargetSprite.
+		mTargetSprite.Destroy();
+	}
+}
+
+
+void MapView::UntargetUnitSprite()
+{
+	TargetUnitSprite( nullptr );
+}
+
+
+UnitSprite* MapView::GetTargetedUnitSprite() const
+{
+	return mTargetedUnitSprite;
+}
+
+
+bool MapView::HasTargetedUnitSprite() const
+{
+	return ( mTargetedUnitSprite != nullptr );
 }
 
 

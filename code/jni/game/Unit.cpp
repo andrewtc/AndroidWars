@@ -70,6 +70,9 @@ void Unit::Destroy()
 	// Disassociate the Unit from its current Tile.
 	mTile = Map::Iterator();
 
+	// Notify the owner that the Unit died.
+	mOwner->UnitLost( this );
+
 	// Disassociate the Unit from the Map.
 	mMap = nullptr;
 }
@@ -679,6 +682,12 @@ void Unit::Die()
 int Unit::GetHealth() const
 {
 	return mHealth;
+}
+
+
+bool Unit::IsDamaged() const
+{
+	return ( mHealth < MAX_HEALTH );
 }
 
 
