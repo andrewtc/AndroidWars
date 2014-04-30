@@ -16,7 +16,6 @@ namespace mage
 		virtual ~MovementTypesTable();
 
 	protected:
-		virtual void OnLoadRecordFromXml( MovementType* movementType, XmlReader::XmlReaderIterator xmlIterator );
 		virtual void OnLoadRecordFromJSON( MovementType* movementType, const rapidjson::Value& object );
 	};
 }

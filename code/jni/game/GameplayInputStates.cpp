@@ -297,30 +297,11 @@ void SelectActionInputState::OnEnter( const Dictionary& parameters )
 
 	if( mActionMenu )
 	{
-		// Get the selected Unit.
-		UnitSprite* selectedUnitSprite = mapView->GetSelectedUnitSprite();
-		assertion( selectedUnitSprite, "Cannot display actions because no UnitSprite is selected!" );
-		Unit* unit = selectedUnitSprite->GetUnit();
+		// Determine the list of available actions for the selected Unit.
+		mapView->DetermineAvailableActionsForSelectedUnit();
 
-		// Clear any previous menu items.
-		mActionMenu->DestroyAllItems();
-
-		// Get the action menu button template.
-		WidgetTemplate* itemTemplate = gWidgetManager->GetTemplate( "ActionMenuButton" );
-
-		if( itemTemplate )
-		{
-			// Build a list of actions for the selected Unit.
-			Button* waitButton = CreateActionButton( *itemTemplate, "Wait" );
-			waitButton->SetOnClickDelegate( Button::OnClickDelegate( this, &SelectActionInputState::OnWaitButtonPressed ) );
-
-			Button* cancelButton = CreateActionButton( *itemTemplate, "Cancel" );
-			cancelButton->SetOnClickDelegate( Button::OnClickDelegate( this, &SelectActionInputState::OnCancelButtonPressed ) );
-		}
-		else
-		{
-			WarnFail( "Could not create item button template for action menu!" );
-		}
+		// Rebuild the menu of actions.
+		RebuildActionsMenu();
 
 		// Show the action menu Widget.
 		mActionMenu->Show();
@@ -344,6 +325,73 @@ void SelectActionInputState::OnExit()
 }
 
 
+void SelectActionInputState::RebuildActionsMenu()
+{
+	GameplayState* owner = GetOwnerDerived();
+	MapView* mapView = owner->GetMapView();
+
+	// Get the selected Unit.
+	UnitSprite* selectedUnitSprite = mapView->GetSelectedUnitSprite();
+	assertion( selectedUnitSprite, "Cannot display actions because no UnitSprite is selected!" );
+	Unit* unit = selectedUnitSprite->GetUnit();
+
+	if( mActionMenu )
+	{
+		// Clear any previous menu items.
+		mActionMenu->DestroyAllItems();
+
+		// Get the action menu button template.
+		WidgetTemplate* itemTemplate = gWidgetManager->GetTemplate( "ActionMenuButton" );
+
+		if( itemTemplate )
+		{
+			// Get the list of available Actions for this unit.
+			Actions actions = mapView->GetAvailableActionsForSelectedUnit();
+			std::set< HashString > uniqueActionTypes;
+
+			for( auto it = actions.begin(); it != actions.end(); ++it )
+			{
+				// Determine the list of unique actions for this Unit.
+				const Action& action = *it;
+				uniqueActionTypes.insert( action.Type );
+			}
+
+			for( auto it = uniqueActionTypes.begin(); it != uniqueActionTypes.end(); ++it )
+			{
+				// Add a button for each available Action.
+				const HashString& type = *it;
+				Button* actionButton = CreateActionButton( *itemTemplate, type.GetString() );
+
+				if( actionButton )
+				{
+					actionButton->SetOnClickDelegate( [ this, type ]()
+					{
+						// When the button is clicked, fire the action button event.
+						OnActionButtonPressed( type );
+					});
+				}
+			}
+
+			// Add the "Cancel" button.
+			Button* cancelButton = CreateActionButton( *itemTemplate, "Cancel" );
+
+			if( cancelButton )
+			{
+				cancelButton->SetOnClickDelegate( Button::OnClickDelegate( this, &SelectActionInputState::OnCancelButtonPressed ) );
+			}
+		}
+		else
+		{
+			WarnFail( "Could not create item button template for action menu!" );
+		}
+	}
+	else
+	{
+		WarnFail( "Could not rebuild actions menu because the menu Widget was not properly initialized!" );
+	}
+}
+
+
 Button* SelectActionInputState::CreateActionButton( WidgetTemplate& widgetTemplate, const std::string& label )
 {
 	// Create the button.
@@ -363,7 +411,7 @@ Button* SelectActionInputState::CreateActionButton( WidgetTemplate& widgetTempla
 }
 
 
-void SelectActionInputState::OnWaitButtonPressed()
+void SelectActionInputState::OnActionButtonPressed( const HashString& type )
 {
 	GameplayState* owner = GetOwnerDerived();
 	MapView* mapView = owner->GetMapView();
@@ -371,21 +419,62 @@ void SelectActionInputState::OnWaitButtonPressed()
 
 	// Get the currently selected Unit.
 	UnitSprite* selectedUnitSprite = mapView->GetSelectedUnitSprite();
-	assertion( selectedUnitSprite, "Cannot display actions because no UnitSprite is selected!" );
+	assertion( selectedUnitSprite, "Cannot select Action because no UnitSprite is selected!" );
 	Unit* unit = selectedUnitSprite->GetUnit();
 
-	// Get the destination Tile.
+	// Get the selected Path.
 	const Path& path = mapView->GetSelectedUnitPath();
-	Map::Iterator tile = map->GetTile( path.GetDestination() );
-	TerrainType* terrainType = tile->GetTerrainType();
 
-	if( tile->IsEmpty() )
+	// Get the list of actions for the selected Unit.
+	const Actions& actions = mapView->GetAvailableActionsForSelectedUnit();
+
+	// Look up the ability by its name.
+	UnitAbility* ability = map->GetUnitAbilityByName( type );
+
+	if( ability )
 	{
-		// If the Unit is not blocked by another friendly unit, move the selected Unit along the path.
-		unit->Move( path );
+		switch( ability->GetTargetType() )
+		{
+			case UnitAbility::TARGET_TYPE_NONE:
+			{
+				Actions::const_iterator it;
 
-		// Exit the state.
-		owner->ChangeState( owner->GetSelectUnitInputState() );
+				for( it = actions.begin(); it != actions.end(); ++it )
+				{
+					if( it->Type == type )
+					{
+						// Get the first Action in the list of actions.
+						break;
+					}
+				}
+
+				if( it != actions.end() )
+				{
+					// Perform the first Action of the specified type in the list.
+					Action action = *it;
+					map->PerformAction( action );
+				}
+				else
+				{
+					WarnFail( "Could not perform Action \"%s\" because no Action was found in the list of available Actions for the selected Unit!", type.GetCString() );
+				}
+
+				// Exit the state.
+				// TODO: Separate InputState for Unit animation.
+				owner->ChangeState( owner->GetSelectUnitInputState() );
+			}
+			break;
+
+			case UnitAbility::TARGET_TYPE_SINGLE:
+			{
+				// TODO: Go to the InputState for selecting a target.
+			}
+			break;
+		}
+	}
+	else
+	{
+		WarnFail( "Could not perform action \"%s\" because no Ability with that name was found!", type.GetCString() );
 	}
 }
 

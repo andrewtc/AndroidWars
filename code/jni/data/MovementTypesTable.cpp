@@ -16,23 +16,6 @@ MovementTypesTable::MovementTypesTable( Scenario* scenario )
 MovementTypesTable::~MovementTypesTable() { }
 
 
-void MovementTypesTable::OnLoadRecordFromXml( MovementType* movementType, XmlReader::XmlReaderIterator xmlIterator )
-{
-	// Read in the movement cost info for this movement type.
-	static const char* movementCostName = "MovementCost";
-
-	for( XmlReader::XmlReaderIterator movementCostIterator = xmlIterator.NextChild( movementCostName );
-		 movementCostIterator.IsValid(); movementCostIterator = movementCostIterator.NextSibling( movementCostName ) )
-	{
-		HashString movementTypeName = movementCostIterator.GetAttributeAsString( "terrainType" );
-		int movementCost = movementCostIterator.GetAttributeAsInt( "cost" );
-
-		movementType->AddMovementCost( movementTypeName, movementCost );
-		DebugPrintf( "Found movement cost of %d over terrain \"%s\".", movementCost, movementTypeName.GetString().c_str() );
-	}
-}
-
-
 void MovementTypesTable::OnLoadRecordFromJSON( MovementType* movementType, const rapidjson::Value& object )
 {
 	if( object.HasMember( MOVEMENT_COSTS_JSON_PROPERTY_NAME ) )

@@ -21,7 +21,6 @@ namespace mage
 		bool LoadDataFromFile( const char* filePath );
 		void LoadDataFromString( const std::string& data );
 		void LoadDataFromString( const char* data );
-		void LoadDataFromXML( XmlReader::XmlReaderIterator rootIterator );
 		void LoadDataFromJSON( const rapidjson::Value& object );
 		void ClearData();
 

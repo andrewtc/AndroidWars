@@ -18,9 +18,7 @@ namespace mage
 		virtual ~UnitTypesTable();
 
 	protected:
-		virtual void OnLoadRecordFromXml( UnitType* unitType, XmlReader::XmlReaderIterator xmlIterator );
 		virtual void OnLoadRecordFromJSON( UnitType* unitType, const rapidjson::Value& object );
-		void LoadWeaponFromXml( Weapon& weapon, XmlReader::XmlReaderIterator xmlIterator );
 		void LoadWeaponFromJSON( Weapon& weapon, const rapidjson::Value& object );
 	};
 }

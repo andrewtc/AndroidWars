@@ -51,6 +51,8 @@ namespace mage
 		const ArrowSprite& GetArrowSprite() const;
 		Path& GetSelectedUnitPath();
 		const Path& GetSelectedUnitPath() const;
+		void DetermineAvailableActionsForSelectedUnit();
+		const Actions& GetAvailableActionsForSelectedUnit() const;
 
 		Vec2f WorldToScreenCoords( const Vec2f& worldCoords ) const;
 		Vec2f WorldToScreenCoords( float worldX, float worldY ) const;
@@ -80,6 +82,7 @@ namespace mage
 		UnitSprite* mSelectedUnitSprite;
 		BitmapFont* mDefaultFont;
 		Camera mCamera;
+		Actions mSelectedUnitActions;
 		ArrowSprite mArrowSprite;
 		UnitSprites mUnitSprites;
 		TileSpritesGrid mTileSprites;

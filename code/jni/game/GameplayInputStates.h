@@ -45,9 +45,10 @@ namespace mage
 		virtual void OnEnter( const Dictionary& parameters );
 		virtual void OnExit();
 
+		void RebuildActionsMenu();
 		Button* CreateActionButton( WidgetTemplate& widgetTemplate, const std::string& label );
 
-		void OnWaitButtonPressed();
+		void OnActionButtonPressed( const HashString& actionType );
 		void OnCancelButtonPressed();
 
 		ListLayout* mActionMenu;

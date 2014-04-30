@@ -60,7 +60,6 @@ namespace mage
 
 		virtual ~Table();
 
-		void LoadRecordsFromXML( XmlReader::XmlReaderIterator rootIterator );
 		void LoadRecordsFromJSON( const rapidjson::Value& object );
 		RecordType* CreateRecord( const HashString& name );
 		void AddRecord( RecordType* record );
@@ -77,7 +76,6 @@ namespace mage
 	protected:
 		Table( Scenario* scenario );
 
-		virtual void OnLoadRecordFromXml( RecordType* record, XmlReader::XmlReaderIterator elementIterator ) = 0;
 		virtual void OnLoadRecordFromJSON( RecordType* record, const rapidjson::Value& object ) = 0;
 
 		Scenario* mScenario;
@@ -95,39 +93,6 @@ namespace mage
 
 	MAGE_TABLE_TEMPLATE
 	MAGE_TABLE::~Table() { }
-
-
-	MAGE_TABLE_TEMPLATE
-	void MAGE_TABLE::LoadRecordsFromXML( XmlReader::XmlReaderIterator rootIterator )
-	{
-		assertion( rootIterator.IsValid(), "Could not load records from XML because iterator is invalid!" );
-
-		// Search for the container element for this table.
-		XmlReader::XmlReaderIterator outerIterator = rootIterator.NextChild( TABLE_NAME );
-		assertion( outerIterator.IsValid(), "Could not load %s records from XML because no \"<%s>\" element was found!", RECORD_NAME, TABLE_NAME );
-
-		// Go to the first XML element in the file.
-		XmlReader::XmlReaderIterator elementIterator = outerIterator.NextChild( RECORD_NAME );
-
-		while( elementIterator.IsValid() )
-		{
-			// Get the name of the element.
-			HashString name = elementIterator.GetAttributeAsString( "name" );
-
-			// Create a new record with the name.
-			RecordType* record = CreateRecord( name );
-
-			if( record )
-			{
-				// Load the record properties.
-				DebugPrintf( "Loading %s \"%s\".", RECORD_NAME, name.GetString().c_str() );
-				OnLoadRecordFromXml( record, elementIterator );
-			}
-
-			// Go to the next XML element in the file.
-			elementIterator = elementIterator.NextSibling( RECORD_NAME );
-		}
-	}
 
 
 	MAGE_TABLE_TEMPLATE

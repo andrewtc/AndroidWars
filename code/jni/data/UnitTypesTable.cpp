@@ -17,44 +17,6 @@ UnitTypesTable::UnitTypesTable( Scenario* scenario )
 UnitTypesTable::~UnitTypesTable() { }
 
 
-void UnitTypesTable::OnLoadRecordFromXml( UnitType* unitType, XmlReader::XmlReaderIterator xmlIterator )
-{
-	// Read in the sprite for this UnitType and pre-load it.
-	unitType->mAnimationSetPath = Scenario::FormatAnimationPath( xmlIterator.GetAttributeAsString( "animationSet" ) );
-	unitType->mAnimationSetName = Scenario::FormatAnimationName( xmlIterator.GetAttributeAsString( "animationSet" ) );
-	unitType->LoadAnimation();
-
-	// Read in the unit display name (if it exists).
-	unitType->mDisplayName = xmlIterator.GetAttributeAsString( "displayName", "" );
-
-	// Read in unit gameplay properties.
-	unitType->mMovementRange    = xmlIterator.GetAttributeAsInt( "movementRange", 0 );
-	unitType->mMovementTypeName = xmlIterator.GetAttributeAsString( "movementType" );
-	unitType->mAttackRange      = xmlIterator.GetAttributeAsIntRange( "attackRange" );
-	unitType->mMaxAmmo          = xmlIterator.GetAttributeAsInt( "ammo", 0 );
-	unitType->mMaxSupplies      = xmlIterator.GetAttributeAsInt( "supplies", UnitType::DEFAULT_MAX_SUPPLIES );
-
-	// Read in all weapon data.
-	XmlReader::XmlReaderIterator weaponsElement = xmlIterator.NextChild( "Weapons" );
-
-	if( weaponsElement.IsValid() )
-	{
-		for( auto weaponIterator = weaponsElement.NextChild( "Weapon" );
-			 weaponIterator.IsValid(); weaponIterator = weaponIterator.NextSibling( "Weapon" ) )
-		{
-			// Grab the name from the XML element.
-			HashString weaponName = weaponIterator.GetAttributeAsString( "name" );
-			assertion( !weaponName.GetString().empty(), "Cannot create Weapon for %s without a valid name!", unitType->ToString() );
-
-			// Load all weapon data.
-			Weapon weapon( weaponName );
-			LoadWeaponFromXml( weapon, weaponIterator );
-			unitType->AddWeapon( weapon );
-		}
-	}
-}
-
-
 void UnitTypesTable::OnLoadRecordFromJSON( UnitType* unitType, const rapidjson::Value& object )
 {
 	// Read in the sprite for this UnitType and pre-load it.
@@ -110,28 +72,6 @@ void UnitTypesTable::OnLoadRecordFromJSON( UnitType* unitType, const rapidjson::
 		{
 			WarnFail( "Could not parse Weapons for %s because the JSON value \"%s\" is not an array!", unitType->ToString(), WEAPONS_JSON_PROPERTY_NAME );
 		}
-	}
-}
-
-
-void UnitTypesTable::LoadWeaponFromXml( Weapon& weapon, XmlReader::XmlReaderIterator xmlIterator )
-{
-	// Load properties.
-	weapon.mDisplayName = xmlIterator.GetAttributeAsString( "displayName", "" );
-	weapon.mAmmoPerShot = xmlIterator.GetAttributeAsInt( "ammoPerShot", 0 );
-
-	DebugPrintf( "Loaded weapon %s (%s ammo)", weapon.GetName().GetCString(), ( weapon.ConsumesAmmo() ? "uses" : "does not use" ) );
-
-	for( auto damageIterator = xmlIterator.NextChild( "Damage" );
-		 damageIterator.IsValid(); damageIterator = damageIterator.NextSibling( "Damage" ) )
-	{
-		// Load all damage information.
-		HashString unitTypeName = damageIterator.GetAttributeAsString( "unitType" );
-		int damagePercentage = damageIterator.GetAttributeAsInt( "percentage", 0 );
-
-		DebugPrintf( "Damage against \"%s\": %d%%", unitTypeName.GetString().c_str(), damagePercentage );
-
-		weapon.SetDamagePercentageAgainstUnitType( unitTypeName, damagePercentage );
 	}
 }
 

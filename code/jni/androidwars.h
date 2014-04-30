@@ -72,6 +72,8 @@ const size_t MAP_SIZE_POWER_OF_TWO = 10;
 #include "data/Scenario.h"
 
 #include "game/Path.h"
+#include "game/Action.h"
+#include "game/UnitAbility.h"
 #include "game/Map.h"
 #include "game/Faction.h"
 #include "game/TileSprite.h"

@@ -341,6 +341,30 @@ const Path& MapView::GetSelectedUnitPath() const
 }
 
 
+void MapView::DetermineAvailableActionsForSelectedUnit()
+{
+	if( mSelectedUnitSprite )
+	{
+		// Get the selected Unit and Path.
+		Unit* unit = mSelectedUnitSprite->GetUnit();
+		const Path& path = mArrowSprite.GetPath();
+
+		// Determine the available actions for the selected Unit and store them for later use.
+		mMap->DetermineAvailableActions( unit, path, mSelectedUnitActions );
+	}
+	else
+	{
+		WarnFail( "Could not determine available actions for selected Unit because no UnitSprite is selected!" );
+	}
+}
+
+
+const Actions& MapView::GetAvailableActionsForSelectedUnit() const
+{
+	return mSelectedUnitActions;
+}
+
+
 Vec2f MapView::WorldToScreenCoords( const Vec2f& worldCoords ) const
 {
 	return WorldToScreenCoords( worldCoords.x, worldCoords.y );

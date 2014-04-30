@@ -228,6 +228,11 @@ void Map::Init( Scenario* scenario )
 	assertion( scenario, "Cannot initialize Map without a valid Scenario!" );
 	mScenario = scenario;
 
+	// Add a UnitAbility for each ability supported by the Scenario.
+	// TODO: Make this come from the Scenario itself.
+	RegisterUnitAbility< UnitAttackAbility >();
+	RegisterUnitAbility< UnitWaitAbility >();
+
 	// Make sure the size of the map is valid.
 	assertion( IsValid(), "Cannot initialize Map with invalid size (%d,%d)!", GetWidth(), GetHeight() );
 
@@ -540,6 +545,26 @@ void Map::DestroyFaction( Faction* faction )
 }
 
 
+bool Map::AreFriends( const Faction* first, const Faction* second ) const
+{
+	bool result = false;
+
+	if( first && second )
+	{
+		// TODO: Support alliances.
+		result = ( first == second );
+	}
+
+	return result;
+}
+
+
+bool Map::AreEnemies( const Faction* first, const Faction* second ) const
+{
+	return !AreFriends( first, second );
+}
+
+
 Unit* Map::CreateUnit( UnitType* unitType, Faction* owner, short tileX, short tileY, int health, int ammo, int supplies )
 {
 	return CreateUnit( unitType, owner, Vec2s( tileX, tileY ) );
@@ -640,6 +665,53 @@ void Map::ForEachUnit( ForEachConstUnitCallback callback ) const
 	}
 }
 
+
+UnitAbility* Map::GetUnitAbilityByName( const HashString& name ) const
+{
+	UnitAbility* result = nullptr;
+
+	// Look up the ability by name.
+	auto it = mUnitAbilitiesByName.find( name );
+
+	if( it != mUnitAbilitiesByName.end() )
+	{
+		result = it->second;
+	}
+
+	return result;
+}
+
+
+void Map::DetermineAvailableActions( const Unit* unit, const Path& movementPath, Actions& result )
+{
+	// Clear the list of results.
+	result.clear();
+
+	for( auto it = mUnitAbilitiesByName.begin(); it != mUnitAbilitiesByName.end(); ++it )
+	{
+		// Ask each UnitAbility for a list of possible actions after the Unit moves along the path.
+		UnitAbility* ability = it->second;
+		ability->DetermineAvailableActions( unit, movementPath, result );
+	}
+}
+
+
+void Map::PerformAction( Action& action )
+{
+	// Find the UnitAbility to activate for the specified Action.
+	auto it = mUnitAbilitiesByName.find( action.Type );
+
+	if( it != mUnitAbilitiesByName.end() )
+	{
+		// If a UnitAbility was found that can process the Action, activate the ability.
+		UnitAbility* ability = it->second;
+		ability->ProcessAction( action );
+	}
+	else
+	{
+		WarnFail( "Cannot perform Action \"%s\" because no UnitAbility was found that can process the Action!", action.Type.GetCString() );
+	}
+}
 
 
 void Map::FindReachableTiles( const Unit* unit, TileSet& result )
@@ -842,6 +914,85 @@ void Map::FindBestPathToTile( const Unit* unit, const Vec2s& tilePos, Path& resu
 }
 
 
+void Map::FindTilesInRange( const Vec2s& tilePos, const IntRange& range, Tiles& result )
+{
+	DebugPrintf( "Finding tiles in range {%d-%d} from Tile (%d,%d)...", range.Min, range.Max, tilePos.x, tilePos.y );
+
+	// Clear the result list.
+	result.clear();
+
+	// Clear the open list.
+	mOpenList.clear();
+
+	// Reserve the next search index.
+	int searchIndex = ReserveSearchIndex();
+
+	// Get the initial Tile.
+	Iterator initialTile = GetTile( tilePos );
+
+	if( initialTile.IsValid() )
+	{
+		// Flood-fill outward from the starting Tile.
+		mOpenList.insert( 0, initialTile );
+		initialTile->Open( searchIndex );
+	}
+
+	while( !mOpenList.isEmpty() )
+	{
+		// Get the next Tile and close it.
+		Iterator tile = mOpenList.popMinElement();
+		tile->Close( searchIndex );
+
+		// Get the distance from the start Tile.
+		short distanceFromTile = tilePos.GetManhattanDistanceTo( tile.GetPosition() );
+
+		if( distanceFromTile >= range.Min && distanceFromTile <= range.Max )
+		{
+			// If the Tile is within the ranges specified, add it to the result list.
+			result.push_back( tile );
+			DebugPrintf( "Tile (%d,%d) is in range!", tile.GetX(), tile.GetY() );
+		}
+
+		if( distanceFromTile < range.Max )
+		{
+			tile.ForEachAdjacent( [ this, searchIndex, distanceFromTile ]( Iterator adjacent )
+			{
+				if( adjacent.IsValid() && !adjacent->IsOpen( searchIndex ) && !adjacent->IsClosed( searchIndex ) )
+				{
+					// If the tile distance is less than the maximum range, open all valid adjacent tiles.
+					mOpenList.insert( distanceFromTile + 1, adjacent );
+					adjacent->Open( searchIndex );
+				}
+			});
+		}
+	}
+}
+
+
+void Map::FindUnitsInRange( const Vec2s& tilePos, const IntRange& range, Units& result )
+{
+	// Clear the result.
+	result.clear();
+
+	// Find all tiles in range of the specified position.
+	Tiles tilesInRange;
+	FindTilesInRange( tilePos, range, tilesInRange );
+
+	for( auto it = tilesInRange.begin(); it != tilesInRange.end(); ++it )
+	{
+		// Get the Unit at each Tile in range (if any).
+		Iterator tile = *it;
+		Unit* unitAtTile = tile->GetUnit();
+
+		if( unitAtTile )
+		{
+			// If any selected Tiles contain a Unit, add the Unit to the list.
+			result.push_back( unitAtTile );
+		}
+	}
+}
+
+
 const Map::Units& Map::GetUnits() const
 {
 	return mUnits;
@@ -935,3 +1086,16 @@ void Map::UnitDied( Unit* unit )
 {
 	// TODO
 }
+
+
+void Map::UnregisterAllUnitAbilities()
+{
+	for( auto it = mUnitAbilitiesByName.begin(); it != mUnitAbilitiesByName.end(); ++it )
+	{
+		UnitAbility* ability = it->second;
+		delete ability;
+	}
+
+	mUnitAbilitiesByName.clear();
+}
+

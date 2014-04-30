@@ -257,6 +257,7 @@
             "movementRange": 3,
             "attackRange":   "1~1",
             "cost":          100,
+            "abilities":     [ "attack", "capture" ],
             "weapons":
             [
                 {
@@ -287,6 +288,7 @@
             "attackRange":   "1~1",
             "ammo":          3,
             "cost":          250,
+            "abilities":     [ "attack", "capture" ],
             "weapons":
             [
                 {
@@ -331,7 +333,8 @@
             "movementRange": 6,
             "supplies":      50,
             "attackRange":   "1~1",
-            "cost":          400
+            "cost":          400,
+            "abilities":     [ "attack" ]
         },
         {
             "name":          "APC",
@@ -340,7 +343,8 @@
             "movementRange": 6,
             "supplies":      50,
             "attackRange":   "1~1",
-            "cost":          500
+            "cost":          500,
+            "abilities":     [ "load", "supply" ]
         },
         {
             "name":          "Artillery",
@@ -349,7 +353,8 @@
             "movementRange": 6,
             "supplies":      50,
             "attackRange":   "1~1",
-            "cost":          600
+            "cost":          600,
+            "abilities":     [ "attack" ]
         },
         {
             "name":          "AntiAir",
@@ -358,7 +363,8 @@
             "movementRange": 6,
             "supplies":      50,
             "attackRange":   "1~1",
-            "cost":          700
+            "cost":          700,
+            "abilities":     [ "attack" ]
         },
         {
             "name":          "Tank",
@@ -367,7 +373,44 @@
             "movementRange": 6,
             "supplies":      50,
             "attackRange":   "1~1",
-            "cost":          800
+            "cost":          800,
+            "abilities":     [ "attack" ],
+            "weapons":
+            [
+                {
+                    "name":        "Cannon",
+                    "ammoPerShot": 0,
+                    "damage":
+                    [
+                        { "unitType": "Recon",      "percentage": 85 },
+                        { "unitType": "APC",        "percentage": 75 },
+                        { "unitType": "Artillery",  "percentage": 70 },
+                        { "unitType": "Tank",       "percentage": 55 },
+                        { "unitType": "AntiAir",    "percentage": 65 },
+                        { "unitType": "Missiles",   "percentage": 85 },
+                        { "unitType": "Rockets",    "percentage": 85 },
+                        { "unitType": "MediumTank", "percentage": 15 }
+                    ]
+                },
+                {
+                    "name":        "MachineGun",
+                    "displayName": "Machine Gun",
+                    "ammoPerShot": 0,
+                    "damage":
+                    [
+                        { "unitType": "Infantry",   "percentage": 75 },
+                        { "unitType": "AntiTank",   "percentage": 70 },
+                        { "unitType": "Recon",      "percentage": 40 },
+                        { "unitType": "APC",        "percentage": 45 },
+                        { "unitType": "Artillery",  "percentage": 45 },
+                        { "unitType": "Tank",       "percentage": 6  },
+                        { "unitType": "AntiAir",    "percentage": 5  },
+                        { "unitType": "Missiles",   "percentage": 30 },
+                        { "unitType": "Rockets",    "percentage": 55 },
+                        { "unitType": "MediumTank", "percentage": 1  }
+                    ]
+                }
+            ]
         },
         {
             "name":          "Missiles",
@@ -376,7 +419,8 @@
             "movementRange": 6,
             "supplies":      50,
             "attackRange":   "1~1",
-            "cost":          1000
+            "cost":          1000,
+            "abilities":     [ "attack" ]
         },
         {
             "name":          "Rockets",
@@ -385,7 +429,8 @@
             "movementRange": 6,
             "supplies":      50,
             "attackRange":   "1~1",
-            "cost":          1200
+            "cost":          1200,
+            "abilities":     [ "attack" ]
         },
         {
             "name":          "MediumTank",
@@ -396,6 +441,7 @@
             "supplies":      50,
             "attackRange":   "1~1",
             "cost":          1500,
+            "abilities":     [ "attack" ],
             "weapons":
             [
                 {

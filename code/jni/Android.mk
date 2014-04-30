@@ -160,6 +160,7 @@ $(aw_data_path)/MovementTypesTable.cpp \
 $(aw_data_path)/Scenario.cpp \
 $(aw_game_path)/GameplayState.cpp \
 $(aw_game_path)/GameplayInputStates.cpp \
+$(aw_game_path)/UnitAbility.cpp \
 $(aw_game_path)/Game.cpp \
 $(aw_game_path)/Player.cpp \
 $(aw_game_path)/Faction.cpp \

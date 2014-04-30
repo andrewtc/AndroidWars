@@ -240,8 +240,38 @@ bool StringUtil::ParseColor( const std::string& string, const Color& defaultValu
 //---------------------------------------
 bool StringUtil::ParseIntRange( const std::string& string, const IntRange& defaultValue, IntRange& result )
 {
-	// TODO
-	return false;
+	bool success = false;
+	IntRange value;
+
+	// Tokenize the string.
+	std::vector< std::string > tokens;
+	StringUtil::Tokenize( string, tokens, "~" );
+
+	if( tokens.size() > 0 )
+	{
+		// Parse the first value of the range.
+		success = StringUtil::StringToType( tokens[ 0 ], &value.Min );
+
+		if( success )
+		{
+			if( tokens.size() > 1 )
+			{
+				// Parse the second value of the range.
+				success = StringUtil::StringToType( tokens[ 1 ], &value.Max );
+			}
+			else
+			{
+				// If only one number was found, parse it and set the min and max range to the same value.
+				result.Max = result.Min;
+			}
+		}
+	}
+
+	// If the parse was successful, return the value in the out parameter.
+	// Otherwise, return the default value.
+	result = ( success ? value : defaultValue );
+
+	return success;
 }
 //---------------------------------------
 bool StringUtil::ParseFloatRange( const std::string& string, const FloatRange& defaultValue, FloatRange& result )

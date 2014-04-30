@@ -259,7 +259,7 @@ bool Unit::CanMoveAcrossTerrain( TerrainType* terrainType ) const
 }
 
 
-bool Unit::CanEnterTile( const Map::Iterator& tile ) const
+bool Unit::CanEnterTile( const Map::ConstIterator& tile ) const
 {
 	bool result = false;
 
@@ -274,6 +274,12 @@ bool Unit::CanEnterTile( const Map::Iterator& tile ) const
 	}
 
 	return result;
+}
+
+
+bool Unit::CanOccupyTile( const Map::ConstIterator& tile ) const
+{
+	return ( tile.IsValid() && CanEnterTile( tile ) && ( tile->IsEmpty() || tile->GetUnit() == this ) );
 }
 
 
@@ -374,11 +380,15 @@ bool Unit::CanAttack( const Unit* target ) const
 	bool isAlive = IsAlive();
 	DebugPrintf( "%s is %s.", ToString().c_str(), ( isAlive ? "ALIVE" : "DEAD" ) );
 
+	// Make sure this Unit is an enemy.
+	bool isEnemy = mMap->AreEnemies( mOwner, target->GetOwner() );
+	DebugPrintf( "%s %s an enemy.", target->ToString().c_str(), ( isEnemy ? "IS" : "IS NOT" ) );
+
 	// Check whether this Unit can target the other Unit.
 	bool canTarget = CanTarget( target );
 	DebugPrintf( "%s %s target %s.", ToString().c_str(), ( canTarget ? "CAN" : "CANNOT" ), target->ToString().c_str() );
 
-	bool result = ( isAlive && canTarget );
+	bool result = ( isAlive && isEnemy && canTarget );
 	DebugPrintf( "RESULT: %s %s attack %s.", ToString().c_str(), ( result ? "CAN" : "CANNOT" ), target->ToString().c_str() );
 
 	return result;

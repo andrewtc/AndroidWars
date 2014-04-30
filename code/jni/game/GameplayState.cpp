@@ -45,6 +45,108 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 	mMap.Resize( 16, 12 );
 	mMap.FillWithDefaultTerrainType();
 
+	// Hacky map generation stuff (for testing).
+	// TODO: Remove this.
+	Tile tile;
+	RectS area;
+
+	TerrainType* seaTerrainType  = mScenario.TerrainTypes.FindByName( "Sea" );
+	TerrainType* roadTerrainType = mScenario.TerrainTypes.FindByName( "Road" );
+	TerrainType* cityTerrainType = mScenario.TerrainTypes.FindByName( "City" );
+
+	tile.SetTerrainType( seaTerrainType );
+	area.Left = 6;
+	area.Top = 0;
+	area.Right = 10;
+	area.Bottom = 5;
+	mMap.Fill( tile, area );
+
+	area.Left = 6;
+	area.Top = 7;
+	area.Right = 10;
+	area.Bottom = 12;
+	mMap.Fill( tile, area );
+
+	area.Left = 0;
+	area.Top = 4;
+	area.Right = 2;
+	area.Bottom = 8;
+	mMap.Fill( tile, area );
+
+	area.Left = 14;
+	area.Top = 4;
+	area.Right = 16;
+	area.Bottom = 8;
+	mMap.Fill( tile, area );
+
+	tile.SetTerrainType( roadTerrainType );
+	area.Left = 0;
+	area.Top = 3;
+	area.Right = 16;
+	area.Bottom = 4;
+	mMap.Fill( tile, area );
+
+	area.Left = 0;
+	area.Top = 8;
+	area.Right = 16;
+	area.Bottom = 9;
+	mMap.Fill( tile, area );
+
+	area.Left = 2;
+	area.Top = 0;
+	area.Right = 3;
+	area.Bottom = 12;
+	mMap.Fill( tile, area );
+
+	area.Left = 13;
+	area.Top = 0;
+	area.Right = 14;
+	area.Bottom = 12;
+	mMap.Fill( tile, area );
+
+	tile.SetTerrainType( cityTerrainType );
+	area.Left = 5;
+	area.Top = 5;
+	area.Right = 6;
+	area.Bottom = 7;
+	mMap.Fill( tile, area );
+
+	area.Left = 10;
+	area.Top = 5;
+	area.Right = 11;
+	area.Bottom = 7;
+	mMap.Fill( tile, area );
+
+	area.Left = 3;
+	area.Top = 2;
+	area.Right = 5;
+	area.Bottom = 3;
+	mMap.Fill( tile, area );
+
+	area.Left = 11;
+	area.Top = 2;
+	area.Right = 13;
+	area.Bottom = 3;
+	mMap.Fill( tile, area );
+
+	area.Left = 3;
+	area.Top = 9;
+	area.Right = 5;
+	area.Bottom = 10;
+	mMap.Fill( tile, area );
+
+	area.Left = 11;
+	area.Top = 9;
+	area.Right = 13;
+	area.Bottom = 10;
+	mMap.Fill( tile, area );
+
+	area.Left = 7;
+	area.Top = 5;
+	area.Right = 9;
+	area.Bottom = 7;
+	mMap.Fill( tile, area );
+
 	// Create Factions.
 	Faction* redFaction = mMap.CreateFaction();
 	redFaction->SetControllable( true );

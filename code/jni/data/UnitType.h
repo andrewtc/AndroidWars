@@ -17,6 +17,7 @@ namespace mage
 
 		void AddWeapon( const Weapon& weapon );
 		int GetNumWeapons() const;
+		bool HasWeapons() const;
 		Weapon& GetWeaponByIndex( int index );
 		const Weapon& GetWeaponByIndex( int index ) const;
 
@@ -56,6 +57,12 @@ namespace mage
 	inline int UnitType::GetNumWeapons() const
 	{
 		return (int) mWeapons.size();
+	}
+
+
+	inline bool UnitType::HasWeapons() const
+	{
+		return ( mWeapons.size() > 0 );
 	}
 
 

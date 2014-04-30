@@ -26,10 +26,10 @@ std::string Scenario::FormatAnimationName( const std::string& animationName )
 }
 
 
-Scenario::Scenario()
-	: TerrainTypes( this )
-	, UnitTypes( this )
-	, MovementTypes( this )
+Scenario::Scenario():
+	TerrainTypes( this ),
+	UnitTypes( this ),
+	MovementTypes( this )
 { }
 
 
@@ -125,15 +125,6 @@ void Scenario::LoadDataFromString( const char* data )
 
 		WarnFail( "Error parsing Scenario JSON data at line %d, column %d: %s", line, column, document.GetParseError() );
 	}
-}
-
-
-void Scenario::LoadDataFromXML( XmlReader::XmlReaderIterator rootIterator )
-{
-	// Load all game data.
-	TerrainTypes.LoadRecordsFromXML( rootIterator );
-	UnitTypes.LoadRecordsFromXML( rootIterator );
-	MovementTypes.LoadRecordsFromXML( rootIterator );
 }
 
 
