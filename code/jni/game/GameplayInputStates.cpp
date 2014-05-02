@@ -349,8 +349,8 @@ void SelectActionInputState::RebuildActionsMenu()
 			for( auto it = actions.begin(); it != actions.end(); ++it )
 			{
 				// Determine the list of unique actions for this Unit.
-				const Action& action = *it;
-				uniqueActionTypes.insert( action.Type );
+				Ability::Action* action = *it;
+				uniqueActionTypes.insert( action->GetType() );
 			}
 
 			for( auto it = uniqueActionTypes.begin(); it != uniqueActionTypes.end(); ++it )
@@ -426,55 +426,54 @@ void SelectActionInputState::OnActionButtonPressed( const HashString& type )
 	const Actions& actions = mapView->GetAvailableActionsForSelectedUnit();
 
 	// Look up the ability by its name.
-	UnitAbility* ability = map->GetUnitAbilityByName( type );
+	Ability* ability = map->GetAbilityByType( type );
 
 	if( ability )
 	{
-		switch( ability->GetTargetType() )
+		// See if the ability targets a single Unit.
+		SingleTargetComponent* singleTargetAbility = dynamic_cast< SingleTargetComponent* >( ability );
+
+		if( singleTargetAbility )
 		{
-			case UnitAbility::TARGET_TYPE_NONE:
+			// Add the Action type to the dictionary.
+			Dictionary parameters;
+			parameters.Set( "actionType", HashString( type ) );
+
+			// Go to the InputState for selecting a target.
+			owner->ChangeState( owner->GetSelectTargetInputState(), parameters );
+		}
+		else
+		{
+			Actions::const_iterator it;
+
+			for( it = actions.begin(); it != actions.end(); ++it )
 			{
-				Actions::const_iterator it;
+				Ability::Action* action = *it;
 
-				for( it = actions.begin(); it != actions.end(); ++it )
+				if( action->GetType() == type )
 				{
-					if( it->Type == type )
-					{
-						// Get the first Action in the list of actions.
-						break;
-					}
+					// Get the first Action in the list of actions.
+					break;
 				}
-
-				if( it != actions.end() )
-				{
-					// Perform the first Action of the specified type in the list.
-					Action action = *it;
-					map->PerformAction( action );
-				}
-				else
-				{
-					WarnFail( "Could not perform Action \"%s\" because no Action was found in the list of available Actions for the selected Unit!", type.GetCString() );
-				}
-
-				// Deselect the currently selected UnitSprite.
-				mapView->DeselectUnitSprite();
-
-				// Exit the state.
-				// TODO: Separate InputState for Unit animation.
-				owner->ChangeState( owner->GetSelectUnitInputState() );
 			}
-			break;
 
-			case UnitAbility::TARGET_TYPE_SINGLE:
+			if( it != actions.end() )
 			{
-				// Add the Action type to the dictionary.
-				Dictionary parameters;
-				parameters.Set( "actionType", HashString( type ) );
-
-				// Go to the InputState for selecting a target.
-				owner->ChangeState( owner->GetSelectTargetInputState(), parameters );
+				// Perform the first Action of the specified type in the list.
+				Ability::Action* action = *it;
+				map->PerformAction( action );
 			}
-			break;
+			else
+			{
+				WarnFail( "Could not perform Action \"%s\" because no Action was found in the list of available Actions for the selected Unit!", type.GetCString() );
+			}
+
+			// Deselect the currently selected UnitSprite.
+			mapView->DeselectUnitSprite();
+
+			// Exit the state.
+			// TODO: Separate InputState for Unit animation.
+			owner->ChangeState( owner->GetSelectUnitInputState() );
 		}
 	}
 	else
@@ -520,7 +519,9 @@ void SelectTargetInputState::OnEnter( const Dictionary& parameters )
 
 	for( auto it = actions.begin(); it != actions.end(); ++it )
 	{
-		if( it->Type == mActionType )
+		const Ability::Action* action = *it;
+
+		if( action->GetType() == mActionType )
 		{
 			mValidActions.push_back( *it );
 		}
@@ -529,7 +530,7 @@ void SelectTargetInputState::OnEnter( const Dictionary& parameters )
 	if( actions.size() > 0 )
 	{
 		// Get the first valid Action.
-		const Action& action = mValidActions[ 0 ];
+		const Ability::Action* action = mValidActions[ 0 ];
 
 		// Get the UnitSprite for the first Action and target it.
 		UnitSprite* unitSprite = GetTargetUnitSpriteForAction( action );
@@ -636,23 +637,37 @@ bool SelectTargetInputState::OnPointerDown( const Pointer& pointer )
 }
 
 
-Unit* SelectTargetInputState::GetTargetForAction( const Action& action ) const
+Unit* SelectTargetInputState::GetTargetForAction( const Ability::Action* action ) const
 {
+	GameplayState* owner = GetOwnerDerived();
+	MapView* mapView = owner->GetMapView();
+	Map* map = mapView->GetMap();
+
 	Unit* result = nullptr;
 
-	// Get the Unit for the specified Action.
-	action.Parameters.Get( "target", result );
+	// Try casting the Action to the required type.
+	const SingleTargetComponent::Action* singleTargetAction = dynamic_cast< const SingleTargetComponent::Action* >( action );
 
-	if( !result )
+	if( singleTargetAction )
 	{
-		WarnFail( "No Target specified for Action!" );
+		// Get the Unit matching the target ID.
+		result = map->GetUnitByID( singleTargetAction->TargetID );
+
+		if( !result )
+		{
+			WarnFail( "Invalid target ID (%d) specified for Action!", singleTargetAction->TargetID );
+		}
+	}
+	else
+	{
+		WarnFail( "Cannot get target Unit for Action because the Action specified does not target a single Unit!" );
 	}
 
 	return result;
 }
 
 
-UnitSprite* SelectTargetInputState::GetTargetUnitSpriteForAction( const Action& action ) const
+UnitSprite* SelectTargetInputState::GetTargetUnitSpriteForAction( const Ability::Action* action ) const
 {
 	UnitSprite* result = nullptr;
 
@@ -683,7 +698,7 @@ bool SelectTargetInputState::IsValidTarget( const Unit* unit ) const
 
 	for( auto it = mValidActions.begin(); it != mValidActions.end(); ++it )
 	{
-		const Action& action = *it;
+		const Ability::Action* action = *it;
 
 		if( GetTargetForAction( action ) == unit )
 		{
@@ -712,7 +727,7 @@ void SelectTargetInputState::OnConfirmButtonPressed()
 
 		for( auto it = mValidActions.begin(); it != mValidActions.end(); ++it )
 		{
-			Action& action = *it;
+			Ability::Action* action = *it;
 
 			if( GetTargetForAction( action ) == target )
 			{

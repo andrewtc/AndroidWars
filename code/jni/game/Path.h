@@ -15,6 +15,9 @@ namespace mage
 		void operator=( const Path& other );
 		~Path();
 
+		void LoadFromJSON( const rapidjson::Value& object );
+		void SaveToJSON( rapidjson::Document& document, rapidjson::Value& object ) const;
+
 		void SetOrigin( const Vec2s& origin );
 		Vec2s GetOrigin() const;
 
@@ -61,6 +64,18 @@ namespace mage
 
 
 	inline Path::~Path() { }
+
+
+	inline void Path::LoadFromJSON( const rapidjson::Value& object )
+	{
+		// TODO
+	}
+
+
+	inline void Path::SaveToJSON( rapidjson::Document& document, rapidjson::Value& object ) const
+	{
+		// TODO
+	}
 
 
 	inline void Path::SetOrigin( const Vec2s& origin )

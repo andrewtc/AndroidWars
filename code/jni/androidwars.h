@@ -39,6 +39,7 @@ const size_t MAP_SIZE_POWER_OF_TWO = 10;
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
+#include "util/JSON.h"
 
 #include "states/InputState.h"
 #include "states/DialogInputState.h"
@@ -72,8 +73,10 @@ const size_t MAP_SIZE_POWER_OF_TWO = 10;
 #include "data/Scenario.h"
 
 #include "game/Path.h"
-#include "game/Action.h"
-#include "game/UnitAbility.h"
+#include "game/abilities/Ability.h"
+#include "game/abilities/UnitAbility.h"
+#include "game/abilities/UnitWaitAbility.h"
+#include "game/abilities/UnitAttackAbility.h"
 #include "game/Map.h"
 #include "game/Faction.h"
 #include "game/TileSprite.h"

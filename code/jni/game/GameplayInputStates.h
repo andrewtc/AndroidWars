@@ -67,8 +67,8 @@ namespace mage
 
 		virtual bool OnPointerDown( const Pointer& pointer );
 
-		Unit* GetTargetForAction( const Action& action ) const;
-		UnitSprite* GetTargetUnitSpriteForAction( const Action& action ) const;
+		Unit* GetTargetForAction( const Ability::Action* action ) const;
+		UnitSprite* GetTargetUnitSpriteForAction( const Ability::Action* action ) const;
 		bool IsValidTarget( const Unit* unit ) const;
 
 		void OnConfirmButtonPressed();

@@ -18,9 +18,6 @@ namespace mage
 
 		static const int MAX_HEALTH = 10;
 
-		Unit();
-		virtual ~Unit();
-
 		bool IsInitialized() const;
 
 		void SaveToJSON( rapidjson::Document& document, rapidjson::Value& object );
@@ -44,9 +41,11 @@ namespace mage
 		bool CanMoveAcrossTerrain( TerrainType* terrainType ) const;
 		bool CanEnterTile( const Map::ConstIterator& tile ) const;
 		bool CanOccupyTile( const Map::ConstIterator& tile ) const;
+		bool CanMoveAlongPath( const Path& path ) const;
+		void GetValidPath( const Path& path, Path& result ) const;
 		void Teleport( const Vec2s& tilePos );
 		void Teleport( Map::Iterator tile );
-		void Move( const Path& path );
+		bool Move( const Path& path );
 		bool IsOwnedBy( Faction* faction ) const;
 
 		bool CanAttack( const Unit* target ) const;
@@ -91,11 +90,15 @@ namespace mage
 		bool IsInactive() const;
 
 		Map* GetMap() const;
+		int GetID() const;
 
 		std::string ToString() const;
 
 	private:
-		void Init( Map* map, const Map::Iterator& tile );
+		Unit();
+		virtual ~Unit();
+
+		void Init( Map* map, size_t unitID, const Map::Iterator& tile );
 		void Destroy();
 
 		void OnTurnStart( int turnIndex );
@@ -108,6 +111,7 @@ namespace mage
 		int mHealth;
 		int mAmmo;
 		int mSupplies;
+		int mID;
 		Map* mMap;
 		UnitType* mUnitType;
 		Faction* mOwner;

@@ -210,7 +210,8 @@ std::string Map::FormatMapPath( const std::string& mapName )
 Map::Map() :
 	mIsInitialized( false ),
 	mScenario( nullptr ),
-	mNextSearchIndex( 0 )
+	mNextSearchIndex( 0 ),
+	mNextUnitID( 0 )
 { }
 
 
@@ -228,10 +229,10 @@ void Map::Init( Scenario* scenario )
 	assertion( scenario, "Cannot initialize Map without a valid Scenario!" );
 	mScenario = scenario;
 
-	// Add a UnitAbility for each ability supported by the Scenario.
+	// Add an Ability for each ability supported by the Scenario.
 	// TODO: Make this come from the Scenario itself.
-	RegisterUnitAbility< UnitAttackAbility >();
-	RegisterUnitAbility< UnitWaitAbility >();
+	RegisterAbility< UnitAttackAbility >();
+	RegisterAbility< UnitWaitAbility >();
 
 	// Make sure the size of the map is valid.
 	assertion( IsValid(), "Cannot initialize Map with invalid size (%d,%d)!", GetWidth(), GetHeight() );
@@ -618,13 +619,17 @@ Unit* Map::CreateUnit( UnitType* unitType, Faction* owner, const Vec2s& tilePos,
 			}
 
 			// Initialize the Unit.
-			unit->Init( this, tile );
+			int unitID = mNextUnitID;
+			++mNextUnitID;
+
+			unit->Init( this, unitID, tile );
 
 			// Place the Unit into the Tile.
 			tile->SetUnit( unit );
 
 			// Add the Unit to the list of Units.
-			mUnits.push_back( unit );
+			assertion( mUnitsByID.find( unitID ) == mUnitsByID.end(), "Cannot create Unit because a Unit with the same ID (%d) already exists!", unitID );
+			mUnitsByID[ unitID ] = unit;
 
 			if( mIsInitialized )
 			{
@@ -648,32 +653,32 @@ Unit* Map::CreateUnit( UnitType* unitType, Faction* owner, const Vec2s& tilePos,
 
 void Map::ForEachUnit( ForEachUnitCallback callback )
 {
-	for( auto it = mUnits.begin(); it != mUnits.end(); ++it )
+	for( auto it = mUnitsByID.begin(); it != mUnitsByID.end(); ++it )
 	{
 		// Call the function for each Unit.
-		callback.Invoke( *it );
+		callback.Invoke( it->second );
 	}
 }
 
 
 void Map::ForEachUnit( ForEachConstUnitCallback callback ) const
 {
-	for( auto it = mUnits.begin(); it != mUnits.end(); ++it )
+	for( auto it = mUnitsByID.begin(); it != mUnitsByID.end(); ++it )
 	{
 		// Call the function for each Unit.
-		callback.Invoke( *it );
+		callback.Invoke( it->second );
 	}
 }
 
 
-UnitAbility* Map::GetUnitAbilityByName( const HashString& name ) const
+Ability* Map::GetAbilityByType( const HashString& name ) const
 {
-	UnitAbility* result = nullptr;
+	Ability* result = nullptr;
 
 	// Look up the ability by name.
-	auto it = mUnitAbilitiesByName.find( name );
+	auto it = mAbilitiesByType.find( name );
 
-	if( it != mUnitAbilitiesByName.end() )
+	if( it != mAbilitiesByType.end() )
 	{
 		result = it->second;
 	}
@@ -687,29 +692,35 @@ void Map::DetermineAvailableActions( const Unit* unit, const Path& movementPath,
 	// Clear the list of results.
 	result.clear();
 
-	for( auto it = mUnitAbilitiesByName.begin(); it != mUnitAbilitiesByName.end(); ++it )
+	for( auto it = mAbilitiesByType.begin(); it != mAbilitiesByType.end(); ++it )
 	{
-		// Ask each UnitAbility for a list of possible actions after the Unit moves along the path.
-		UnitAbility* ability = it->second;
-		ability->DetermineAvailableActions( unit, movementPath, result );
+		// Try to cast each Ability to a UnitAbility.
+		Ability* ability = it->second;
+		UnitAbility* unitAbility = dynamic_cast< UnitAbility* >( ability );
+
+		if( unitAbility )
+		{
+			// Ask each UnitAbility for a list of possible actions after the Unit moves along the path.
+			unitAbility->DetermineAvailableActions( unit, movementPath, result );
+		}
 	}
 }
 
 
-void Map::PerformAction( Action& action )
+void Map::PerformAction( Ability::Action* action )
 {
-	// Find the UnitAbility to activate for the specified Action.
-	auto it = mUnitAbilitiesByName.find( action.Type );
+	// Find the Ability to activate for the specified Action.
+	auto it = mAbilitiesByType.find( action->GetType() );
 
-	if( it != mUnitAbilitiesByName.end() )
+	if( it != mAbilitiesByType.end() )
 	{
-		// If a UnitAbility was found that can process the Action, activate the ability.
-		UnitAbility* ability = it->second;
+		// If an Ability was found that can process the Action, activate the ability.
+		Ability* ability = it->second;
 		ability->ProcessAction( action );
 	}
 	else
 	{
-		WarnFail( "Cannot perform Action \"%s\" because no UnitAbility was found that can process the Action!", action.Type.GetCString() );
+		WarnFail( "Cannot perform Action \"%s\" because no Ability was found that can process the Action!", action->GetType().GetCString() );
 	}
 }
 
@@ -993,15 +1004,29 @@ void Map::FindUnitsInRange( const Vec2s& tilePos, const IntRange& range, Units& 
 }
 
 
-const Map::Units& Map::GetUnits() const
+Unit* Map::GetUnitByID( int unitID ) const
 {
-	return mUnits;
+	Unit* result = nullptr;
+	auto it = mUnitsByID.find( unitID );
+
+	if( it != mUnitsByID.end() )
+	{
+		result = it->second;
+	}
+
+	return result;
+}
+
+
+const Map::UnitsByID& Map::GetUnitsByID() const
+{
+	return mUnitsByID;
 }
 
 
 size_t Map::GetUnitCount() const
 {
-	return mUnits.size();
+	return mUnitsByID.size();
 }
 
 
@@ -1011,15 +1036,13 @@ void Map::DestroyUnit( Unit* unit )
 	assertion( unit->IsInitialized(), "Cannot destroy Unit that has not been initialized!" );
 	assertion( unit->GetMap() == this, "Cannot destroy Unit created by another Map!" );
 
-	for( auto it = mUnits.begin(); it != mUnits.end(); ++it )
-	{
-		if( *it == unit )
-		{
-			// Remove the Unit from the list of Units.
-			mUnits.erase( it );
-			break;
-		}
-	}
+	// Look up the Unit by its ID.
+	auto it = mUnitsByID.find( unit->GetID() );
+	assertion( it != mUnitsByID.end(), "Cannot destroy Unit because it is not registered with the Map!" );
+	assertion( it->second == unit, "Cannot destroy Unit because a Unit with the same ID (%d) was registered with the Map!", unit->GetID() );
+
+	// Remove the Unit from the list of Units.
+	mUnitsByID.erase( it );
 
 	if( mIsInitialized )
 	{
@@ -1089,14 +1112,14 @@ void Map::UnitDied( Unit* unit )
 }
 
 
-void Map::UnregisterAllUnitAbilities()
+void Map::UnregisterAllAbilities()
 {
-	for( auto it = mUnitAbilitiesByName.begin(); it != mUnitAbilitiesByName.end(); ++it )
+	for( auto it = mAbilitiesByType.begin(); it != mAbilitiesByType.end(); ++it )
 	{
-		UnitAbility* ability = it->second;
+		Ability* ability = it->second;
 		delete ability;
 	}
 
-	mUnitAbilitiesByName.clear();
+	mAbilitiesByType.clear();
 }
 

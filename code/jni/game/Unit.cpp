@@ -11,6 +11,7 @@ MAGE_IMPLEMENT_RTTI( MapObject, Unit );
 
 Unit::Unit() :
 	mMap( nullptr ),
+	mID( -1 ),
 	mUnitType( nullptr ),
 	mOwner( nullptr ),
 	mHealth( MAX_HEALTH ),
@@ -30,13 +31,17 @@ Unit::~Unit()
 }
 
 
-void Unit::Init( Map* map, const Map::Iterator& tile )
+void Unit::Init( Map* map, size_t unitID, const Map::Iterator& tile )
 {
 	assertion( !IsInitialized(), "Cannot initialize Unit that has already been initialized!" );
 
 	// Keep track of the Game that spawned this Unit.
 	mMap = map;
-	assertion( mMap, "Cannot initialize Unit because it is no Map was specified!" );
+	assertion( mMap, "Cannot initialize Unit because no Map was specified!" );
+
+	// Keep track of the Unit's unique ID.
+	mID = unitID;
+	assertion( mID > 0, "Cannot initialize Unit because the unit ID (%d) is invalid!", mID );
 
 	// Make sure a valid UnitType was specified for this Unit.
 	assertion( mUnitType, "Could not initialize Unit because no UnitType was specified!" );
@@ -72,6 +77,9 @@ void Unit::Destroy()
 
 	// Notify the owner that the Unit died.
 	mOwner->UnitLost( this );
+
+	// Reset the unit ID.
+	mID = -1;
 
 	// Disassociate the Unit from the Map.
 	mMap = nullptr;
@@ -238,7 +246,7 @@ int Unit::CalculatePathCost( const Path& path ) const
 	// Get the current tile for this Unit.
 	Map::Iterator currentTile = mMap->GetTile( path.GetOrigin() );
 
-	for( size_t i = 0; i < path.GetLength(); ++i )
+	for( size_t i = 0, length = path.GetLength(); i < length; ++i )
 	{
 		// Get the adjacent tile in the direction specified.
 		PrimaryDirection direction = path.GetDirection( i );
@@ -286,6 +294,51 @@ bool Unit::CanOccupyTile( const Map::ConstIterator& tile ) const
 }
 
 
+bool Unit::CanMoveAlongPath( const Path& path ) const
+{
+	// Get a valid path from the proposed path.
+	Path validPath;
+	GetValidPath( path, validPath );
+
+	// Return true if the validated path is exactly the same length as the proposed one.
+	return ( path.GetLength() == validPath.GetLength() );
+}
+
+
+void Unit::GetValidPath( const Path& path, Path& result ) const
+{
+	// Clear the result.
+	result.Clear();
+
+	// Set the origin of the result.
+	result.SetOrigin( path.GetOrigin() );
+
+	// Get the origin tile.
+	Map::ConstIterator tile = mMap->GetTile( path.GetOrigin() );
+
+	for( size_t index = 0, length = path.GetLength(); index < length; ++index )
+	{
+		// Move in the next direction.
+		PrimaryDirection direction = path.GetDirection( index );
+		tile = tile.GetAdjacent( direction );
+
+		// Check if the Tile can be entered or occupied, depending on whether it is the destination tile.
+		bool canMoveIntoTile = ( ( index + 1 ) < length ? CanEnterTile( tile ) : CanOccupyTile( tile ) );
+
+		if( canMoveIntoTile )
+		{
+			// If the Tile is enterable, add a direction to the result.
+			result.AddDirection( direction );
+		}
+		else
+		{
+			// Otherwise, stop adding to the result.
+			break;
+		}
+	}
+}
+
+
 void Unit::Teleport( const Vec2s& tilePos )
 {
 	// Teleport to the Tile at the position.
@@ -304,43 +357,44 @@ void Unit::Teleport( Map::Iterator tile )
 }
 
 
-void Unit::Move( const Path& path )
+bool Unit::Move( const Path& path )
 {
+	bool success = false;
+
 	if( IsActive() )
 	{
-		// Make sure the destination Tile is empty.
-		Map::Iterator destinationTile = mMap->GetTile( path.GetDestination() );
+		// Check if the Unit is able to move along the Path.
+		Path validPath;
+		GetValidPath( path, validPath );
 
-		if( destinationTile->IsEmpty() )
+		if( validPath.GetLength() > 0 )
 		{
-			if( path.GetLength() > 0 )
-			{
-				// TODO: Check for traps.
-				Path validatedPath = path;
+			// Move to the destination tile.
+			Map::Iterator destinationTile = mMap->GetTile( validPath.GetDestination() );
+			SetTile( destinationTile );
 
-				// Move to the destination tile.
-				SetTile( destinationTile );
-
-				// Consume supplies equal to the cost of traversing the path.
-				int pathCost = CalculatePathCost( validatedPath );
-				ConsumeSupplies( pathCost );
-			}
-
-			// Deactivate the Unit.
-			Deactivate();
-
-			// Fire the move event.
-			OnMove.Invoke( path );
+			// Consume supplies equal to the cost of traversing the verified path.
+			int pathCost = CalculatePathCost( validPath );
+			ConsumeSupplies( pathCost );
 		}
-		else
+
+		// Determine whether the Unit was able to move along the original Path.
+		success = ( validPath.GetLength() == path.GetLength() );
+
+		if( !success )
 		{
-			WarnFail( "Cannot move Unit to Tile (%d,%d) because the Tile is occupied by another Unit!", destinationTile.GetX(), destinationTile.GetY() );
+			// TODO: It's a trap!
 		}
+
+		// Fire the move event.
+		OnMove.Invoke( validPath );
 	}
 	else
 	{
 		WarnFail( "Cannot order inactive Unit to move!" );
 	}
+
+	return success;
 }
 
 
@@ -821,6 +875,12 @@ bool Unit::IsInactive() const
 Map* Unit::GetMap() const
 {
 	return mMap;
+}
+
+
+int Unit::GetID() const
+{
+	return mID;
 }
 
 

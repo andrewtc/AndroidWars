@@ -71,9 +71,10 @@ namespace mage
 
 		typedef std::vector< Faction* > Factions;
 		typedef std::vector< Unit* > Units;
+		typedef std::map< int, Unit* > UnitsByID;
 		typedef std::vector< Iterator > Tiles;
 		typedef std::set< Iterator > TileSet;
-		typedef HashMap< UnitAbility* > UnitAbilitiesByName;
+		typedef HashMap< Ability* > AbilitiesByType;
 
 		typedef Delegate< void, const Map::Iterator& > OnTileChangedCallback;
 
@@ -112,7 +113,8 @@ namespace mage
 
 		Unit* CreateUnit( UnitType* unitType, Faction* owner, short tileX, short tileY, int health = -1, int ammo = -1, int supplies = -1 );
 		Unit* CreateUnit( UnitType* unitType, Faction* owner, const Vec2s& tilePos, int health = -1, int ammo = -1, int supplies = -1 );
-		const Units& GetUnits() const;
+		Unit* GetUnitByID( int unitID ) const;
+		const UnitsByID& GetUnitsByID() const;
 		size_t GetUnitCount() const;
 		void DestroyUnit( Unit* unit );
 		void DestroyAllUnits();
@@ -120,9 +122,9 @@ namespace mage
 		void ForEachUnit( ForEachUnitCallback callback );
 		void ForEachUnit( ForEachConstUnitCallback callback ) const;
 
-		UnitAbility* GetUnitAbilityByName( const HashString& name ) const;
+		Ability* GetAbilityByType( const HashString& name ) const;
 		void DetermineAvailableActions( const Unit* unit, const Path& movementPath, Actions& result );
-		void PerformAction( Action& action );
+		void PerformAction( Ability::Action* action );
 
 		void FindReachableTiles( const Unit* unit, TileSet& result );
 		void ForEachReachableTile( const Unit* unit, ForEachReachableTileCallback callback );
@@ -141,15 +143,16 @@ namespace mage
 		void UnitMoved( Unit* unit, const Path& path );
 		void UnitDied( Unit* unit );
 
-		template< class UnitAbilitySubclass >
-		void RegisterUnitAbility();
-		void UnregisterAllUnitAbilities();
+		template< class AbilitySubclass >
+		void RegisterAbility();
+		void UnregisterAllAbilities();
 
 		bool mIsInitialized;
 		int mNextSearchIndex;
+		int mNextUnitID;
 		Scenario* mScenario;
-		Units mUnits;
-		UnitAbilitiesByName mUnitAbilitiesByName;
+		UnitsByID mUnitsByID;
+		AbilitiesByType mAbilitiesByType;
 		Factions mFactions;
 		OpenList mOpenList;
 
@@ -164,15 +167,15 @@ namespace mage
 	};
 
 
-	template< class UnitAbilitySubclass >
-	void Map::RegisterUnitAbility()
+	template< class AbilitySubclass >
+	void Map::RegisterAbility()
 	{
 		// Create a new UnitAbility of the specified subclass.
-		UnitAbility* ability = new UnitAbilitySubclass();
-		assertion( ability, "Could not register UnitAbility because the specified class is not a subclass of UnitAbility!" );
+		Ability* ability = new AbilitySubclass( this );
+		assertion( ability, "Could not register Ability because the specified class is not a subclass of Ability!" );
 
 		// Add it to the list of abilities.
-		assertion( mUnitAbilitiesByName.find( ability->GetName() ) == mUnitAbilitiesByName.end(), "Could not register UnitAbility because an ability with the name \"%s\" already exists!", ability->GetName().GetCString() );
-		mUnitAbilitiesByName[ ability->GetName() ] = ability;
+		assertion( mAbilitiesByType.find( ability->GetType() ) == mAbilitiesByType.end(), "Could not register Ability because an Ability of the type \"%s\" already exists!", ability->GetType().GetCString() );
+		mAbilitiesByType[ ability->GetType() ] = ability;
 	}
 }
