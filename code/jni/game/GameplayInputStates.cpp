@@ -461,7 +461,7 @@ void SelectActionInputState::OnActionButtonPressed( const HashString& type )
 			{
 				// Perform the first Action of the specified type in the list.
 				Ability::Action* action = *it;
-				map->PerformAction( action );
+				owner->PerformAction( action );
 			}
 			else
 			{
@@ -470,10 +470,6 @@ void SelectActionInputState::OnActionButtonPressed( const HashString& type )
 
 			// Deselect the currently selected UnitSprite.
 			mapView->DeselectUnitSprite();
-
-			// Exit the state.
-			// TODO: Separate InputState for Unit animation.
-			owner->ChangeState( owner->GetSelectUnitInputState() );
 		}
 	}
 	else
@@ -732,7 +728,7 @@ void SelectTargetInputState::OnConfirmButtonPressed()
 			if( GetTargetForAction( action ) == target )
 			{
 				// Find the Action that targets the currently targeted Unit and perform it.
-				map->PerformAction( action );
+				owner->PerformAction( action );
 				break;
 			}
 		}
@@ -747,9 +743,6 @@ void SelectTargetInputState::OnConfirmButtonPressed()
 
 	// Deselect the currently selected UnitSprite.
 	mapView->DeselectUnitSprite();
-
-	// Go back to UnitSelection.
-	owner->ChangeState( owner->GetSelectUnitInputState() );
 }
 
 
@@ -764,3 +757,61 @@ void SelectTargetInputState::OnCancelButtonPressed()
 	// Exit the state.
 	owner->ChangeState( owner->GetSelectActionInputState() );
 }
+
+
+PerformActionInputState::PerformActionInputState( GameState* owner ) :
+	DerivedInputState( owner ),
+	mAction( nullptr ),
+	mMapAnimation( nullptr )
+{ }
+
+
+PerformActionInputState::~PerformActionInputState() { }
+
+
+void PerformActionInputState::OnEnter( const Dictionary& parameters )
+{
+	GameplayState* owner = GetOwnerDerived();
+	MapView* mapView = owner->GetMapView();
+
+	// Get the Action to perform.
+	Dictionary::DictionaryError error = parameters.Get( "action", mAction );
+	assertion( error == Dictionary::DErr_SUCCESS, "No Ability::Action was specified for PerformActionInputState!" );
+
+	// Start a new Map animation for the Action.
+	mMapAnimation = mapView->ScheduleAnimationForAction( mAction );
+
+	if( mMapAnimation )
+	{
+		// Wait for the animation to finish before exiting the state.
+		mMapAnimation->OnFinished.AddCallback( this, &PerformActionInputState::OnAnimationFinished );
+	}
+	else
+	{
+		WarnFail( "No animation scheduled for Action!" );
+	}
+}
+
+
+void PerformActionInputState::OnExit()
+{
+	// Clear the values.
+	mAction = nullptr;
+	mMapAnimation = nullptr;
+}
+
+
+void PerformActionInputState::OnAnimationFinished()
+{
+	DebugPrintf( "MapAnimation finished for PerformActionInputState." );
+
+	GameplayState* owner = GetOwnerDerived();
+	Map* map = owner->GetMap();
+
+	// If the animation finished immediately, perform the Action on the Map.
+	map->PerformAction( mAction );
+
+	// Go back to Unit selection.
+	owner->ChangeState( owner->GetSelectUnitInputState() );
+}
+

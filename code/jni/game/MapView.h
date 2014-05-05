@@ -12,6 +12,7 @@ namespace mage
 
 		typedef Grid< TileSprite, MAP_SIZE_POWER_OF_TWO > TileSpritesGrid;
 		typedef std::vector< UnitSprite* > UnitSprites;
+		typedef std::deque< MapAnimation* > MapAnimations;
 
 		MapView();
 		~MapView();
@@ -60,6 +61,12 @@ namespace mage
 		void DetermineAvailableActionsForSelectedUnit();
 		const Actions& GetAvailableActionsForSelectedUnit() const;
 
+		template< class MapAnimationSubclass, typename... ParameterTypes >
+		MapAnimationSubclass* ScheduleMapAnimation( ParameterTypes... parameters );
+		MapAnimation* ScheduleAnimationForAction( Ability::Action* action );
+		MapAnimation* GetCurrentMapAnimation() const;
+		bool IsPlayingMapAnimation() const;
+
 		Vec2f WorldToScreenCoords( const Vec2f& worldCoords ) const;
 		Vec2f WorldToScreenCoords( float worldX, float worldY ) const;
 		Vec2f ScreenToWorldCoords( const Vec2f& screenCoords ) const;
@@ -88,13 +95,33 @@ namespace mage
 		UnitSprite* mSelectedUnitSprite;
 		UnitSprite* mTargetedUnitSprite;
 		BitmapFont* mDefaultFont;
+		MapAnimation* mCurrentMapAnimation;
 		Camera mCamera;
 		Actions mSelectedUnitActions;
 		TargetSprite mTargetSprite;
 		ArrowSprite mArrowSprite;
 		UnitSprites mUnitSprites;
+		MapAnimations mScheduledMapAnimations;
 		TileSpritesGrid mTileSprites;
 
 		friend class UnitSprite;
 	};
+
+
+	template< class MapAnimationSubclass, typename... ParameterTypes >
+	MapAnimationSubclass* MapView::ScheduleMapAnimation( ParameterTypes... parameters )
+	{
+		// Create a new MapAnimation of the specified type.
+		MapAnimationSubclass* derivedMapAnimation = new MapAnimationSubclass( parameters... );
+
+		// Cast the MapAnimation to the base type.
+		MapAnimation* mapAnimation = dynamic_cast< MapAnimation* >( derivedMapAnimation );
+		assertion( mapAnimation != nullptr, "Could not schedule MapAnimation because the animation type specified is not a subclass of MapAnimation!" );
+
+		// Add the animation to the animation queue.
+		mScheduledMapAnimations.push_back( mapAnimation );
+
+		// Return the newly scheduled MapAnimation.
+		return derivedMapAnimation;
+	}
 }

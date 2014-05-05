@@ -4,12 +4,10 @@ using namespace mage;
 
 
 const char* const UnitSprite::DEFAULT_ANIMATION_NAME = "Idle";
-const float UnitSprite::MOVE_ANIMATION_SPEED = 8.0f;
 
 
 UnitSprite::UnitSprite( MapView* mapView, Unit* unit ) :
-	mMapView( mapView ), mUnit( unit ), mIsInitialized( false ), mSprite( nullptr ),
-	mIsMoving( false ), mMoveAnimationTimer( 0.0f ), mMoveAnimationSpeed( 0.0f ), mMoveAnimationOrigin( Vec2f::ZERO )
+	mMapView( mapView ), mUnit( unit ), mIsInitialized( false ), mSprite( nullptr )
 {
 	assertion( mMapView, "Cannot create UnitSprite without a valid MapView!" );
 	assertion( mUnit, "Cannot create UnitSprite without a valid Unit!" );
@@ -32,8 +30,7 @@ void UnitSprite::Init()
 
 	// Listen for changes to the Unit.
 	mUnit->OnOwnerChanged.AddCallback( this, &UnitSprite::OnUnitOwnerChanged );
-	mUnit->OnTeleport.AddCallback( this, &UnitSprite::OnUnitTeleport );
-	mUnit->OnMove.AddCallback( this, &UnitSprite::OnUnitMove );
+	mUnit->OnTileChanged.AddCallback( this, &UnitSprite::OnUnitTileChanged );
 	mUnit->OnTakeDamage.AddCallback( this, &UnitSprite::OnUnitTakeDamage );
 	mUnit->OnHealthChanged.AddCallback( this, &UnitSprite::OnUnitHealthChanged );
 	mUnit->OnDestroyed.AddCallback( this, &UnitSprite::OnUnitDestroyed );
@@ -73,30 +70,6 @@ bool UnitSprite::IsInitialized() const
 
 void UnitSprite::Update( float elapsedTime )
 {
-	if( mIsMoving )
-	{
-		// Update the movement timer.
-		mMoveAnimationTimer += ( mMoveAnimationSpeed * elapsedTime );
-
-		if( mMoveAnimationTimer >= 1.0f )
-		{
-			// If the move animation is finished, set the position of the sprite to the destination.
-			mSprite->Position = mMapView->TileToWorldCoords( mMovementPath.GetDestination() );
-
-			// End the animation.
-			mIsMoving = false;
-
-			// Update the UnitSprite's color (to display as inactive).
-			UpdateColor();
-		}
-		else
-		{
-			// Otherwise, update the position of the sprite.
-			Vec2f tilePosition = mMovementPath.Interpolate( mMoveAnimationTimer );
-			mSprite->Position = ( tilePosition * MapView::TILE_WORLD_SCALE );
-		}
-	}
-
 	// Update the Sprite.
 	mSprite->OnUpdate( elapsedTime );
 }
@@ -188,23 +161,10 @@ void UnitSprite::OnUnitOwnerChanged( Faction* owner, Faction* formerOwner )
 }
 
 
-void UnitSprite::OnUnitTeleport( const Map::Iterator& tile )
+void UnitSprite::OnUnitTileChanged( const Map::Iterator& tile )
 {
 	// Update the sprite position.
 	SetPosition( mMapView->TileToWorldCoords( mUnit->GetTilePos() ) );
-}
-
-
-void UnitSprite::OnUnitMove( const Path& path )
-{
-	// Start the move animation.
-	DebugPrintf( "Starting UnitSprite move animation." );
-	mIsMoving = true;
-	mMoveAnimationTimer = 0.0f;
-	mMovementPath = path;
-
-	// Calculate move animation speed.
-	mMoveAnimationSpeed = ( MOVE_ANIMATION_SPEED / mMovementPath.GetLength() );
 }
 
 
@@ -229,18 +189,18 @@ void UnitSprite::OnUnitDestroyed()
 
 void UnitSprite::OnUnitActivate()
 {
-	DebugPrintf( "Activating Unit!" );
+	//DebugPrintf( "Activating Unit!" );
 
-	// Update the color of the Sprite.
+	// Update the color of the UnitSprite.
 	UpdateColor();
 }
 
 
 void UnitSprite::OnUnitDeactivate()
 {
-	DebugPrintf( "Deactivating Unit!" );
+	//DebugPrintf( "Deactivating Unit!" );
 
-	// Update the color of the Sprite.
+	// Update the color of the UnitSprite.
 	UpdateColor();
 }
 
@@ -249,7 +209,7 @@ void UnitSprite::UpdateColor()
 {
 	Color color;
 
-	if( mIsMoving || mUnit->IsActive() )
+	if( mUnit->IsActive() )
 	{
 		// Set the color of the Unit to the owning Faction's color.
 		mSprite->DrawColor = mUnit->GetOwner()->GetColor();

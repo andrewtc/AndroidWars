@@ -13,7 +13,8 @@ MapView::MapView() :
 	mDefaultFont( nullptr ),
 	mCamera( gWindowWidth, gWindowHeight ),
 	mSelectedUnitSprite( nullptr ),
-	mTargetedUnitSprite( nullptr )
+	mTargetedUnitSprite( nullptr ),
+	mCurrentMapAnimation( nullptr )
 { }
 
 
@@ -95,9 +96,38 @@ void MapView::Update( float elapsedTime )
 		unitSprite->Update( elapsedTime );
 	}
 
+	if( mCurrentMapAnimation )
+	{
+		// If the MapView is currently playing an animation, update it.
+		mCurrentMapAnimation->Update( elapsedTime );
+
+		if( mCurrentMapAnimation->IsFinished() )
+		{
+			// If the animation finished, destroy it.
+			delete mCurrentMapAnimation;
+			mCurrentMapAnimation = nullptr;
+		}
+	}
+
+	while( !mCurrentMapAnimation && mScheduledMapAnimations.size() > 0 )
+	{
+		// If no MapAnimation is playing and there is at least one scheduled MapAnimation,
+		// start the next MapAnimation.
+		mCurrentMapAnimation = mScheduledMapAnimations.front();
+		mScheduledMapAnimations.pop_front();
+		mCurrentMapAnimation->Start( this );
+
+		if( mCurrentMapAnimation->IsFinished() )
+		{
+			// If the animation finished immediately, destroy it.
+			delete mCurrentMapAnimation;
+			mCurrentMapAnimation = nullptr;
+		}
+	}
+
 	if( mArrowSprite.IsInitialized() )
 	{
-		// Draw the arrow sprite (if necessary).
+		// Update the arrow sprite (if necessary).
 		mArrowSprite.Update( elapsedTime );
 	}
 
@@ -448,6 +478,45 @@ void MapView::DetermineAvailableActionsForSelectedUnit()
 const Actions& MapView::GetAvailableActionsForSelectedUnit() const
 {
 	return mSelectedUnitActions;
+}
+
+
+MapAnimation* MapView::ScheduleAnimationForAction( Ability::Action* action )
+{
+	DebugPrintf( "Scheduling animation..." );
+
+	MapAnimation* result = nullptr;
+
+	// Try casting the action to a UnitAbility::Action.
+	UnitAbility::Action* unitAction = dynamic_cast< UnitAbility::Action* >( action );
+
+	if( unitAction )
+	{
+		// If this is a Unit action, get the Unit for this Action.
+		Unit* unit = mMap->GetUnitByID( unitAction->UnitID );
+		assertion( unit, "Cannot schedule MapAnimation for invalid Unit ID (%d)!", unitAction->UnitID );
+
+		UnitSprite* unitSprite = GetUnitSpriteForUnit( unit );
+		assertion( unitSprite, "Cannot schedule MapAnimation for Unit because no associated UnitSprite was found!" );
+
+		// Schedule a new move Action following the movement path.
+		// TODO: Allow for traps.
+		result = ScheduleMapAnimation< UnitMoveMapAnimation >( unitSprite, unitAction->MovementPath );
+	}
+
+	return result;
+}
+
+
+MapAnimation* MapView::GetCurrentMapAnimation() const
+{
+	return mCurrentMapAnimation;
+}
+
+
+bool MapView::IsPlayingMapAnimation() const
+{
+	return ( mCurrentMapAnimation != nullptr );
 }
 
 

@@ -10,6 +10,7 @@ GameplayState::GameplayState() :
 	mMoveUnitInputState( nullptr ),
 	mSelectActionInputState( nullptr ),
 	mSelectTargetInputState( nullptr ),
+	mPerformActionInputState( nullptr ),
 	mGameplayInterface( nullptr )
 {
 	DebugPrintf( "GameplayState created!" );
@@ -216,6 +217,7 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 	mMoveUnitInputState = CreateState< MoveUnitInputState >();
 	mSelectActionInputState = CreateState< SelectActionInputState >();
 	mSelectTargetInputState = CreateState< SelectTargetInputState >();
+	mPerformActionInputState = CreateState< PerformActionInputState >();
 
 	// Start by letting the player select a Unit.
 	ChangeState( mSelectUnitInputState );
@@ -304,6 +306,15 @@ bool GameplayState::OnPointerMotion( const Pointer& activePointer, const Pointer
 }
 
 
+void GameplayState::PerformAction( Ability::Action* action )
+{
+	// Go to the PerformActionInputState.
+	Dictionary parameters;
+	parameters.Set( "action", action );
+	ChangeState( mPerformActionInputState, parameters );
+}
+
+
 Game* GameplayState::GetGame()
 {
 	return &mGame;
@@ -361,6 +372,12 @@ SelectActionInputState* GameplayState::GetSelectActionInputState() const
 SelectTargetInputState* GameplayState::GetSelectTargetInputState() const
 {
 	return mSelectTargetInputState;
+}
+
+
+PerformActionInputState* GameplayState::GetPerformActionInputState() const
+{
+	return mPerformActionInputState;
 }
 
 

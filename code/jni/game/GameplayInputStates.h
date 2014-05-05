@@ -80,4 +80,21 @@ namespace mage
 
 		friend class GameState;
 	};
+
+
+	class PerformActionInputState : public DerivedInputState< GameplayState >
+	{
+		PerformActionInputState( GameState* owner );
+		~PerformActionInputState();
+
+		virtual void OnEnter( const Dictionary& parameters );
+		virtual void OnExit();
+
+		void OnAnimationFinished();
+
+		Ability::Action* mAction;
+		MapAnimation* mMapAnimation;
+
+		friend class GameState;
+	};
 }

@@ -164,6 +164,8 @@ $(aw_game_path)/abilities/Ability.cpp \
 $(aw_game_path)/abilities/UnitAbility.cpp \
 $(aw_game_path)/abilities/UnitWaitAbility.cpp \
 $(aw_game_path)/abilities/UnitAttackAbility.cpp \
+$(aw_game_path)/animations/MapAnimation.cpp \
+$(aw_game_path)/animations/UnitMoveMapAnimation.cpp \
 $(aw_game_path)/Game.cpp \
 $(aw_game_path)/Player.cpp \
 $(aw_game_path)/Faction.cpp \
