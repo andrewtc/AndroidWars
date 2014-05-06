@@ -7,7 +7,7 @@ const char* const UnitSprite::DEFAULT_ANIMATION_NAME = "Idle";
 
 
 UnitSprite::UnitSprite( MapView* mapView, Unit* unit ) :
-	mMapView( mapView ), mUnit( unit ), mIsInitialized( false ), mSprite( nullptr )
+	mMapView( mapView ), mUnit( unit ), mIsInitialized( false ), mIsVisible( true ), mSprite( nullptr )
 {
 	assertion( mMapView, "Cannot create UnitSprite without a valid MapView!" );
 	assertion( mUnit, "Cannot create UnitSprite without a valid Unit!" );
@@ -44,8 +44,8 @@ void UnitSprite::Init()
 	UnitType* unitType = mUnit->GetUnitType();
 	mSprite = SpriteManager::CreateSprite( unitType->GetAnimationSetName(), mUnit->GetTilePos() );
 
-	// Move the Sprite to the proper location on the Map.
-	SetPosition( mMapView->TileToWorldCoords( mUnit->GetTilePos() ) );
+	// Set the initial position.
+	UpdateTilePosition();
 
 	// Call initial callbacks to update unit properties.
 	OnUnitOwnerChanged( mUnit->GetOwner(), nullptr );
@@ -77,16 +77,19 @@ void UnitSprite::Update( float elapsedTime )
 
 void UnitSprite::Draw( const Camera& camera )
 {
-	// Draw the Sprite.
-	mSprite->OnDraw( camera );
-
-	if( mUnit->IsDamaged() )
+	if( mIsVisible )
 	{
-		// Draw health.
-		BitmapFont* font = mMapView->GetDefaultFont();
-		Vec2f textPos = ( GetPosition() - camera.GetPosition() );
-		float height = ( mSprite->GetClippingRectForCurrentAnimation().Height() * 0.5f );
-		DrawTextFormat( textPos.x, textPos.y + height - font->GetLineHeight(), font, "%d", mUnit->GetHealth() );
+		// If the UnitSprite is visible, draw the internal Sprite.
+		mSprite->OnDraw( camera );
+
+		if( mUnit->IsDamaged() )
+		{
+			// Draw health.
+			BitmapFont* font = mMapView->GetDefaultFont();
+			Vec2f textPos = ( GetPosition() - camera.GetPosition() );
+			float height = ( mSprite->GetClippingRectForCurrentAnimation().Height() * 0.5f );
+			DrawTextFormat( textPos.x, textPos.y + height - font->GetLineHeight(), font, "%d", mUnit->GetHealth() );
+		}
 	}
 }
 
@@ -163,8 +166,7 @@ void UnitSprite::OnUnitOwnerChanged( Faction* owner, Faction* formerOwner )
 
 void UnitSprite::OnUnitTileChanged( const Map::Iterator& tile )
 {
-	// Update the sprite position.
-	SetPosition( mMapView->TileToWorldCoords( mUnit->GetTilePos() ) );
+	UpdateTilePosition();
 }
 
 
@@ -218,5 +220,21 @@ void UnitSprite::UpdateColor()
 	{
 		// Adjust color for inactive state.
 		mSprite->DrawColor = mUnit->GetOwner()->GetInactiveColor();
+	}
+}
+
+
+void UnitSprite::UpdateTilePosition()
+{
+	// Get the current Tile for the Unit.
+	Map::Iterator tile = mUnit->GetTile();
+
+	// Hide or show the UnitSprite depending on whether its Unit is still on the game board.
+	mIsVisible = tile.IsValid();
+
+	if( mIsVisible )
+	{
+		// If the UnitSprite is still visible, update its position.
+		SetPosition( mMapView->TileToWorldCoords( mUnit->GetTilePos() ) );
 	}
 }

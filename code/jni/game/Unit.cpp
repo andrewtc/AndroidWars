@@ -322,10 +322,7 @@ void Unit::GetValidPath( const Path& path, Path& result ) const
 		PrimaryDirection direction = path.GetDirection( index );
 		tile = tile.GetAdjacent( direction );
 
-		// Check if the Tile can be entered or occupied, depending on whether it is the destination tile.
-		bool canMoveIntoTile = ( ( index + 1 ) < length ? CanEnterTile( tile ) : CanOccupyTile( tile ) );
-
-		if( canMoveIntoTile )
+		if( CanEnterTile( tile ) )
 		{
 			// If the Tile is enterable, add a direction to the result.
 			result.AddDirection( direction );
@@ -371,7 +368,18 @@ bool Unit::Move( const Path& path )
 		{
 			// Move to the destination tile.
 			Map::Iterator destinationTile = mMap->GetTile( validPath.GetDestination() );
-			SetTile( destinationTile );
+
+			if( CanOccupyTile( destinationTile ) )
+			{
+				// If the Unit can occupy the destination (i.e. a friendly Unit is not in the Tile),
+				// Move the Unit to the destination tile.
+				SetTile( destinationTile );
+			}
+			else
+			{
+				// Otherwise, remove the Unit from its current Tile (i.e. take the Unit off the board).
+				RemoveFromCurrentTile();
+			}
 
 			// Consume supplies equal to the cost of traversing the verified path.
 			int pathCost = CalculatePathCost( validPath );
@@ -400,24 +408,36 @@ bool Unit::Move( const Path& path )
 
 void Unit::SetTile( Map::Iterator tile )
 {
-	// Make sure the tile is valid and not occupied.
-	assertion( tile.IsValid(), "Cannot place Unit into invalid Tile (%d,%d)!", tile.GetX(), tile.GetY() );
-	assertion( tile->IsEmpty(), "Cannot place Unit into Tile (%d,%d) because the tile is occupied by another Unit!", tile.GetX(), tile.GetY() );
-
-	// Tell the previous Tile that the Unit left.
-	if( mTile.IsValid() )
+	if( tile != mTile )
 	{
-		mTile->ClearUnit();
+		// Tell the previous Tile that the Unit left.
+		if( mTile.IsValid() )
+		{
+			mTile->ClearUnit();
+		}
+
+		// Update the current Tile for the Unit.
+		mTile = tile;
+
+		if( mTile.IsValid() )
+		{
+			// If the Unit is moving to a different Tile, make sure the tile is not occupied.
+			assertion( tile->IsEmpty(), "Cannot place Unit into Tile (%d,%d) because the tile is occupied by another Unit!", tile.GetX(), tile.GetY() );
+
+			// If not moving to an invalid tile, tell the new Tile that the Unit has entered.
+			mTile->SetUnit( this );
+		}
+
+		// Fire the tile changed event.
+		OnTileChanged.Invoke( mTile );
 	}
+}
 
-	// Update the current Tile for the Unit.
-	mTile = tile;
 
-	// Tell the new Tile that the Unit has entered.
-	mTile->SetUnit( this );
-
-	// Fire the tile changed event.
-	OnTileChanged.Invoke( mTile );
+void Unit::RemoveFromCurrentTile()
+{
+	// Move the Unit to an invalid tile.
+	SetTile( Map::Iterator() );
 }
 
 
@@ -696,6 +716,12 @@ void Unit::SetHealth( int health )
 }
 
 
+void Unit::AddHealth( int health )
+{
+	SetHealth( mHealth + health );
+}
+
+
 void Unit::ResetHealth()
 {
 	// Reset the Unit's health to maximum.
@@ -763,9 +789,22 @@ float Unit::GetHealthScale() const
 }
 
 
+bool Unit::CanReinforce( Unit* target ) const
+{
+	// Allow different Units owned by the same Faction with the same UnitType to reinforce each other, as long as the target is partially damaged.
+	return ( target && target != this && target->IsAlive() && target->GetOwner() == mOwner && target->GetUnitType() == mUnitType && target->GetHealth() < MAX_HEALTH );
+}
+
+
 void Unit::SetAmmo( int ammo )
 {
 	mAmmo = Mathi::Clamp( ammo, 0, mUnitType->GetMaxAmmo() );
+}
+
+
+void Unit::AddAmmo( int ammo )
+{
+	SetAmmo( mAmmo + ammo );
 }
 
 
@@ -797,6 +836,12 @@ void Unit::SetSupplies( int supplies )
 {
 	mSupplies = Mathi::Clamp( supplies, 0, mUnitType->GetMaxSupplies() );
 	DebugPrintf( "Unit now has %d supplies.", mSupplies );
+}
+
+
+void Unit::AddSupplies( int supplies )
+{
+	SetSupplies( mSupplies + supplies );
 }
 
 

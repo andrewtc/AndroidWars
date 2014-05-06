@@ -231,8 +231,9 @@ void Map::Init( Scenario* scenario )
 
 	// Add an Ability for each ability supported by the Scenario.
 	// TODO: Make this come from the Scenario itself.
-	RegisterAbility< UnitAttackAbility >();
 	RegisterAbility< UnitWaitAbility >();
+	RegisterAbility< UnitAttackAbility >();
+	RegisterAbility< UnitReinforceAbility >();
 
 	// Make sure the size of the map is valid.
 	assertion( IsValid(), "Cannot initialize Map with invalid size (%d,%d)!", GetWidth(), GetHeight() );
@@ -1050,10 +1051,14 @@ void Map::DestroyUnit( Unit* unit )
 		OnUnitDestroyed.Invoke( unit );
 	}
 
-	// Remove the Unit from its current Tile.
+	// Remove the Unit from its current Tile (if any).
 	Iterator tile = unit->GetTile();
-	assertion( tile->GetUnit() == unit, "Cannot remove Unit from Tile that it does not occupy!" );
-	tile->ClearUnit();
+
+	if( tile.IsValid() )
+	{
+		assertion( tile->GetUnit() == unit, "Cannot remove Unit from Tile that it does not occupy!" );
+		tile->ClearUnit();
+	}
 
 	// Destroy the Unit.
 	unit->Destroy();

@@ -62,6 +62,7 @@ namespace mage
 		int GetBestAvailableWeaponAgainst( const Unit* target ) const;
 
 		void SetHealth( int health );
+		void AddHealth( int health );
 		void ResetHealth();
 		void TakeDamage( int damageAmount, Unit* instigator = nullptr );
 		void Die();
@@ -71,13 +72,17 @@ namespace mage
 		bool IsDead() const;
 		float GetHealthScale() const;
 
+		bool CanReinforce( Unit* target ) const;
+
 		void SetAmmo( int ammo );
+		void AddAmmo( int ammo );
 		void ResetAmmo();
 		void ConsumeAmmo( int ammo );
 		int GetAmmo() const;
 		bool HasAmmo() const;
 
 		void SetSupplies( int supplies );
+		void AddSupplies( int supplies );
 		void ResetSupplies();
 		void ConsumeSupplies( int supplies );
 		int GetSupplies() const;
@@ -105,6 +110,7 @@ namespace mage
 		void OnTurnEnd( int turnIndex );
 
 		void SetTile( Map::Iterator tile );
+		void RemoveFromCurrentTile();
 
 		bool mIsAlive;
 		bool mIsActive;

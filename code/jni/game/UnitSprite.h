@@ -40,8 +40,10 @@ namespace mage
 		void OnUnitDeactivate();
 
 		void UpdateColor();
+		void UpdateTilePosition();
 
 		bool mIsInitialized;
+		bool mIsVisible;
 		MapView* mMapView;
 		Unit* mUnit;
 		Sprite* mSprite;

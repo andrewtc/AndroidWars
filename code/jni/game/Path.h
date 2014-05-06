@@ -169,16 +169,18 @@ namespace mage
 	{
 		Vec2f result;
 
-		if( GetLength() == 0 )
+		if( GetLength() == 0 || percentage <= 0.0f )
 		{
-			// If the path is empty, return the origin.
+			// If the path is empty or the percentage is less than 0.0, return the origin.
 			result = mOrigin;
+		}
+		if( percentage >= 1.0f )
+		{
+			// If the percentage is greater than or equal to 1.0, return the destination.
+			result = GetDestination();
 		}
 		else
 		{
-			// Otherwise, clamp the percentage value to a value between 0.0 and 1.0.
-			Mathf::ClampToRange( percentage, 0.0f, 1.0f );
-
 			// Get the index of the first waypoint to interpolate between.
 			float interpolatedIndex = ( percentage * GetLength() );
 			size_t firstWaypointIndex = (size_t) interpolatedIndex;
