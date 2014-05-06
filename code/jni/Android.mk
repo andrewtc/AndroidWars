@@ -190,7 +190,6 @@ $(aw_editor_path)/EditorInputStates.cpp \
  sound/SoundManager.cpp \
  online/OnlineGameClient.cpp \
  util/JNI.cpp \
- util/JSON.cpp \
  util/PrimaryDirection.cpp
 
 LOCAL_LDLIBS := -llog -landroid -lEGL -lGLESv2 -lOpenSLES

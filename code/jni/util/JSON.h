@@ -43,6 +43,24 @@
 		object.AddMember( name, jsonValue, document.GetAllocator() ); \
 	}\
 
+#define MAGE_IMPLEMENT_JSON_PARSER_CONVERSION_TEMPLATE( type, cppType, defaultValue ) \
+	template<> \
+	inline void JSON::Save< cppType >( rapidjson::Document& document, rapidjson::Value& object, const char* name, cppType const& value ) \
+	{ \
+		Save< std::string >( document, object, name, StringUtil::ToString( value ) ); \
+	} \
+	\
+	template<> \
+	inline void JSON::Load< cppType >( const rapidjson::Value& object, const char* name, cppType& result ) \
+	{ \
+		std::string string; \
+		Load< std::string >( object, name, string ); \
+		StringUtil::Parse ## type( string, defaultValue, result ); \
+	}
+
+#define MAGE_IMPLEMENT_JSON_VECTOR_CONVERSION_TEMPLATE( type, cppType ) \
+	MAGE_IMPLEMENT_JSON_PARSER_CONVERSION_TEMPLATE( type, cppType, cppType::ZERO );
+
 #define MAGE_IMPLEMENT_JSON_CONVERSION( type, cppType ) \
 	inline void JSON::Save ## type( rapidjson::Document& document, rapidjson::Value& object, const char* name, cppType const& value ) \
 	{ \
@@ -79,6 +97,8 @@ namespace mage
 		MAGE_DECLARE_JSON_CONVERSION( Double, double         )
 		MAGE_DECLARE_JSON_CONVERSION( String, const char*    )
 		MAGE_DECLARE_JSON_CONVERSION( String, std::string    )
+		MAGE_DECLARE_JSON_CONVERSION( Vec2i,  Vec2i          )
+		MAGE_DECLARE_JSON_CONVERSION( Vec2f,  Vec2f          )
 	};
 
 
@@ -112,6 +132,10 @@ namespace mage
 	}
 
 
+	MAGE_IMPLEMENT_JSON_VECTOR_CONVERSION_TEMPLATE( Vec2i, Vec2i );
+	MAGE_IMPLEMENT_JSON_VECTOR_CONVERSION_TEMPLATE( Vec2f, Vec2f );
+
+
 	MAGE_IMPLEMENT_JSON_CONVERSION( Bool,   bool           )
 	MAGE_IMPLEMENT_JSON_CONVERSION( Char,   char           )
 	MAGE_IMPLEMENT_JSON_CONVERSION( Uchar,  unsigned char  )
@@ -125,4 +149,6 @@ namespace mage
 	MAGE_IMPLEMENT_JSON_CONVERSION( Double, double         )
 	MAGE_IMPLEMENT_JSON_CONVERSION( String, const char*    )
 	MAGE_IMPLEMENT_JSON_CONVERSION( String, std::string    )
+	MAGE_IMPLEMENT_JSON_CONVERSION( Vec2i,  Vec2i          )
+	MAGE_IMPLEMENT_JSON_CONVERSION( Vec2f,  Vec2f          )
 }

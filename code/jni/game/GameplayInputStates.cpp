@@ -103,22 +103,40 @@ void MoveUnitInputState::OnEnter( const Dictionary& parameters )
 	// Get the UnitSprite to select.
 	UnitSprite* unitSpriteToSelect;
 	Dictionary::DictionaryError error = parameters.Get( "unit", unitSpriteToSelect );
-	assertion( error == Dictionary::DErr_SUCCESS, "No \"unit\" property was provided to MoveUnitInputState!" );
 
-	// Get the Unit for this UnitSprite.
-	Unit* unit = unitSpriteToSelect->GetUnit();
+	Unit* unit = nullptr;
 
-	// Only allow the local player to move this Unit if it is his own and the Unit is active.
-	Player* localPlayer = game->GetLocalPlayer();
-	Faction* currentFaction = game->GetCurrentFaction();
-	mAllowMovement = ( currentFaction && game->PlayerControlsFaction( localPlayer, currentFaction ) && unit->GetOwner() == currentFaction && unit->IsActive() );
+	// Calculate the position of the active pointer.
+	const Pointer& activePointer = GetActivePointer();
+	Vec2f activePointerWorldCoords = mapView->ScreenToWorldCoords( activePointer.position );
+	Vec2s activePointerTileCoords = mapView->WorldToTileCoords( activePointerWorldCoords );
 
-	// Select the UnitSprite.
-	assertion( unitSpriteToSelect, "Cannot select null UnitSprite for MoveUnitInputState!" );
-	mapView->SelectUnitSprite( unitSpriteToSelect, mAllowMovement );
+	if( error == Dictionary::DErr_SUCCESS )
+	{
+		// If a UnitSprite to select was specified, get the Unit for the specified UnitSprite.
+		assertion( unitSpriteToSelect, "Cannot enter MoveUnitInputState because an invalid UnitSprite to select was specified!" );
+		unit = unitSpriteToSelect->GetUnit();
 
-	// Keep track of the tile pos of the active pointer.
-	mLastPointerTilePos = unit->GetTilePos();
+		// Only allow the local player to move this Unit if it is his own and the Unit is active.
+		Player* localPlayer = game->GetLocalPlayer();
+		Faction* currentFaction = game->GetCurrentFaction();
+		mAllowMovement = ( currentFaction && game->PlayerControlsFaction( localPlayer, currentFaction ) && unit->GetOwner() == currentFaction && unit->IsActive() );
+
+		// Select the UnitSprite.
+		mapView->SelectUnitSprite( unitSpriteToSelect, mAllowMovement );
+
+		// Reset the last tile position.
+		mLastPointerTilePos = activePointerTileCoords;
+	}
+	else
+	{
+		// Otherwise, use the currently selected UnitSprite.
+		assertion( mapView->HasSelectedUnitSprite(), "Cannot enter MoveUnitInputState because no UnitSprite is currently selected and no UnitSprite to select was specified!" );
+		unit = mapView->GetSelectedUnitSprite()->GetUnit();
+	}
+
+	// Recalculate the arrow using the active pointer's current Tile position.
+	RecalculateArrow( activePointerTileCoords );
 
 	// TODO: Show unit info.
 }
@@ -173,92 +191,102 @@ bool MoveUnitInputState::OnPointerMotion( const Pointer& activePointer, const Po
 
 	if( mAllowMovement && activePointer.isMoving )
 	{
-		// Get the selected UnitSprite.
-		UnitSprite* selectedUnitSprite = mapView->GetSelectedUnitSprite();
-		Unit* selectedUnit = selectedUnitSprite->GetUnit();
-
 		// Get the new tile position of the active pointer.
 		Vec2f pointerWorldPos = mapView->ScreenToWorldCoords( activePointer.position );
 		Vec2s pointerTilePos = mapView->WorldToTileCoords( pointerWorldPos );
 
 		if( pointerTilePos != mLastPointerTilePos )
 		{
-			//DebugPrintf( "Pointer is over tile (%d,%d).", pointerTilePos.x, pointerTilePos.y );
-
-			// Determine whether the TileSprite is selected at this location.
-			MapView::TileSpritesGrid::Iterator tileSpriteIt = mapView->GetTileSprites().GetTile( pointerTilePos );
-
-			if( tileSpriteIt->IsSelected() )
-			{
-				// If the tile is selected, determine whether the new tile is already in the path.
-				Path& selectedUnitPath = mapView->GetSelectedUnitPath();
-				int index = selectedUnitPath.GetIndexOfWaypoint( pointerTilePos );
-
-				if( index != -1 )
-				{
-					// If the tile is already in the selected Unit path, truncate the path after the tile.
-					int previousIndex = std::max( index - 1, 0 );
-					DebugPrintf( "Removing waypoints after index %d.", previousIndex );
-					selectedUnitPath.RemoveWaypointsAfterIndex( previousIndex );
-				}
-				else
-				{
-					// Otherwise, determine whether the new tile is adjacent to the old one.
-					bool isAdjacentTile = false;
-					PrimaryDirection direction;
-
-					for( size_t i = 0; i < CARDINAL_DIRECTION_COUNT; ++i )
-					{
-						// Check the previous known tile position for adjacency.
-						PrimaryDirection directionToCheck = CARDINAL_DIRECTIONS[ i ];
-
-						if( mLastPointerTilePos + directionToCheck.GetOffset() == pointerTilePos )
-						{
-							// If the new tile is adjacent to the previous one, save the direction of movement.
-							isAdjacentTile = true;
-							direction = directionToCheck;
-							break;
-						}
-					}
-
-					bool recalculatePath = false;
-
-					if( isAdjacentTile )
-					{
-						// If the new tile is adjacent, add a new direction to the path.
-						selectedUnitPath.AddDirection( direction );
-
-						// If the tile is adjacent to the last one, check to see if it is reachable.
-						int pathCost = selectedUnit->CalculatePathCost( selectedUnitPath );
-						bool canReachDestination = ( pathCost <= selectedUnit->GetMovementRange() );
-
-						if( !canReachDestination )
-						{
-							// If the path isn't reachable, recalculate the path.
-							recalculatePath = true;
-						}
-					}
-					else
-					{
-						// Otherwise, recalculate the path.
-						recalculatePath = true;
-					}
-
-					if( recalculatePath )
-					{
-						// Calculate the shortest path to the new tile position.
-						mapView->GetMap()->FindBestPathToTile( selectedUnit, pointerTilePos, selectedUnitPath );
-					}
-				}
-
-				// Keep track of the last tile position of the active pointer.
-				mLastPointerTilePos = pointerTilePos;
-			}
+			// Recalculate the arrow, taking into account the new pointer position.
+			RecalculateArrow( pointerTilePos );
 		}
 	}
 
 	bool wasHandled = false; //InputState::OnPointerMotion( activePointer, pointersByID );
 	return wasHandled;
+}
+
+
+void MoveUnitInputState::RecalculateArrow( const Vec2s& pointerTilePos )
+{
+	GameplayState* owner = GetOwnerDerived();
+	MapView* mapView = owner->GetMapView();
+
+	// Get the selected UnitSprite.
+	UnitSprite* selectedUnitSprite = mapView->GetSelectedUnitSprite();
+	Unit* selectedUnit = selectedUnitSprite->GetUnit();
+
+	//DebugPrintf( "Pointer is over tile (%d,%d).", pointerTilePos.x, pointerTilePos.y );
+
+	// Determine whether the TileSprite at this location is selected.
+	TileSprite* tileSprite = mapView->GetTileSpriteAtTileCoords( pointerTilePos );
+
+	if( tileSprite && tileSprite->IsSelected() )
+	{
+		// If the TileSprite is selected, determine whether the new tile is already in the path.
+		Path& selectedUnitPath = mapView->GetSelectedUnitPath();
+		int index = selectedUnitPath.GetIndexOfWaypoint( pointerTilePos );
+
+		if( index >= 0 )
+		{
+			// If the tile is already in the selected Unit path, truncate the path after the tile.
+			int previousIndex = std::max( index - 1, 0 );
+			DebugPrintf( "Removing waypoints after index %d.", previousIndex );
+			selectedUnitPath.RemoveWaypointsAfterIndex( previousIndex );
+		}
+		else
+		{
+			// Otherwise, determine whether the new tile is adjacent to the old one.
+			bool isAdjacentTile = false;
+			PrimaryDirection direction;
+
+			for( size_t i = 0; i < CARDINAL_DIRECTION_COUNT; ++i )
+			{
+				// Check the previous known tile position for adjacency.
+				PrimaryDirection directionToCheck = CARDINAL_DIRECTIONS[ i ];
+
+				if( mLastPointerTilePos + directionToCheck.GetOffset() == pointerTilePos )
+				{
+					// If the new tile is adjacent to the previous one, save the direction of movement.
+					isAdjacentTile = true;
+					direction = directionToCheck;
+					break;
+				}
+			}
+
+			bool recalculatePath = false;
+
+			if( isAdjacentTile )
+			{
+				// If the new tile is adjacent, add a new direction to the path.
+				selectedUnitPath.AddDirection( direction );
+
+				// If the tile is adjacent to the last one, check to see if it is reachable.
+				int pathCost = selectedUnit->CalculatePathCost( selectedUnitPath );
+				bool canReachDestination = ( pathCost <= selectedUnit->GetMovementRange() );
+
+				if( !canReachDestination )
+				{
+					// If the path isn't reachable, recalculate the path.
+					recalculatePath = true;
+				}
+			}
+			else
+			{
+				// Otherwise, recalculate the path.
+				recalculatePath = true;
+			}
+
+			if( recalculatePath )
+			{
+				// Calculate the shortest path to the new tile position.
+				mapView->GetMap()->FindBestPathToTile( selectedUnit, pointerTilePos, selectedUnitPath );
+			}
+		}
+
+		// Keep track of the last tile position of the active pointer.
+		mLastPointerTilePos = pointerTilePos;
+	}
 }
 
 
@@ -319,6 +347,32 @@ void SelectActionInputState::OnExit()
 		// Hide the action menu Widget.
 		mActionMenu->Hide();
 	}
+}
+
+
+bool SelectActionInputState::OnPointerDown( const Pointer& pointer )
+{
+	GameplayState* owner = GetOwnerDerived();
+	MapView* mapView = owner->GetMapView();
+
+	// Let the WidgetManager process the event.
+	bool wasHandled = InputState::OnPointerDown( pointer );
+
+	if( !wasHandled )
+	{
+		// If the event was not processed by a Widget, check to see if the pointer is
+		// over a tile that is selected.
+		TileSprite* tileSpriteUnderPointer = mapView->GetTileSpriteAtScreenCoords( pointer.position );
+		wasHandled = ( tileSpriteUnderPointer && tileSpriteUnderPointer->IsSelected() );
+
+		if( wasHandled )
+		{
+			// If the pointer is over a selected TileSprite, let the player reselect the Unit movement path.
+			owner->ChangeState( owner->GetMoveUnitInputState() );
+		}
+	}
+
+	return wasHandled;
 }
 
 

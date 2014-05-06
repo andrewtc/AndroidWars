@@ -135,6 +135,12 @@ RectF UnitSprite::GetWorldBounds() const
 }
 
 
+bool UnitSprite::IsVisible() const
+{
+	return mIsVisible;
+}
+
+
 MapView* UnitSprite::GetMapView() const
 {
 	return mMapView;

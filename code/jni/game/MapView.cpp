@@ -248,6 +248,102 @@ const MapView::TileSpritesGrid& MapView::GetTileSprites() const
 }
 
 
+TileSprite* MapView::GetTileSpriteAtScreenCoords( float screenX, float screenY )
+{
+	return GetTileSpriteAtScreenCoords( Vec2f( screenX, screenY ) );
+}
+
+
+const TileSprite* MapView::GetTileSpriteAtScreenCoords( float screenX, float screenY ) const
+{
+	return GetTileSpriteAtScreenCoords( Vec2f( screenX, screenY ) );
+}
+
+
+TileSprite* MapView::GetTileSpriteAtScreenCoords( const Vec2f& screenCoords )
+{
+	Vec2f worldCoords = ScreenToWorldCoords( screenCoords );
+	return GetTileSpriteAtWorldCoords( worldCoords );
+}
+
+
+const TileSprite* MapView::GetTileSpriteAtScreenCoords( const Vec2f& screenCoords ) const
+{
+	Vec2f worldCoords = ScreenToWorldCoords( screenCoords );
+	return GetTileSpriteAtWorldCoords( worldCoords );
+}
+
+
+TileSprite* MapView::GetTileSpriteAtWorldCoords( float worldX, float worldY )
+{
+	return GetTileSpriteAtWorldCoords( Vec2f( worldX, worldY ) );
+}
+
+
+const TileSprite* MapView::GetTileSpriteAtWorldCoords( float worldX, float worldY ) const
+{
+	return GetTileSpriteAtWorldCoords( Vec2f( worldX, worldY ) );
+}
+
+
+TileSprite* MapView::GetTileSpriteAtWorldCoords( const Vec2f& worldCoords )
+{
+	return MapView::GetTileSpriteAtTileCoords( WorldToTileCoords( worldCoords ) );
+}
+
+
+const TileSprite* MapView::GetTileSpriteAtWorldCoords( const Vec2f& worldCoords ) const
+{
+	return MapView::GetTileSpriteAtTileCoords( WorldToTileCoords( worldCoords ) );
+}
+
+
+TileSprite* MapView::GetTileSpriteAtTileCoords( short tileX, short tileY )
+{
+	return GetTileSpriteAtTileCoords( Vec2s( tileX, tileY ) );
+}
+
+
+const TileSprite* MapView::GetTileSpriteAtTileCoords( short tileX, short tileY ) const
+{
+	return GetTileSpriteAtTileCoords( Vec2s( tileX, tileY ) );
+}
+
+
+TileSprite* MapView::GetTileSpriteAtTileCoords( const Vec2s& tileCoords )
+{
+	TileSprite* result = nullptr;
+
+	// Get an iterator to the TileSprite at the specified coordinates.
+	TileSpritesGrid::Iterator iterator = mTileSprites.GetTile( tileCoords );
+
+	if( iterator.IsValid() )
+	{
+		// If the position is valid, return the TileSprite at the Grid position (if any).
+		result = &( *iterator );
+	}
+
+	return result;
+}
+
+
+const TileSprite* MapView::GetTileSpriteAtTileCoords( const Vec2s& tileCoords ) const
+{
+	const TileSprite* result = nullptr;
+
+	// Get an iterator to the TileSprite at the specified coordinates.
+	TileSpritesGrid::ConstIterator iterator = mTileSprites.GetTile( tileCoords );
+
+	if( iterator.IsValid() )
+	{
+		// If the position is valid, return the TileSprite at the Grid position (if any).
+		result = &( *iterator );
+	}
+
+	return result;
+}
+
+
 UnitSprite* MapView::CreateUnitSprite( Unit* unit )
 {
 	DebugPrintf( "Creating UnitSprite at (%d,%d)!", unit->GetTileX(), unit->GetTileY() );
@@ -345,13 +441,17 @@ UnitSprite* MapView::GetUnitSpriteAtWorldCoords( const Vec2f& worldCoords ) cons
 	{
 		// Get the bounds of the UnitSprite.
 		UnitSprite* unitSprite = *it;
-		RectF bounds = unitSprite->GetWorldBounds();
 
-		if( bounds.Contains( worldCoords.x, worldCoords.y ) )
+		if( unitSprite->IsVisible() )
 		{
-			// If a Sprite is found at this location, return it.
-			result = unitSprite;
-			break;
+			RectF bounds = unitSprite->GetWorldBounds();
+
+			if( bounds.Contains( worldCoords.x, worldCoords.y ) )
+			{
+				// If a Sprite is found at this location, return it.
+				result = unitSprite;
+				break;
+			}
 		}
 	}
 

@@ -23,7 +23,7 @@ namespace mage
 
 		Sprite* GetSprite() const;
 		RectF GetWorldBounds() const;
-
+		bool IsVisible() const;
 		MapView* GetMapView() const;
 
 	private:

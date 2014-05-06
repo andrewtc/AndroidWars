@@ -74,6 +74,7 @@ const size_t MAP_SIZE_POWER_OF_TWO = 10;
 
 #include "game/Path.h"
 #include "game/abilities/Ability.h"
+#include "game/abilities/ConstructUnitAbility.h"
 #include "game/abilities/UnitAbility.h"
 #include "game/abilities/UnitWaitAbility.h"
 #include "game/abilities/UnitAttackAbility.h"

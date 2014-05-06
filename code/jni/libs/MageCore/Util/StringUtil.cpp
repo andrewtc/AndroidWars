@@ -190,6 +190,11 @@ bool StringUtil::ParseBool( const std::string& string, const bool& defaultValue,
 	return AutoParseType( bool );
 }
 //---------------------------------------
+bool StringUtil::ParseVec2i( const std::string& string, const Vec2i& defaultValue, Vec2i& result )
+{
+	return AutoParseVector( Vec2i, 2 );
+}
+//---------------------------------------
 bool StringUtil::ParseVec2f( const std::string& string, const Vec2f& defaultValue, Vec2f& result )
 {
 	return AutoParseVector( Vec2f, 2 );

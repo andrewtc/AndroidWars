@@ -34,6 +34,18 @@ namespace mage
 		void SetDefaultFont( BitmapFont* font );
 		BitmapFont* GetDefaultFont() const;
 
+		TileSprite* GetTileSpriteAtScreenCoords( float screenX, float screenY );
+		const TileSprite* GetTileSpriteAtScreenCoords( float screenX, float screenY ) const;
+		TileSprite* GetTileSpriteAtScreenCoords( const Vec2f& screenCoords );
+		const TileSprite* GetTileSpriteAtScreenCoords( const Vec2f& screenCoords ) const;
+		TileSprite* GetTileSpriteAtWorldCoords( float worldX, float worldY );
+		const TileSprite* GetTileSpriteAtWorldCoords( float worldX, float worldY ) const;
+		TileSprite* GetTileSpriteAtWorldCoords( const Vec2f& worldCoords );
+		const TileSprite* GetTileSpriteAtWorldCoords( const Vec2f& worldCoords ) const;
+		TileSprite* GetTileSpriteAtTileCoords( short tileX, short tileY );
+		const TileSprite* GetTileSpriteAtTileCoords( short tileX, short tileY ) const;
+		TileSprite* GetTileSpriteAtTileCoords( const Vec2s& tilePos );
+		const TileSprite* GetTileSpriteAtTileCoords( const Vec2s& tilePos ) const;
 		TileSpritesGrid& GetTileSprites();
 		const TileSpritesGrid& GetTileSprites() const;
 

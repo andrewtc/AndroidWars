@@ -30,6 +30,8 @@ namespace mage
 		virtual bool OnPointerUp( const Pointer& pointer );
 		virtual bool OnPointerMotion( const Pointer& activePointer, const PointersByID& pointersByID );
 
+		void RecalculateArrow( const Vec2s& pointerTilePos );
+
 		bool mAllowMovement;
 		Vec2s mLastPointerTilePos;
 
@@ -44,6 +46,8 @@ namespace mage
 
 		virtual void OnEnter( const Dictionary& parameters );
 		virtual void OnExit();
+
+		virtual bool OnPointerDown( const Pointer& pointer );
 
 		void RebuildActionsMenu();
 		Button* CreateActionButton( WidgetTemplate& widgetTemplate, const std::string& label );

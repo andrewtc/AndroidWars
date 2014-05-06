@@ -64,6 +64,7 @@ namespace mage
 		static bool ParseUInt       ( const std::string& string, const unsigned& defaultValue,   unsigned& result );
 		static bool ParseFloat      ( const std::string& string, const float& defaultValue,      float& result );
 		static bool ParseBool       ( const std::string& string, const bool& defaultValue,       bool& result );
+		static bool ParseVec2i      ( const std::string& string, const Vec2i& defaultValue,      Vec2i& result );
 		static bool ParseVec2f      ( const std::string& string, const Vec2f& defaultValue,      Vec2f& result );
 		static bool ParseVec3f      ( const std::string& string, const Vec3f& defaultValue,      Vec3f& result );
 		static bool ParseVec4f      ( const std::string& string, const Vec4f& defaultValue,      Vec4f& result );
@@ -266,7 +267,7 @@ namespace mage
 				if ( !StringUtil::StringToType( tokens[i], &result[i] ) )
 				{
 					success = false;
-					WarnFail( "StringUtil : Could not parse vector: Element %d (\"%s\") could not be converted to a float.",
+					WarnFail( "StringUtil : Could not parse vector: Element %d (\"%s\") could not be converted to the requested type.",
 						i+1, tokens[i].c_str() );
 					break;
 				}
