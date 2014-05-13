@@ -3,6 +3,7 @@
     <Font name="test.fnt" file="fonts/font.fnt"/>
     <Font name="default_s.fnt" file="fonts/small.fnt"/>
     <Font name="MainMenuFont" file="fonts/main_menu_font.fnt"/>
+    <Font name="SmallFont" file="fonts/SmallFont.fnt"/>
     
     <!-- Sprites used in UI -->
     <Sprite file="ui/background.anim" />
@@ -17,35 +18,38 @@
     <Sprite file="ui/tool_button.anim" />
     <Sprite file="ui/tool_icon.anim" />
     <Sprite file="ui/tile_selector.anim" />
+    <Sprite file="ui/unit_info.anim" />
     
     <!-- Sounds used in UI -->
     <Sound file="sfx/super_mario_jump.wav" name="click.sfx"/>
     
     <!-- Templates -->
-    <Template name="TestLabel"      file="ui/test_label.xml"       />
-    <Template name="TestButton"     file="ui/test_button.xml"      />
-    <Template name="TestMenuButton" file="ui/test_menu_button.xml" />
-    <Template name="TestWidget"     file="ui/test_widget.xml"      />
-    <Template name="TestTextField"  file="ui/test_text_field.xml"  />
-    <Template name="MainMenu"       file="ui/main_menu.xml"        />
-    <Template name="Login"          file="ui/login.xml"            />
-    <Template name="Progress"       file="ui/progress.xml"         />
-    <Template name="Dashboard"      file="ui/dashboard.xml"        />
-    <Template name="GamesListItem"  file="ui/games_list_item.xml"  />
-	<Template name="MoveDialog"     file="ui/move_dialog.xml"      />
-	<Template name="AttackDialog"   file="ui/attack_dialog.xml"    />
-	<Template name="CaptureDialog"  file="ui/capture_dialog.xml"   />
-	<Template name="GameOverSplash" file="ui/game_end.xml"         />
-	<Template name="UnitDialog"     file="ui/unit_dialog.xml"      />
-	<Template name="ToolButton"     file="ui/tool_button.xml"      />
-    <Template name="ToolPalette"    file="ui/tool_palette.xml"     />
-    <Template name="TileSelector"   file="ui/tile_selector.xml"    />
-    <Template name="TilePalette"    file="ui/tile_palette.xml"     />
-    <Template name="UnitSelector"   file="ui/unit_selector.xml"    />
-    <Template name="UnitPalette"    file="ui/unit_palette.xml"     />
-    <Template name="Actions"        file="ui/actions.xml"          />
-    <Template name="ActionMenuButton" file="ui/action_menu_button.xml" />
-    <Template name="GameplayInterface" file="ui/gameplay_interface.xml" />
+    <Template name="TestLabel"         file="ui/test_label.xml"          />
+    <Template name="SmallLabel"        file="ui/small_label.xml"         />
+    <Template name="TestButton"        file="ui/test_button.xml"         />
+    <Template name="TestMenuButton"    file="ui/test_menu_button.xml"    />
+    <Template name="TestWidget"        file="ui/test_widget.xml"         />
+    <Template name="TestTextField"     file="ui/test_text_field.xml"     />
+    <Template name="MainMenu"          file="ui/main_menu.xml"           />
+    <Template name="Login"             file="ui/login.xml"               />
+    <Template name="Progress"          file="ui/progress.xml"            />
+    <Template name="Dashboard"         file="ui/dashboard.xml"           />
+    <Template name="GamesListItem"     file="ui/games_list_item.xml"     />
+	<Template name="MoveDialog"        file="ui/move_dialog.xml"         />
+	<Template name="AttackDialog"      file="ui/attack_dialog.xml"       />
+	<Template name="CaptureDialog"     file="ui/capture_dialog.xml"      />
+	<Template name="GameOverSplash"    file="ui/game_end.xml"            />
+	<Template name="UnitDialog"        file="ui/unit_dialog.xml"         />
+	<Template name="ToolButton"        file="ui/tool_button.xml"         />
+    <Template name="ToolPalette"       file="ui/tool_palette.xml"        />
+    <Template name="TileSelector"      file="ui/tile_selector.xml"       />
+    <Template name="TilePalette"       file="ui/tile_palette.xml"        />
+    <Template name="UnitSelector"      file="ui/unit_selector.xml"       />
+    <Template name="UnitPalette"       file="ui/unit_palette.xml"        />
+    <Template name="Actions"           file="ui/actions.xml"             />
+    <Template name="ActionMenuButton"  file="ui/action_menu_button.xml"  />
+    <Template name="GameplayInterface" file="ui/gameplay_interface.xml"  />
+    <Template name="UnitInfo"          file="ui/unit_info.xml"           />
     <Template name="ConstructUnitMenu" file="ui/construct_unit_menu.xml" />
         
 </Theme>

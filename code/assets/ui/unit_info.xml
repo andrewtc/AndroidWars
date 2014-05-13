@@ -1,0 +1,17 @@
+<Widget name="unitInfo"
+    position="20,500"
+    >
+    <Graphic name="background"
+        animationSet="unit_info.anim"
+        layer="-1"
+        />
+    <Graphic name="unit"
+        animationSet="Tank.anim"
+        position="48,41"
+        />
+    <Include name="nameLabel" template="smallLabel" position="10,10" />
+    <Include name="healthLabel" template="smallLabel" position="52,130" />
+    <Include name="movementLabel" template="smallLabel" position="119,130" />
+    <Include name="ammoLabel" template="smallLabel" position="52,175" />
+    <Include name="suppliesLabel" template="smallLabel" position="119,175" />
+</Widget>

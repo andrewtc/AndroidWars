@@ -11,7 +11,8 @@ GameplayState::GameplayState() :
 	mSelectActionInputState( nullptr ),
 	mSelectTargetInputState( nullptr ),
 	mPerformActionInputState( nullptr ),
-	mGameplayInterface( nullptr )
+	mGameplayInterface( nullptr ),
+	mUnitInfoOverlay( nullptr )
 {
 	DebugPrintf( "GameplayState created!" );
 }
@@ -212,6 +213,20 @@ void GameplayState::OnEnter( const Dictionary& parameters )
 		WarnFail( "Could not create gameplay interface!" );
 	}
 
+	// Create the Unit info overlay.
+	mUnitInfoOverlay = gWidgetManager->CreateWidgetFromTemplate( "UnitInfo" );
+
+	if( mUnitInfoOverlay )
+	{
+		// Add the Unit info overlay to the root and hide it.
+		gWidgetManager->GetRootWidget()->AddChild( mUnitInfoOverlay );
+		mUnitInfoOverlay->Hide();
+	}
+	else
+	{
+		WarnFail( "Could not create Unit info overlay!" );
+	}
+
 	// Create input states.
 	mSelectUnitInputState = CreateState< SelectUnitInputState >();
 	mMoveUnitInputState = CreateState< MoveUnitInputState >();
@@ -276,6 +291,12 @@ void GameplayState::OnExit()
 	{
 		// Destroy the gameplay interface.
 		gWidgetManager->DestroyWidget( mGameplayInterface );
+	}
+
+	if( mUnitInfoOverlay )
+	{
+		// Destroy the gameplay interface.
+		gWidgetManager->DestroyWidget( mUnitInfoOverlay );
 	}
 
 	DebugPrintf( "GameplayState exited!" );
@@ -384,4 +405,91 @@ PerformActionInputState* GameplayState::GetPerformActionInputState() const
 Widget* GameplayState::GetGameplayInterface() const
 {
 	return mGameplayInterface;
+}
+
+
+Widget* GameplayState::GetUnitInfoOverlay() const
+{
+	return mUnitInfoOverlay;
+}
+
+
+void GameplayState::ShowUnitInfoOverlay( Unit* unit )
+{
+	if( mUnitInfoOverlay )
+	{
+		if( unit )
+		{
+			// Get the UnitType.
+			UnitType* unitType = unit->GetUnitType();
+
+			// Get necessary components.
+			Label* nameLabel = mUnitInfoOverlay->GetChildByName< Label >( "nameLabel" );
+			Label* healthLabel = mUnitInfoOverlay->GetChildByName< Label >( "healthLabel" );
+			Label* movementLabel = mUnitInfoOverlay->GetChildByName< Label >( "movementLabel" );
+			Label* ammoLabel = mUnitInfoOverlay->GetChildByName< Label >( "ammoLabel" );
+			Label* suppliesLabel = mUnitInfoOverlay->GetChildByName< Label >( "suppliesLabel" );
+			Graphic* unitGraphic = mUnitInfoOverlay->GetChildByName< Graphic >( "unit" );
+
+			if( nameLabel )
+			{
+				// Set the name label text to the name of the UnitType.
+				std::string unitTypeName = unitType->GetName().GetString();
+				nameLabel->SetText( unitTypeName );
+			}
+
+			if( healthLabel )
+			{
+				// Set the name label text to the name of the UnitType.
+				std::string healthText = StringUtil::ToString( unit->GetHealth() );
+				healthLabel->SetText( healthText );
+			}
+
+			if( movementLabel )
+			{
+				// Set the name label text to the name of the UnitType.
+				std::string movementText = StringUtil::ToString( unitType->GetMovementRange() );
+				movementLabel->SetText( movementText );
+			}
+
+			if( ammoLabel )
+			{
+				// Set the name label text to the name of the UnitType.
+				std::string ammoText = StringUtil::ToString( unit->GetAmmo() );
+				ammoLabel->SetText( ammoText );
+			}
+
+			if( suppliesLabel )
+			{
+				// Set the name label text to the name of the UnitType.
+				std::string suppliesText = StringUtil::ToString( unit->GetSupplies() );
+				suppliesLabel->SetText( suppliesText );
+			}
+
+			if( unitGraphic )
+			{
+				// Set the Unit graphic.
+				HashString animationSetName = unitType->GetAnimationSetName();
+				unitGraphic->SetSprite( animationSetName, "Idle" );
+
+				// Set the color of the graphic.
+				Sprite* sprite = unitGraphic->GetSprite();
+				sprite->DrawColor = unit->GetOwner()->GetColor();
+			}
+
+			// Show the Unit info overlay.
+			mUnitInfoOverlay->Show();
+		}
+		else
+		{
+			WarnFail( "Cannot show Unit info overlay for null Unit!" );
+		}
+	}
+}
+
+
+void GameplayState::HideUnitInfoOverlay()
+{
+	// Hide the Unit info overlay.
+	mUnitInfoOverlay->Hide();
 }

@@ -97,6 +97,21 @@ void Unit::OnTurnStart( int turnIndex )
 		// If the Unit runs out of supplies and it needs them to survive, kill it.
 		Die();
 	}
+
+	if( IsAlive() )
+	{
+		// Get the Unit's current Tile.
+		Map::Iterator tile = GetTile();
+
+		if( tile.IsValid() && tile->GetOwner() == GetOwner() )
+		{
+			// If the Unit is on top of a friendly tile, repair it.
+			// TODO: Only allow certain TerrainTypes to repair.
+			// TODO: Make health amount come from TerrainType.
+			// TODO: Allow online game to track health increase.
+			AddHealth( 2 );
+		}
+	}
 }
 
 

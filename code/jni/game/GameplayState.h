@@ -33,6 +33,10 @@ namespace mage
 		PerformActionInputState* GetPerformActionInputState() const;
 
 		Widget* GetGameplayInterface() const;
+		Widget* GetUnitInfoOverlay() const;
+
+		void ShowUnitInfoOverlay( Unit* unit );
+		void HideUnitInfoOverlay();
 
 	private:
 		virtual void OnEnter( const Dictionary& parameters );
@@ -47,6 +51,7 @@ namespace mage
 
 		bool mIsNetworkGame;
 		Widget* mGameplayInterface;
+		Widget* mUnitInfoOverlay;
 		SelectUnitInputState* mSelectUnitInputState;
 		MoveUnitInputState* mMoveUnitInputState;
 		SelectActionInputState* mSelectActionInputState;

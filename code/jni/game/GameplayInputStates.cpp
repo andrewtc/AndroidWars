@@ -19,6 +19,9 @@ void SelectUnitInputState::OnEnter( const Dictionary& parameters )
 	// Deselect the current UnitSprite (if any).
 	mapView->DeselectUnitSprite();
 
+	// Hide the Unit info overlay.
+	owner->HideUnitInfoOverlay();
+
 	// Show the gameplay interface.
 	Widget* gameplayInterface = owner->GetGameplayInterface();
 
@@ -124,6 +127,9 @@ void MoveUnitInputState::OnEnter( const Dictionary& parameters )
 
 		// Select the UnitSprite.
 		mapView->SelectUnitSprite( unitSpriteToSelect, mAllowMovement );
+
+		// Show the UnitInfo for the selected Unit.
+		owner->ShowUnitInfoOverlay( unit );
 
 		// Reset the last tile position.
 		mLastPointerTilePos = activePointerTileCoords;
