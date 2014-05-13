@@ -165,6 +165,8 @@ $(aw_game_path)/abilities/UnitAbility.cpp \
 $(aw_game_path)/abilities/UnitWaitAbility.cpp \
 $(aw_game_path)/abilities/UnitAttackAbility.cpp \
 $(aw_game_path)/abilities/UnitReinforceAbility.cpp \
+$(aw_game_path)/abilities/UnitCaptureAbility.cpp \
+$(aw_game_path)/abilities/TileAbility.cpp \
 $(aw_game_path)/animations/MapAnimation.cpp \
 $(aw_game_path)/animations/UnitMoveMapAnimation.cpp \
 $(aw_game_path)/Game.cpp \

@@ -108,6 +108,9 @@ void TileSprite::Init( MapView* mapView, const Vec2s& tilePos )
 	// Initialize the Tile pointer.
 	mTile = mapView->GetMap()->GetTile( tilePos );
 
+	// Listen for Tile changes.
+	mTile->OnOwnerChanged.AddCallback( this, &TileSprite::TileOwnerChanged );
+
 	// Create initial Sprite.
 	UpdateSprite();
 }
@@ -164,8 +167,7 @@ void TileSprite::SetSelected( bool selected )
 		//DebugPrintf( "%s TileSprite at (%d,%d)!", ( selected ? "Selecting" : "Deselecting" ), mTile.GetX(), mTile.GetY() );
 		mIsSelected = selected;
 
-		// Set the color of the Sprite based on selection state.
-		mSprite->DrawColor = ( mIsSelected ? SELECTED_COLOR : DEFAULT_COLOR );
+		UpdateSprite();
 	}
 }
 
@@ -209,6 +211,9 @@ void TileSprite::UpdateSprite()
 
 			// Create a new Sprite.
 			mSprite = SpriteManager::CreateSprite( animationSetName, worldPos, animation );
+
+			// Update color.
+			UpdateColor();
 		}
 	}
 }
@@ -221,4 +226,35 @@ void TileSprite::DestroySprite()
 		// If there was a previous Sprite, destroy it.
 		SpriteManager::DestroySprite( mSprite );
 	}
+}
+
+
+void TileSprite::TileOwnerChanged( Faction* formerOwner, Faction* owner )
+{
+	// Update the color of the Sprite.
+	UpdateColor();
+}
+
+
+void TileSprite::UpdateColor()
+{
+	Color color = DEFAULT_COLOR;
+
+	// Get the TerrainType.
+	Map::Iterator tile = GetTile();
+
+	if( tile->HasOwner() )
+	{
+		// If a player owns the Tile, draw the tile in the owner color.
+		color = tile->GetOwner()->GetColor();
+	}
+
+	if( mIsSelected )
+	{
+		// If the Tile is selected, use the selected color.
+		color *= SELECTED_COLOR;
+	}
+
+	// Set the color of the Sprite based on selection state.
+	mSprite->DrawColor = color;
 }

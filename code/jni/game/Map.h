@@ -52,6 +52,7 @@ namespace mage
 
 	public:
 		Event<> OnChanged;
+		Event< Faction*, Faction* > OnOwnerChanged;
 
 		friend class Map;
 		friend class Unit;

@@ -31,6 +31,9 @@ namespace mage
 		static HSV   ColorToHSV( const Color& color );
 		static Color Lerp( const Color& A, const Color& B, float alpha );
 
+		Color operator*( const Color& other ) const;
+		void operator*=( const Color& other );
+
 #pragma warning( push )
 #pragma warning( disable : 4201 )
 		union
@@ -71,6 +74,23 @@ namespace mage
 	inline std::ostream& operator<<( std::ostream& out, const Color& color )
 	{
 		return out << "#" << std::hex << color.bgra;
+	}
+	//---------------------------------------
+	inline Color Color::operator*( const Color& other ) const
+	{
+		Color result( *this );
+		result *= other;
+		return result;
+	}
+	//---------------------------------------
+	inline void Color::operator*=( const Color& other )
+	{
+		static const float DIVISOR = ( 1.0f / 255.0f );
+
+		r = (uint8) ( ( ( r * DIVISOR ) * ( other.r * DIVISOR ) ) * 255.0f );
+		g = (uint8) ( ( ( g * DIVISOR ) * ( other.g * DIVISOR ) ) * 255.0f );
+		b = (uint8) ( ( ( b * DIVISOR ) * ( other.b * DIVISOR ) ) * 255.0f );
+		a = (uint8) ( ( ( a * DIVISOR ) * ( other.a * DIVISOR ) ) * 255.0f );
 	}
 	//---------------------------------------
 }

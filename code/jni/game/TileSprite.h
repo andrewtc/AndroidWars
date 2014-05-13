@@ -38,6 +38,10 @@ namespace mage
 	private:
 		void DestroySprite();
 
+		void TileOwnerChanged( Faction* formerOwner, Faction* owner );
+
+		void UpdateColor();
+
 		static bool TileMatchesVariation( const Map::ConstIterator& tile, const Variation* variation );
 
 		bool mIsSelected;

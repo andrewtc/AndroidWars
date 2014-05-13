@@ -10,6 +10,7 @@ namespace mage
 		ConstructUnitAbility( Map* map );
 		virtual ~ConstructUnitAbility();
 
+		virtual void DetermineAvailableActionsForTile( const Vec2s& tilePos, Actions& result );
 		virtual void ProcessAction( Ability::Action* action );
 	};
 
@@ -22,10 +23,12 @@ namespace mage
 		Action();
 		~Action();
 
-		virtual void SaveToJSON( rapidjson::Document& document, rapidjson::Value& object );
+		virtual void SaveToJSON( rapidjson::Document& document, rapidjson::Value& object ) const;
 		virtual void LoadFromJSON( const rapidjson::Value& object );
 
-		int FactionIndex;
+		int UnitID;
+		int FactionID;
+		int BuildCost;
 		HashString UnitTypeID;
 		Vec2s TilePos;
 	};

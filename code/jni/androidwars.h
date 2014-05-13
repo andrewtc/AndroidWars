@@ -14,6 +14,7 @@ namespace mage
 	class Unit;
 	class Faction;
 	class Player;
+	class UnitType;
 }
 
 #include <MageTypes.h>
@@ -74,11 +75,13 @@ const size_t MAP_SIZE_POWER_OF_TWO = 10;
 
 #include "game/Path.h"
 #include "game/abilities/Ability.h"
-#include "game/abilities/ConstructUnitAbility.h"
 #include "game/abilities/UnitAbility.h"
 #include "game/abilities/UnitWaitAbility.h"
 #include "game/abilities/UnitAttackAbility.h"
 #include "game/abilities/UnitReinforceAbility.h"
+#include "game/abilities/UnitCaptureAbility.h"
+#include "game/abilities/TileAbility.h"
+#include "game/abilities/ConstructUnitAbility.h"
 #include "game/animations/MapAnimation.h"
 #include "game/animations/UnitMoveMapAnimation.h"
 #include "game/Map.h"

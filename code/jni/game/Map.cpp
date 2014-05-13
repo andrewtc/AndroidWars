@@ -92,7 +92,7 @@ void Tile::SetOwner( Faction* owner )
 	if( mOwner != oldOwner )
 	{
 		// If the owner changed, fire the changed callback.
-		OnChanged.Invoke();
+		OnOwnerChanged.Invoke( oldOwner, mOwner );
 	}
 }
 
@@ -234,6 +234,7 @@ void Map::Init( Scenario* scenario )
 	RegisterAbility< UnitWaitAbility >();
 	RegisterAbility< UnitAttackAbility >();
 	RegisterAbility< UnitReinforceAbility >();
+	RegisterAbility< UnitCaptureAbility >();
 
 	// Make sure the size of the map is valid.
 	assertion( IsValid(), "Cannot initialize Map with invalid size (%d,%d)!", GetWidth(), GetHeight() );

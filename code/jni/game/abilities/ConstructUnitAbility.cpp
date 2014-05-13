@@ -14,6 +14,50 @@ ConstructUnitAbility::ConstructUnitAbility( Map* map ) :
 ConstructUnitAbility::~ConstructUnitAbility() { }
 
 
+void ConstructUnitAbility::DetermineAvailableActionsForTile( const Vec2s& tilePos, Actions& result )
+{
+	// Get the tile.
+	Map::Iterator tile = mMap->GetTile( tilePos );
+
+	if( tile.IsValid() )
+	{
+		// If the Tile is valid, get the owner of the Tile (if any).
+		Faction* owner = tile->GetOwner();
+
+		if( owner )
+		{
+			// If the Tile has an owner, get the TerrainType for the Tile.
+			TerrainType* terrainType = tile->GetTerrainType();
+
+			// Get the list of Units that can be created by this Tile (if any).
+			std::vector< UnitType* > constructedUnitTypes;
+			terrainType->GetConstructedUnitTypes( constructedUnitTypes );
+
+			if( constructedUnitTypes.size() > 0 )
+			{
+				// If this Tile can construct Units, get the current funds for the Tile owner.
+				int currentFunds = owner->GetFunds();
+
+				for( auto it = constructedUnitTypes.begin(); it != constructedUnitTypes.end(); ++it )
+				{
+					// Get the build cost of each UnitType that can be constructed.
+					UnitType* unitType = *it;
+					int buildCost = unitType->GetBuildCost();
+
+					if( buildCost <= currentFunds )
+					{
+						// If the Unit can be built, create an Action for it.
+						ConstructUnitAbility::Action* constructUnitAction = new ConstructUnitAbility::Action();
+
+						constructUnitAction->FactionID = GetMap()->
+					}
+				}
+			}
+		}
+	}
+}
+
+
 void ConstructUnitAbility::ProcessAction( Ability::Action* action )
 {
 	// Cast the action to the proper type.
@@ -29,29 +73,37 @@ void ConstructUnitAbility::ProcessAction( Ability::Action* action )
 	assertion( tile.IsValid(), "Invalid Tile position (%d,%d) specified for ConstructUnitAbility Action!", constructUnitAction->TilePos.x, constructUnitAction->TilePos.y );
 
 	// Get the Faction.
-	Faction* faction = GetMap()->GetFactionByIndex( constructUnitAction->FactionIndex );
-	assertion( faction, "Invalid Faction index (%d) specified for ConstructUnitAbility Action!", constructUnitAction->FactionIndex );
+	Faction* faction = GetMap()->GetFactionByID( constructUnitAction->FactionID );
+	assertion( faction, "Invalid Faction ID (%d) specified for ConstructUnitAbility Action!", constructUnitAction->FactionID );
 
-	// Create a new, inactive Unit at the specified location.
-	Unit* unit = GetMap()->CreateUnit( unitType, faction, constructUnitAction->TilePos );
+	// Make sure a valid Unit ID was specified.
+	int unitID = constructUnitAction->UnitID;
+	assertion( unitID > 0, "Invalid Unit ID (%d) specified for ConstructUnitAbility Action!", unitID );
+
+	// Create and initialize a new, inactive Unit at the specified location.
+	Unit* unit = GetMap()->CreateUnit( unitID, unitType, faction, tile.GetPosition() );
 	assertion( unit, "Could not create Unit for ConstructUnitAbility Action!" );
 	unit->Deactivate();
 }
 
 
 ConstructUnitAbility::Action::Action() :
-	FactionIndex( -1 )
+	UnitID( -1 ),
+	FactionID( -1 ),
+	BuildCost( 0 )
 { }
 
 
 ConstructUnitAbility::Action::~Action() { }
 
 
-void ConstructUnitAbility::Action::SaveToJSON( rapidjson::Document& document, rapidjson::Value& object )
+void ConstructUnitAbility::Action::SaveToJSON( rapidjson::Document& document, rapidjson::Value& object ) const
 {
-	JSON::SaveInt( document, object, "faction", FactionIndex );
+	JSON::SaveInt( document, object, "unitID", UnitID );
+	JSON::SaveInt( document, object, "faction", FactionID );
 	JSON::SaveString( document, object, "unitType", UnitTypeID.GetString() );
 	JSON::SaveVec2i( document, object, "tilePos", TilePos );
+	JSON::SaveInt( document, object, "buildCost", BuildCost );
 }
 
 

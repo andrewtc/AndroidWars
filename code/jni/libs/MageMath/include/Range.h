@@ -58,6 +58,12 @@ namespace mage
 		return RNG::RandomInRange( Min, Max );
 	}
 	//---------------------------------------
+	template< typename T >
+	inline std::ostream& operator<<( std::ostream& stream, const Range< T >& range )
+	{
+		return ( stream << range.Min << "~" << range.Max );
+	}
+	//---------------------------------------
 
 	//---------------------------------------
 	// Types

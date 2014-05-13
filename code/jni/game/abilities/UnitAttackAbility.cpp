@@ -38,7 +38,7 @@ void UnitAttackAbility::DetermineAvailableActions( const Unit* unit, const Path&
 				if( unit->CanAttack( target ) )
 				{
 					// Add an attack action to the list of actions.
-					Action* attackAction = new Action();
+					UnitAttackAbility::Action* attackAction = new UnitAttackAbility::Action();
 
 					attackAction->UnitID = unit->GetID();
 					attackAction->TargetID = target->GetID();
